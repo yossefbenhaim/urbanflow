@@ -1,0 +1,332 @@
+import { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+
+type FormData = {
+  // Auth
+  email: string
+  password: string
+  confirmPassword: string
+  // Personal
+  fullName: string
+  idNumber: string
+  phone: string
+  // Professional
+  roleType: string
+  companyName: string
+  companyRegistration: string
+  licenseNumber: string
+  city: string
+  experienceYears: string
+  projectsCount: string
+}
+
+const ROLE_TYPES = [
+  { value: 'developer', label: '🏗️ יזם נדל"ן' },
+  { value: 'lawyer', label: '⚖️ עורך דין' },
+  { value: 'project_manager', label: '📋 מנהל פרויקט' },
+  { value: 'committee', label: '🏘️ ועד דיירים' },
+]
+
+const CITIES = [
+  'תל אביב-יפו', 'ירושלים', 'חיפה', 'ראשון לציון', 'פתח תקווה',
+  'אשדוד', 'נתניה', 'באר שבע', 'בני ברק', 'הרצליה', 'רמת גן',
+  'גבעתיים', 'חולון', 'בת ים', 'רחובות', 'אחר',
+]
+
+export default function RegisterManager() {
+  const navigate = useNavigate()
+  const [step, setStep] = useState(1)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const [form, setForm] = useState<FormData>({
+    email: '', password: '', confirmPassword: '',
+    fullName: '', idNumber: '', phone: '',
+    roleType: '', companyName: '', companyRegistration: '',
+    licenseNumber: '', city: '', experienceYears: '', projectsCount: '',
+  })
+
+  const update = (field: keyof FormData, value: string) =>
+    setForm(prev => ({ ...prev, [field]: value }))
+
+  const validateStep1 = () => {
+    if (!form.fullName.trim()) return 'שם מלא נדרש'
+    if (!/^\d{9}$/.test(form.idNumber)) return 'תעודת זהות חייבת להכיל 9 ספרות'
+    if (!/^05\d{8}$/.test(form.phone.replace(/[-\s]/g, ''))) return 'מספר טלפון לא תקין'
+    if (!form.email.includes('@')) return 'אימייל לא תקין'
+    if (form.password.length < 8) return 'סיסמה חייבת להכיל לפחות 8 תווים'
+    if (form.password !== form.confirmPassword) return 'הסיסמאות אינן תואמות'
+    return null
+  }
+
+  const validateStep2 = () => {
+    if (!form.roleType) return 'יש לבחור סוג תפקיד'
+    if (!form.city) return 'יש לבחור עיר פעילות'
+    return null
+  }
+
+  const handleNext = () => {
+    setError('')
+    const err = step === 1 ? validateStep1() : validateStep2()
+    if (err) { setError(err); return }
+    setStep(s => s + 1)
+  }
+
+  const handleSubmit = async () => {
+    setError('')
+    setLoading(true)
+
+    // 1. Create auth user
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+    })
+
+    if (authError || !authData.user) {
+      setError(authError?.message === 'User already registered'
+        ? 'אימייל זה כבר רשום במערכת'
+        : 'שגיאה ביצירת החשבון')
+      setLoading(false)
+      return
+    }
+
+    const userId = authData.user.id
+
+    // 2. Update profiles
+    await supabase.from('profiles').upsert({
+      id: userId,
+      full_name: form.fullName,
+      email: form.email,
+      phone: form.phone,
+      id_number: form.idNumber,
+      role: 'manager',
+    })
+
+    // 3. Insert manager profile
+    const { error: managerError } = await supabase.from('manager_profiles').upsert({
+      id: userId,
+      company_name: form.companyName || null,
+      company_registration: form.companyRegistration || null,
+      role_type: form.roleType,
+      license_number: form.licenseNumber || null,
+      phone: form.phone,
+      city: form.city,
+      experience_years: form.experienceYears ? parseInt(form.experienceYears) : null,
+      projects_count: form.projectsCount || null,
+    })
+
+    if (managerError) {
+      console.error('manager profile error:', managerError)
+      setError('שגיאה בשמירת הפרופיל המקצועי')
+      setLoading(false)
+      return
+    }
+
+    setLoading(false)
+    navigate('/manager')
+  }
+
+  const stepTitles = ['פרטים אישיים', 'פרטים מקצועיים', 'אישור']
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-slate-100 flex items-center justify-center p-4" dir="rtl">
+      <div className="w-full max-w-lg">
+        {/* Header */}
+        <div className="text-center mb-6">
+          <Link to="/register" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
+            ← חזרה לבחירת תפקיד
+          </Link>
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-purple-600 rounded-2xl mb-3 shadow-lg">
+            <span className="text-2xl">🏢</span>
+          </div>
+          <h1 className="text-xl font-bold text-gray-900">הרשמה כמנהל פרויקט</h1>
+        </div>
+
+        {/* Step indicator */}
+        <div className="flex items-center justify-center gap-2 mb-6">
+          {stepTitles.map((title, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                step === i + 1
+                  ? 'bg-purple-600 text-white'
+                  : step > i + 1
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-gray-100 text-gray-400'
+              }`}>
+                <span>{step > i + 1 ? '✓' : i + 1}</span>
+                <span>{title}</span>
+              </div>
+              {i < stepTitles.length - 1 && <div className="w-6 h-px bg-gray-200" />}
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+
+          {/* Step 1 */}
+          {step === 1 && (
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">פרטים אישיים</h2>
+              <Field label="שם מלא *">
+                <input type="text" placeholder="ישראל ישראלי" value={form.fullName}
+                  onChange={e => update('fullName', e.target.value)} className={inputCls} />
+              </Field>
+              <Field label="תעודת זהות *">
+                <input type="text" placeholder="000000000" maxLength={9} value={form.idNumber}
+                  onChange={e => update('idNumber', e.target.value.replace(/\D/g, ''))} className={inputCls} />
+              </Field>
+              <Field label="טלפון נייד *">
+                <input type="tel" placeholder="050-0000000" value={form.phone}
+                  onChange={e => update('phone', e.target.value)} className={inputCls} />
+              </Field>
+              <Field label="אימייל *">
+                <input type="email" placeholder="your@company.com" value={form.email}
+                  onChange={e => update('email', e.target.value)} className={inputCls} />
+              </Field>
+              <Field label="סיסמה *">
+                <input type="password" placeholder="••••••••" value={form.password}
+                  onChange={e => update('password', e.target.value)} className={inputCls} />
+              </Field>
+              <Field label="אישור סיסמה *">
+                <input type="password" placeholder="••••••••" value={form.confirmPassword}
+                  onChange={e => update('confirmPassword', e.target.value)} className={inputCls} />
+              </Field>
+            </div>
+          )}
+
+          {/* Step 2 */}
+          {step === 2 && (
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">פרטים מקצועיים</h2>
+
+              <Field label="תפקיד *">
+                <div className="grid grid-cols-2 gap-2">
+                  {ROLE_TYPES.map(rt => (
+                    <button
+                      key={rt.value}
+                      type="button"
+                      onClick={() => update('roleType', rt.value)}
+                      className={`p-3 rounded-xl border-2 text-right text-sm font-medium transition-colors ${
+                        form.roleType === rt.value
+                          ? 'border-purple-500 bg-purple-50 text-purple-800'
+                          : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                      }`}
+                    >
+                      {rt.label}
+                    </button>
+                  ))}
+                </div>
+              </Field>
+
+              <Field label="שם חברה / משרד">
+                <input type="text" placeholder="חברת ABC בניה בע״מ" value={form.companyName}
+                  onChange={e => update('companyName', e.target.value)} className={inputCls} />
+              </Field>
+
+              <Field label="מספר ח.פ / ע.מ">
+                <input type="text" placeholder="000000000" maxLength={9} value={form.companyRegistration}
+                  onChange={e => update('companyRegistration', e.target.value.replace(/\D/g, ''))} className={inputCls} />
+              </Field>
+
+              <Field label="מספר רישיון מקצועי">
+                <input type="text" placeholder="123456" value={form.licenseNumber}
+                  onChange={e => update('licenseNumber', e.target.value)} className={inputCls} />
+              </Field>
+
+              <Field label="עיר פעילות ראשית *">
+                <select value={form.city} onChange={e => update('city', e.target.value)} className={inputCls}>
+                  <option value="">בחר עיר...</option>
+                  {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </Field>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="שנות ניסיון">
+                  <input type="number" placeholder="5" min="0" max="50" value={form.experienceYears}
+                    onChange={e => update('experienceYears', e.target.value)} className={inputCls} />
+                </Field>
+                <Field label="פרויקטים שניהלת">
+                  <select value={form.projectsCount} onChange={e => update('projectsCount', e.target.value)} className={inputCls}>
+                    <option value="">בחר...</option>
+                    <option value="0">עדיין לא</option>
+                    <option value="1-5">1–5</option>
+                    <option value="6-20">6–20</option>
+                    <option value="20+">20+</option>
+                  </select>
+                </Field>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Summary */}
+          {step === 3 && (
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">סיכום ואישור</h2>
+              <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
+                <SummaryRow label="שם" value={form.fullName} />
+                <SummaryRow label="אימייל" value={form.email} />
+                <SummaryRow label="טלפון" value={form.phone} />
+                <SummaryRow label="תפקיד" value={ROLE_TYPES.find(r => r.value === form.roleType)?.label || ''} />
+                {form.companyName && <SummaryRow label="חברה" value={form.companyName} />}
+                <SummaryRow label="עיר" value={form.city} />
+                {form.experienceYears && <SummaryRow label="ניסיון" value={`${form.experienceYears} שנים`} />}
+              </div>
+              <p className="text-xs text-gray-500 text-center">
+                בלחיצה על "הרשמה" אתה מאשר את תנאי השימוש
+              </p>
+            </div>
+          )}
+
+          {/* Error */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mt-4">
+              {error}
+            </div>
+          )}
+
+          {/* Buttons */}
+          <div className="flex gap-3 mt-6">
+            {step > 1 && (
+              <button onClick={() => setStep(s => s - 1)}
+                className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl font-medium hover:bg-gray-50">
+                ← הקודם
+              </button>
+            )}
+            {step < 3 ? (
+              <button onClick={handleNext}
+                className="flex-1 bg-purple-600 text-white py-3 rounded-xl font-medium hover:bg-purple-700 transition-colors">
+                הבא ←
+              </button>
+            ) : (
+              <button onClick={handleSubmit} disabled={loading}
+                className="flex-1 bg-purple-600 text-white py-3 rounded-xl font-medium hover:bg-purple-700 transition-colors disabled:opacity-50">
+                {loading ? 'נרשם...' : '✅ הרשמה'}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const inputCls = 'w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 text-sm'
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      {children}
+    </div>
+  )
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between">
+      <span className="text-gray-500">{label}:</span>
+      <span className="font-medium text-gray-800">{value}</span>
+    </div>
+  )
+}
