@@ -89,39 +89,46 @@ export default function RegisterTenant() {
     const userId = authData.user.id
 
     // 2. Update profiles table with role + personal info
-    const { error: profileError } = await supabase.from('profiles').upsert({
-      id: userId,
-      full_name: form.fullName,
-      email: form.email,
-      phone: form.phone,
-      id_number: form.idNumber,
-      role: 'tenant',
-    })
+    const { error: profileError } = await supabase.from('profiles').upsert(
+      {
+        id: userId,
+        full_name: form.fullName,
+        email: form.email,
+        phone: form.phone,
+        id_number: form.idNumber,
+        role: 'tenant',
+      },
+      { onConflict: 'id' }
+    )
 
     if (profileError) {
-      setError('שגיאה בשמירת הפרופיל')
+      console.error('profile error:', profileError)
+      setError(`שגיאה בשמירת הפרופיל: ${profileError.message}`)
       setLoading(false)
       return
     }
 
     // 3. Insert tenant profile
-    const { error: tenantError } = await supabase.from('tenant_profiles').upsert({
-      user_id: userId,
-      unit_id: null, // will be linked later when manager assigns unit
-      phone: form.phone,
-      id_number: form.idNumber,
-      address: `${form.street} ${form.buildingNumber}, ${form.city}`,
-      building_number: form.buildingNumber,
-      floor: form.floor ? parseInt(form.floor) : null,
-      apartment_sqm: form.apartmentSqm ? parseFloat(form.apartmentSqm) : null,
-      is_owner: form.isOwner,
-      move_in_year: form.moveInYear ? parseInt(form.moveInYear) : null,
-      invite_code: form.inviteCode || null,
-      is_onboarded: true,
-    })
+    const { error: tenantError } = await supabase.from('tenant_profiles').upsert(
+      {
+        user_id: userId,
+        phone: form.phone,
+        id_number: form.idNumber,
+        address: `${form.street} ${form.buildingNumber}, ${form.city}`,
+        building_number: form.buildingNumber,
+        floor: form.floor ? parseInt(form.floor) : null,
+        apartment_sqm: form.apartmentSqm ? parseFloat(form.apartmentSqm) : null,
+        is_owner: form.isOwner,
+        move_in_year: form.moveInYear ? parseInt(form.moveInYear) : null,
+        invite_code: form.inviteCode || null,
+        is_onboarded: true,
+      },
+      { onConflict: 'user_id' }
+    )
 
     if (tenantError) {
       console.error('tenant profile error:', tenantError)
+      // Non-fatal: user account created, profile will be set later
     }
 
     setLoading(false)

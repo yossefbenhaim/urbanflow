@@ -94,31 +94,43 @@ export default function RegisterManager() {
     const userId = authData.user.id
 
     // 2. Update profiles
-    await supabase.from('profiles').upsert({
-      id: userId,
-      full_name: form.fullName,
-      email: form.email,
-      phone: form.phone,
-      id_number: form.idNumber,
-      role: 'manager',
-    })
+    const { error: profileError } = await supabase.from('profiles').upsert(
+      {
+        id: userId,
+        full_name: form.fullName,
+        email: form.email,
+        phone: form.phone,
+        id_number: form.idNumber,
+        role: 'manager',
+      },
+      { onConflict: 'id' }
+    )
+    if (profileError) {
+      console.error('profile error:', profileError)
+      setError(`שגיאה בשמירת הפרופיל: ${profileError.message}`)
+      setLoading(false)
+      return
+    }
 
     // 3. Insert manager profile
-    const { error: managerError } = await supabase.from('manager_profiles').upsert({
-      id: userId,
-      company_name: form.companyName || null,
-      company_registration: form.companyRegistration || null,
-      role_type: form.roleType,
-      license_number: form.licenseNumber || null,
-      phone: form.phone,
-      city: form.city,
-      experience_years: form.experienceYears ? parseInt(form.experienceYears) : null,
-      projects_count: form.projectsCount || null,
-    })
+    const { error: managerError } = await supabase.from('manager_profiles').upsert(
+      {
+        id: userId,
+        company_name: form.companyName || null,
+        company_registration: form.companyRegistration || null,
+        role_type: form.roleType,
+        license_number: form.licenseNumber || null,
+        phone: form.phone,
+        city: form.city,
+        experience_years: form.experienceYears ? parseInt(form.experienceYears) : null,
+        projects_count: form.projectsCount || null,
+      },
+      { onConflict: 'id' }
+    )
 
     if (managerError) {
       console.error('manager profile error:', managerError)
-      setError('שגיאה בשמירת הפרופיל המקצועי')
+      setError(`שגיאה בשמירת הפרופיל המקצועי: ${managerError.message}`)
       setLoading(false)
       return
     }

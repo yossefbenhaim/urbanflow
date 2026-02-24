@@ -148,42 +148,54 @@ export default function RegisterProvider() {
     const userId = authData.user.id
 
     // profiles
-    await supabase.from('profiles').upsert({
-      id: userId,
-      full_name: form.fullName,
-      email: form.email,
-      phone: form.phone,
-      id_number: form.idNumber,
-      role: 'provider',
-    })
+    const { error: profileError } = await supabase.from('profiles').upsert(
+      {
+        id: userId,
+        full_name: form.fullName,
+        email: form.email,
+        phone: form.phone,
+        id_number: form.idNumber,
+        role: 'provider',
+      },
+      { onConflict: 'id' }
+    )
+    if (profileError) {
+      console.error('profile error:', profileError)
+      setError(`שגיאה בשמירת הפרופיל: ${profileError.message}`)
+      setLoading(false)
+      return
+    }
 
     // provider_profiles
     const validProjects = form.pastProjects.filter(p => p.name.trim())
 
-    const { error: providerError } = await supabase.from('provider_profiles').upsert({
-      id: userId,
-      full_name: form.fullName,
-      company: form.companyName || null,
-      id_number: form.idNumber,
-      phone: form.phone,
-      service_types: form.professionTypes,
-      profession_types: form.professionTypes,
-      license_number: form.licenseNumber || null,
-      license_authority: form.licenseAuthority || null,
-      license_expiry: form.licenseExpiry || null,
-      experience_years: form.experienceYears ? parseInt(form.experienceYears) : null,
-      pinuy_binuy_experience: form.pinuyBinuyExperience,
-      operating_regions: form.operatingRegions,
-      bio: form.bio || null,
-      website: form.portfolioUrl || null,
-      portfolio_url: form.portfolioUrl || null,
-      past_projects: validProjects.length > 0 ? validProjects : null,
-      is_verified: false,
-    })
+    const { error: providerError } = await supabase.from('provider_profiles').upsert(
+      {
+        id: userId,
+        full_name: form.fullName,
+        company: form.companyName || null,
+        id_number: form.idNumber,
+        phone: form.phone,
+        service_types: form.professionTypes,
+        profession_types: form.professionTypes,
+        license_number: form.licenseNumber || null,
+        license_authority: form.licenseAuthority || null,
+        license_expiry: form.licenseExpiry || null,
+        experience_years: form.experienceYears ? parseInt(form.experienceYears) : null,
+        pinuy_binuy_experience: form.pinuyBinuyExperience,
+        operating_regions: form.operatingRegions,
+        bio: form.bio || null,
+        website: form.portfolioUrl || null,
+        portfolio_url: form.portfolioUrl || null,
+        past_projects: validProjects.length > 0 ? validProjects : null,
+        is_verified: false,
+      },
+      { onConflict: 'id' }
+    )
 
     if (providerError) {
       console.error('provider profile error:', providerError)
-      setError('שגיאה בשמירת הפרופיל')
+      setError(`שגיאה בשמירת הפרופיל: ${providerError.message}`)
       setLoading(false)
       return
     }
