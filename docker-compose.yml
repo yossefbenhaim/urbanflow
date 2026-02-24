@@ -1,0 +1,41 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    container_name: urbanflow-backend
+    restart: unless-stopped
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - PORT=3000
+      - FRONTEND_URL=https://urbanflow.byclick.co.il
+    networks:
+      - urbanflow
+      - coolify
+
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    container_name: urbanflow-nginx
+    restart: unless-stopped
+    depends_on:
+      - backend
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.urbanflow.rule=Host(`urbanflow.byclick.co.il`)
+      - traefik.http.routers.urbanflow.entrypoints=https
+      - traefik.http.routers.urbanflow.tls=true
+      - traefik.http.routers.urbanflow.tls.certresolver=letsencrypt
+      - traefik.http.services.urbanflow.loadbalancer.server.port=80
+    networks:
+      - urbanflow
+      - coolify
+
+networks:
+  urbanflow:
+    driver: bridge
+  coolify:
+    external: true
+    name: coolify
