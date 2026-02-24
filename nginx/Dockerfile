@@ -1,7 +1,9 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Copy entire monorepo (needed for cross-package type imports)
+# Unset NODE_ENV so devDependencies get installed for build
+ENV NODE_ENV=development
+
 COPY package*.json ./
 COPY apps/frontend/package*.json ./apps/frontend/
 COPY apps/backend/package*.json ./apps/backend/
