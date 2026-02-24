@@ -39,7 +39,7 @@ export default function Onboarding() {
           {step === 0 && (
             <div className="space-y-4">
               <Field label="שם מלא" value={data.fullName} onChange={v => update('fullName', v)} placeholder="ישראל ישראלי" />
-              <Field label="מספר ת"ז" value={data.idNumber} onChange={v => update('idNumber', v)} placeholder="123456789" type="number" />
+              <Field label='מספר ת&quot;ז' value={data.idNumber} onChange={v => update('idNumber', v)} placeholder="123456789" type="number" />
               <Field label="טלפון נייד" value={data.phone} onChange={v => update('phone', v)} placeholder="050-0000000" type="tel" />
             </div>
           )}
@@ -52,7 +52,7 @@ export default function Onboarding() {
                 <Field label="קומה" value={data.floor} onChange={v => update('floor', v)} placeholder="2" type="number" />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <Field label='גודל (מ"ר)' value={data.areaSqm} onChange={v => update('areaSqm', v)} placeholder="75" type="number" />
+                <Field label='גודל (מ&quot;ר)' value={data.areaSqm} onChange={v => update('areaSqm', v)} placeholder="75" type="number" />
                 <Field label="מספר חדרים" value={data.rooms} onChange={v => update('rooms', v)} placeholder="3" type="number" />
               </div>
               <div>

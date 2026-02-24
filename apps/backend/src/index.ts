@@ -11,7 +11,7 @@ app.use(express.json())
 
 app.use('/api/trpc', createExpressMiddleware({ router: appRouter, createContext }))
 
-app.get('/health', (_, res) => res.json({ status: 'ok', app: 'urbanflow-backend' }))
+app.get('/health', (_req: import('express').Request, res: import('express').Response) => res.json({ status: 'ok', app: 'urbanflow-backend' }))
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => console.log(`🚀 UrbanFlow API running on :${PORT}`))
