@@ -1,3 +1,5 @@
+import Navbar from '../components/Navbar'
+
 const STAGES = ['סקר','ייצוג','מו"מ','הסכם','חתימות','תכנון','היתר','פינוי','בנייה','מסירה']
 const CURRENT_STAGE = 4 // חתימות
 
@@ -146,17 +148,8 @@ function ProjectTimeline() {
 
 export default function Dashboard() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100 px-4 py-4 sticky top-0 z-10">
-        <div className="max-w-lg mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="font-bold text-gray-900">שלום, יוסי</h1>
-            <p className="text-xs text-gray-500">רחוב הרצל 15, דירה 5</p>
-          </div>
-          <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">י</div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gray-50" dir="rtl">
+      <Navbar />
 
       <div className="max-w-lg mx-auto p-4 space-y-4 pb-8">
         <ProjectStatusCard />

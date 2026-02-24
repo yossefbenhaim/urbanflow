@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Navbar from '../components/Navbar'
 
 const mockTenants = [
   { id: 1, name: 'דוד כהן', unit: 'דירה 1', floor: 1, signed: true, onboarded: true, phone: '050-1111111' },
@@ -27,17 +28,8 @@ export default function CommitteeDashboard() {
   })
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100 px-4 py-4 sticky top-0 z-10">
-        <div className="max-w-lg mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="font-bold text-gray-900">ועד הבית</h1>
-            <p className="text-xs text-gray-500">רחוב הרצל 15</p>
-          </div>
-          <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">נציג ועד</span>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gray-50" dir="rtl">
+      <Navbar />
 
       {/* Tabs */}
       <div className="bg-white border-b border-gray-100 sticky top-14 z-10">

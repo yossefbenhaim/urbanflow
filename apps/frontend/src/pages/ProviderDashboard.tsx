@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Navbar from '../components/Navbar'
 
 const mockJobs = [
   { id: '1', title: 'עורך דין לייצוג דיירים', project: 'פרויקט הרצל 15', type: 'עו"ד התחדשות עירונית', location: 'תל אביב', engagement: 'ליווי מלא', published: '20/02/2026' },
@@ -21,16 +22,8 @@ export default function ProviderDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-100 px-4 py-4 sticky top-0 z-10">
-        <div className="max-w-lg mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="font-bold text-gray-900">פורטל נותן שירות</h1>
-            <p className="text-xs text-gray-500">עו"ד דנה כהן | כהן ושות'</p>
-          </div>
-          <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">מאומת ✓</span>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gray-50" dir="rtl">
+      <Navbar />
 
       <div className="bg-white border-b border-gray-100 sticky top-14 z-10">
         <div className="max-w-lg mx-auto flex">
