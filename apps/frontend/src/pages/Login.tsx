@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 export default function Login() {
@@ -14,9 +14,25 @@ export default function Login() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) setError('אימייל או סיסמה שגויים')
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error || !data.user) {
+      setError('אימייל או סיסמה שגויים')
+      setLoading(false)
+      return
+    }
+
+    // Route based on role
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .single()
+
+    const role = profile?.role
+    if (role === 'manager') navigate('/manager')
+    else if (role === 'provider') navigate('/provider')
     else navigate('/dashboard')
+
     setLoading(false)
   }
 
@@ -29,7 +45,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 flex items-center justify-center p-4" dir="rtl">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -109,6 +125,14 @@ export default function Login() {
             </form>
           )}
         </div>
+
+        {/* Register link */}
+        <p className="text-center text-sm text-gray-500 mt-4">
+          אין לך חשבון?{' '}
+          <Link to="/register" className="text-blue-600 font-medium hover:underline">
+            הרשמה
+          </Link>
+        </p>
       </div>
     </div>
   )
