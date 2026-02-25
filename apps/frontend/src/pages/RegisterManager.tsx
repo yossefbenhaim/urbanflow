@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { trpc } from '../lib/trpc'
 
 type FormData = {
   // Auth
@@ -37,7 +37,14 @@ const CITIES = [
 export default function RegisterManager() {
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
-  const [loading, setLoading] = useState(false)
+  const registerManager = trpc.auth.registerManager.useMutation({
+    onSuccess: (data) => {
+      if (data.accessToken) localStorage.setItem('sb-token', data.accessToken)
+      navigate('/manager')
+    },
+    onError: (err) => setError(err.message || 'שגיאה בהרשמה'),
+  })
+  const loading = registerManager.isPending
   const [error, setError] = useState('')
 
   const [form, setForm] = useState<FormData>({
@@ -73,70 +80,15 @@ export default function RegisterManager() {
     setStep(s => s + 1)
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     setError('')
-    setLoading(true)
-
-    // 1. Create auth user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
+    registerManager.mutate({
+      email: form.email, password: form.password,
+      fullName: form.fullName, phone: form.phone, idNumber: form.idNumber,
+      company: form.companyName,
+      licenseNumber: form.licenseNumber || undefined,
+      yearsExperience: form.experienceYears ? parseInt(form.experienceYears) : undefined,
     })
-
-    if (authError || !authData.user) {
-      setError(authError?.message === 'User already registered'
-        ? 'אימייל זה כבר רשום במערכת'
-        : 'שגיאה ביצירת החשבון')
-      setLoading(false)
-      return
-    }
-
-    const userId = authData.user.id
-
-    // 2. Update profiles
-    const { error: profileError } = await supabase.from('profiles').upsert(
-      {
-        id: userId,
-        full_name: form.fullName,
-        email: form.email,
-        phone: form.phone,
-        id_number: form.idNumber,
-        role: 'manager',
-      },
-      { onConflict: 'id' }
-    )
-    if (profileError) {
-      console.error('profile error:', profileError)
-      setError(`שגיאה בשמירת הפרופיל: ${profileError.message}`)
-      setLoading(false)
-      return
-    }
-
-    // 3. Insert manager profile
-    const { error: managerError } = await supabase.from('manager_profiles').upsert(
-      {
-        id: userId,
-        company_name: form.companyName || null,
-        company_registration: form.companyRegistration || null,
-        role_type: form.roleType,
-        license_number: form.licenseNumber || null,
-        phone: form.phone,
-        city: form.city,
-        experience_years: form.experienceYears ? parseInt(form.experienceYears) : null,
-        projects_count: form.projectsCount || null,
-      },
-      { onConflict: 'id' }
-    )
-
-    if (managerError) {
-      console.error('manager profile error:', managerError)
-      setError(`שגיאה בשמירת הפרופיל המקצועי: ${managerError.message}`)
-      setLoading(false)
-      return
-    }
-
-    setLoading(false)
-    navigate('/manager')
   }
 
   const stepTitles = ['פרטים אישיים', 'פרטים מקצועיים', 'אישור']

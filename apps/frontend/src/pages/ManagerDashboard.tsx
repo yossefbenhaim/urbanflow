@@ -1,177 +1,77 @@
-import { useState } from 'react'
 import Navbar from '../components/Navbar'
+import { trpc } from '../lib/trpc'
 
-const mockProjects = [
-  { id: '1', name: 'פרויקט הרצל 15', type: 'פינוי בינוי', buildings: 2, signed: 34, total: 48, stage: 'חתימות', value: 45000000 },
-  { id: '2', name: 'פרויקט ביאליק 8', type: 'תמ"א 38/2', buildings: 1, signed: 22, total: 30, stage: 'מו"מ', value: 18000000 },
-]
-
-type Tab = 'projects' | 'tenants' | 'invitations' | 'providers'
+const TYPE_LABELS: Record<string, string> = {
+  PINUY_BINUY: 'פינוי בינוי', TAMA_38_1: 'תמ"א 38/1',
+  TAMA_38_2: 'תמ"א 38/2', IBUY_BINUY: 'עיבוי בינוי',
+}
+const STATUS_LABELS: Record<string, string> = {
+  INITIAL: 'התחלה', SURVEY: 'סקר', REPRESENTATION: 'ייצוג',
+  NEGOTIATION: 'מו"מ', AGREEMENT: 'הסכם', SIGNATURES: 'חתימות',
+  PLANNING: 'תכנון', PERMIT: 'היתר', EVACUATION: 'פינוי',
+  CONSTRUCTION: 'בנייה', DELIVERY: 'מסירה',
+}
 
 export default function ManagerDashboard() {
-  const [selected, setSelected] = useState(mockProjects[0])
-  const [tab, setTab] = useState<Tab>('projects')
+  const { data: projects, isLoading } = trpc.manager.getProjects.useQuery()
 
-  const pct = Math.round((selected.signed / selected.total) * 100)
+  if (isLoading) return (
+    <div className="min-h-screen bg-gray-50" dir="rtl">
+      <Navbar />
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-400 text-lg">טוען...</div>
+      </div>
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
       <Navbar />
+      <div className="max-w-5xl mx-auto px-4 py-8">
 
-      <div className="max-w-2xl mx-auto p-4">
-        {/* Project selector */}
-        <div className="flex gap-3 mb-4 overflow-x-auto pb-1">
-          {mockProjects.map(p => (
-            <button key={p.id} onClick={() => setSelected(p)}
-              className={`shrink-0 px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
-                selected.id === p.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-200'
-              }`}>{p.name}</button>
-          ))}
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">לוח הבקרה — מנהל פרויקט</h1>
+            <p className="text-gray-500 text-sm mt-1">{projects?.length ?? 0} פרויקטים פעילים</p>
+          </div>
+          <button className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors">
+            + פרויקט חדש
+          </button>
         </div>
 
-        {/* Project overview */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-4">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h2 className="font-bold text-gray-900 text-lg">{selected.name}</h2>
-              <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">{selected.type}</span>
-            </div>
-            <span className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full font-medium">{selected.stage}</span>
+        {/* Projects grid */}
+        {!projects || projects.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center text-gray-400">
+            <div className="text-5xl mb-4">🏗️</div>
+            <p className="text-lg font-medium">אין פרויקטים עדיין</p>
+            <p className="text-sm mt-1">לחץ על "פרויקט חדש" כדי להתחיל</p>
           </div>
-
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            {[
-              { label: 'חתמו', value: `${selected.signed}/${selected.total}`, sub: `${pct}%`, color: 'blue' },
-              { label: 'בניינים', value: selected.buildings, color: 'gray' },
-              { label: 'ערך משוער', value: `₪${(selected.value/1000000).toFixed(0)}M`, color: 'green' },
-            ].map(s => (
-              <div key={s.label} className={`text-center p-3 bg-${s.color}-50 rounded-xl`}>
-                <p className={`text-2xl font-bold text-${s.color}-600`}>{s.value}</p>
-                {s.sub && <p className="text-xs text-gray-500">{s.sub}</p>}
-                <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="w-full bg-gray-100 rounded-full h-2">
-            <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${pct}%` }} />
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-1 mb-4 bg-gray-100 p-1 rounded-xl">
-          {([['projects','בניינים'],['tenants','דיירים'],['invitations','הזמנות'],['providers','שירותים']] as [Tab,string][]).map(([v,l]) => (
-            <button key={v} onClick={() => setTab(v)}
-              className={`flex-1 py-2 text-xs font-medium rounded-lg transition-colors ${tab === v ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'}`}>{l}</button>
-          ))}
-        </div>
-
-        {tab === 'projects' && (
-          <div className="space-y-3">
-            {[
-              { address: 'רחוב הרצל 15א', units: 24, signed: 20, committee: 'יוסי מזרחי' },
-              { address: 'רחוב הרצל 15ב', units: 24, signed: 14, committee: 'דנה לוי' },
-            ].map((b, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-100 p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <p className="font-medium text-gray-900 text-sm">{b.address}</p>
-                  <span className="text-xs text-gray-500">{b.units} יחידות</span>
-                </div>
-                <div className="flex justify-between text-xs text-gray-500 mb-2">
-                  <span>ועד: {b.committee}</span>
-                  <span className="text-blue-600 font-medium">{b.signed}/{b.units} חתמו</span>
-                </div>
-                <div className="w-full bg-gray-100 rounded-full h-1.5">
-                  <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${Math.round(b.signed/b.units*100)}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {tab === 'tenants' && (
-          <div className="space-y-2">
-            <div className="flex justify-between items-center mb-3">
-              <p className="text-sm text-gray-600">{selected.total} דיירים</p>
-              <button className="text-sm text-blue-600 font-medium">ייצוא CSV</button>
-            </div>
-            {['דוד כהן','שרה לוי','משה ישראלי','רחל ברקוביץ','יוסי אלון'].map((name, i) => (
-              <div key={i} className="bg-white rounded-xl border border-gray-100 p-3 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{name}</p>
-                  <p className="text-xs text-gray-500">דירה {i+1} | קומה {Math.ceil((i+1)/2)}</p>
-                </div>
-                <div className="flex gap-1">
-                  <span className={`text-xs px-2 py-1 rounded-full ${i < 2 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                    {i < 2 ? 'חתם' : 'ממתין'}
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {projects.map((project: any) => (
+              <div key={project.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow cursor-pointer">
+                <div className="flex items-start justify-between mb-3">
+                  <h3 className="font-semibold text-gray-900">{project.name}</h3>
+                  <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
+                    {TYPE_LABELS[project.type] ?? project.type}
                   </span>
                 </div>
+
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full">
+                    {STATUS_LABELS[project.status] ?? project.status}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-4 text-sm text-gray-500">
+                  <span>🏢 {project.buildings?.length ?? 0} בניינים</span>
+                </div>
               </div>
             ))}
           </div>
         )}
 
-        {tab === 'invitations' && (
-          <div className="space-y-4">
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <h3 className="font-semibold text-gray-900 mb-3">צור קישור הזמנה</h3>
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">בניין</label>
-                  <select className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white">
-                    <option>רחוב הרצל 15א</option>
-                    <option>רחוב הרצל 15ב</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">תפקיד</label>
-                  <select className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white">
-                    <option>דייר</option>
-                    <option>ועד בית</option>
-                  </select>
-                </div>
-                <button className="w-full bg-blue-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-blue-700">
-                  🔗 צור קישור
-                </button>
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <h3 className="font-semibold text-gray-900 mb-3">קישורים אחרונים</h3>
-              {['דירה 3 — דייר','דירה 7 — דייר'].map((link, i) => (
-                <div key={i} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                  <p className="text-sm text-gray-700">{link}</p>
-                  <span className="text-xs text-gray-400">⏳ ממתין</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {tab === 'providers' && (
-          <div className="space-y-4">
-            <button className="w-full bg-blue-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-blue-700">
-              + פרסם משרה חדשה
-            </button>
-            {[
-              { title: 'עורך דין לייצוג דיירים', type: 'עו"ד התחדשות עירונית', apps: 3, status: 'פתוח' },
-              { title: 'מפקח בנייה', type: 'מפקח', apps: 1, status: 'פתוח' },
-            ].map((job, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-100 p-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-medium text-gray-900 text-sm">{job.title}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{job.type}</p>
-                  </div>
-                  <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">{job.status}</span>
-                </div>
-                <div className="flex justify-between items-center mt-3">
-                  <p className="text-xs text-gray-500">{job.apps} מועמדויות</p>
-                  <button className="text-sm text-blue-600 font-medium">צפה →</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   )

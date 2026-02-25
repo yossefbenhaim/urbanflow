@@ -1,10 +1,12 @@
 import { router } from './middleware/auth'
+import { authRouter } from './routers/auth'
 import { tenantRouter } from './routers/tenant'
 import { managerRouter } from './routers/manager'
 import { committeeRouter } from './routers/committee'
 import { providerRouter } from './routers/provider'
 
 export const appRouter = router({
+  auth: authRouter,
   tenant: tenantRouter,
   manager: managerRouter,
   committee: committeeRouter,

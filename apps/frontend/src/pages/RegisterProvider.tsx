@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { trpc } from '../lib/trpc'
 
 type PastProject = { name: string; city: string; year: string; role: string }
 
@@ -64,7 +64,14 @@ const REGIONS = [
 export default function RegisterProvider() {
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
-  const [loading, setLoading] = useState(false)
+  const registerProvider = trpc.auth.registerProvider.useMutation({
+    onSuccess: (data) => {
+      if (data.accessToken) localStorage.setItem('sb-token', data.accessToken)
+      navigate('/provider')
+    },
+    onError: (err) => setError(err.message || 'שגיאה בהרשמה'),
+  })
+  const loading = registerProvider.isPending
   const [error, setError] = useState('')
 
   const [form, setForm] = useState<FormData>({
@@ -128,80 +135,19 @@ export default function RegisterProvider() {
     setStep(s => s + 1)
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     setError('')
-    setLoading(true)
-
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
+    registerProvider.mutate({
+      email: form.email, password: form.password,
+      fullName: form.fullName, phone: form.phone, idNumber: form.idNumber,
+      company: form.companyName || undefined,
+      serviceTypes: form.professionTypes,
+      operatingRegions: form.operatingRegions,
+      bio: form.bio || undefined,
+      licenseNumber: form.licenseNumber || undefined,
+      website: form.portfolioUrl || undefined,
+      yearsExperience: form.experienceYears ? parseInt(form.experienceYears) : undefined,
     })
-
-    if (authError || !authData.user) {
-      setError(authError?.message === 'User already registered'
-        ? 'אימייל זה כבר רשום'
-        : 'שגיאה ביצירת החשבון')
-      setLoading(false)
-      return
-    }
-
-    const userId = authData.user.id
-
-    // profiles
-    const { error: profileError } = await supabase.from('profiles').upsert(
-      {
-        id: userId,
-        full_name: form.fullName,
-        email: form.email,
-        phone: form.phone,
-        id_number: form.idNumber,
-        role: 'provider',
-      },
-      { onConflict: 'id' }
-    )
-    if (profileError) {
-      console.error('profile error:', profileError)
-      setError(`שגיאה בשמירת הפרופיל: ${profileError.message}`)
-      setLoading(false)
-      return
-    }
-
-    // provider_profiles
-    const validProjects = form.pastProjects.filter(p => p.name.trim())
-
-    const { error: providerError } = await supabase.from('provider_profiles').upsert(
-      {
-        id: userId,
-        full_name: form.fullName,
-        company: form.companyName || null,
-        id_number: form.idNumber,
-        phone: form.phone,
-        service_types: form.professionTypes,
-        profession_types: form.professionTypes,
-        license_number: form.licenseNumber || null,
-        license_authority: form.licenseAuthority || null,
-        license_expiry: form.licenseExpiry || null,
-        experience_years: form.experienceYears ? parseInt(form.experienceYears) : null,
-        pinuy_binuy_experience: form.pinuyBinuyExperience,
-        operating_regions: form.operatingRegions,
-        bio: form.bio || null,
-        website: form.portfolioUrl || null,
-        portfolio_url: form.portfolioUrl || null,
-        past_projects: validProjects.length > 0 ? validProjects : null,
-        is_verified: false,
-      },
-      { onConflict: 'id' }
-    )
-
-    if (providerError) {
-      console.error('provider profile error:', providerError)
-      setError(`שגיאה בשמירת הפרופיל: ${providerError.message}`)
-      setLoading(false)
-      return
-    }
-
-    setLoading(false)
-    navigate('/provider')
   }
 
   const stepTitles = ['פרטים אישיים', 'מקצועי ואזורים', 'פורטפוליו']

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { trpc } from '../lib/trpc'
 
 type FormData = {
   // Auth
@@ -29,7 +29,7 @@ const YEARS = Array.from({ length: 60 }, (_, i) => String(CURRENT_YEAR - i))
 export default function RegisterTenant() {
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
-  const [loading, setLoading] = useState(false)
+  const loading = registerTenant.isPending
   const [error, setError] = useState('')
 
   const [form, setForm] = useState<FormData>({
@@ -68,71 +68,25 @@ export default function RegisterTenant() {
     setStep(s => s + 1)
   }
 
-  const handleSubmit = async () => {
+  const registerTenant = trpc.auth.registerTenant.useMutation({
+    onSuccess: (data) => {
+      if (data.accessToken) localStorage.setItem('sb-token', data.accessToken)
+      navigate('/dashboard')
+    },
+    onError: (err) => setError(err.message || 'שגיאה בהרשמה'),
+  })
+
+  const handleSubmit = () => {
     setError('')
-    setLoading(true)
-
-    // 1. Create auth user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
+    registerTenant.mutate({
+      email: form.email, password: form.password,
+      fullName: form.fullName, phone: form.phone, idNumber: form.idNumber,
+      city: form.city, street: form.street, buildingNumber: form.buildingNumber,
+      floor: form.floor, apartmentSqm: form.apartmentSqm,
+      isOwner: form.isOwner,
+      moveInYear: form.moveInYear || undefined,
+      inviteCode: form.inviteCode || undefined,
     })
-
-    if (authError || !authData.user) {
-      setError(authError?.message === 'User already registered'
-        ? 'אימייל זה כבר רשום במערכת'
-        : 'שגיאה ביצירת החשבון')
-      setLoading(false)
-      return
-    }
-
-    const userId = authData.user.id
-
-    // 2. Update profiles table with role + personal info
-    const { error: profileError } = await supabase.from('profiles').upsert(
-      {
-        id: userId,
-        full_name: form.fullName,
-        email: form.email,
-        phone: form.phone,
-        id_number: form.idNumber,
-        role: 'tenant',
-      },
-      { onConflict: 'id' }
-    )
-
-    if (profileError) {
-      console.error('profile error:', profileError)
-      setError(`שגיאה בשמירת הפרופיל: ${profileError.message}`)
-      setLoading(false)
-      return
-    }
-
-    // 3. Insert tenant profile
-    const { error: tenantError } = await supabase.from('tenant_profiles').upsert(
-      {
-        user_id: userId,
-        phone: form.phone,
-        id_number: form.idNumber,
-        address: `${form.street} ${form.buildingNumber}, ${form.city}`,
-        building_number: form.buildingNumber,
-        floor: form.floor ? parseInt(form.floor) : null,
-        apartment_sqm: form.apartmentSqm ? parseFloat(form.apartmentSqm) : null,
-        is_owner: form.isOwner,
-        move_in_year: form.moveInYear ? parseInt(form.moveInYear) : null,
-        invite_code: form.inviteCode || null,
-        is_onboarded: true,
-      },
-      { onConflict: 'user_id' }
-    )
-
-    if (tenantError) {
-      console.error('tenant profile error:', tenantError)
-      // Non-fatal: user account created, profile will be set later
-    }
-
-    setLoading(false)
-    navigate('/dashboard')
   }
 
   const stepTitles = ['פרטים אישיים', 'פרטי הדירה', 'אישור']
