@@ -1,9 +1,17 @@
 {
   "name": "urbanflow",
   "private": true,
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "concurrently \"npm run dev -w apps/frontend\" \"npm run dev -w apps/backend\"",
     "build": "npm run build -w packages/shared && npm run build -w apps/frontend && npm run build -w apps/backend"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.7",
+    "vite": "^5.0.11"
   }
 }

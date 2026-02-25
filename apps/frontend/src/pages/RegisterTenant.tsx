@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 
@@ -29,7 +29,6 @@ const YEARS = Array.from({ length: 60 }, (_, i) => String(CURRENT_YEAR - i))
 export default function RegisterTenant() {
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
-  const loading = registerTenant.isPending
   const [error, setError] = useState('')
 
   const [form, setForm] = useState<FormData>({
@@ -75,6 +74,7 @@ export default function RegisterTenant() {
     },
     onError: (err) => setError(err.message || 'שגיאה בהרשמה'),
   })
+  const loading = registerTenant.isPending
 
   const handleSubmit = () => {
     setError('')
