@@ -1,4 +1,3 @@
-removed supabase from deps
 {
   "name": "@urbanflow/frontend",
   "version": "0.1.0",

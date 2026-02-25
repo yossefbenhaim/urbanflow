@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 
@@ -20,15 +21,18 @@ export function useUser() {
   const navigate = useNavigate()
   const token = localStorage.getItem('sb-token')
 
-  const { data: profile, isLoading } = trpc.auth.me.useQuery(undefined, {
+  const { data: profile, isLoading, isError } = trpc.auth.me.useQuery(undefined, {
     enabled: !!token,
     retry: false,
-    onError: () => {
-      // Token expired / invalid → go to login
+  })
+
+  // Token expired or invalid → redirect to login
+  useEffect(() => {
+    if (isError) {
       localStorage.removeItem('sb-token')
       navigate('/')
-    },
-  })
+    }
+  }, [isError, navigate])
 
   const signOut = trpc.auth.signOut.useMutation({
     onSettled: () => {
