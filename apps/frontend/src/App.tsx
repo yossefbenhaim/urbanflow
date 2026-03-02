@@ -12,34 +12,38 @@ import Profile from './pages/Profile'
 import CommitteeDashboard from './pages/CommitteeDashboard'
 import ManagerDashboard from './pages/ManagerDashboard'
 import ProviderDashboard from './pages/ProviderDashboard'
+import FaqBot from './components/FaqBot/FaqBot'
 
 export default function App() {
   return (
-    <Routes>
-      {/* Landing */}
-      <Route path="/" element={<Landing />} />
+    <>
+      <Routes>
+        {/* Landing */}
+        <Route path="/" element={<Landing />} />
 
-      {/* Auth */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/register/tenant" element={<RegisterTenant />} />
-      <Route path="/register/manager" element={<RegisterManager />} />
-      <Route path="/register/provider" element={<RegisterProvider />} />
+        {/* Auth */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/register/tenant" element={<RegisterTenant />} />
+        <Route path="/register/manager" element={<RegisterManager />} />
+        <Route path="/register/provider" element={<RegisterProvider />} />
 
-      {/* Tenant */}
-      <Route path="/onboarding" element={<Onboarding />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/documents" element={<Documents />} />
-      <Route path="/profile" element={<Profile />} />
+        {/* Tenant */}
+        <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/documents" element={<Documents />} />
+        <Route path="/profile" element={<Profile />} />
 
-      {/* Committee */}
-      <Route path="/committee/*" element={<CommitteeDashboard />} />
+        {/* Committee */}
+        <Route path="/committee/*" element={<CommitteeDashboard />} />
 
-      {/* Manager */}
-      <Route path="/manager/*" element={<ManagerDashboard />} />
+        {/* Manager */}
+        <Route path="/manager/*" element={<ManagerDashboard />} />
 
-      {/* Service Provider */}
-      <Route path="/provider/*" element={<ProviderDashboard />} />
-    </Routes>
+        {/* Service Provider */}
+        <Route path="/provider/*" element={<ProviderDashboard />} />
+      </Routes>
+      <FaqBot />
+    </>
   )
 }
