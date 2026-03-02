@@ -48,9 +48,7 @@ export default function Register() {
       <div className="w-full max-w-lg">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg">
-            <span className="text-white text-2xl font-bold">UF</span>
-          </div>
+          <img src="/logo.jpg" alt="Silver Castle" className="w-16 h-16 rounded-2xl mb-4 shadow-lg object-cover mx-auto" />
           <h1 className="text-2xl font-bold text-gray-900">הרשמה ל-Silver Castle</h1>
           <p className="text-gray-500 text-sm mt-1">בחר את סוג המשתמש שלך להמשך</p>
         </div>

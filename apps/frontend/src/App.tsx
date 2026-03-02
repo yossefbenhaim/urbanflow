@@ -1,4 +1,5 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -13,35 +14,42 @@ import CommitteeDashboard from './pages/CommitteeDashboard'
 import ManagerDashboard from './pages/ManagerDashboard'
 import ProviderDashboard from './pages/ProviderDashboard'
 import FaqBot from './components/FaqBot/FaqBot'
+import OAuthRoleSelect from './pages/OAuthRoleSelect'
+
+function OAuthCallback() {
+  const navigate = useNavigate()
+  useEffect(() => {
+    if (window.location.hash.includes('access_token')) {
+      const hash = window.location.hash.substring(1)
+      const params = new URLSearchParams(hash)
+      const token = params.get('access_token')
+      if (token) {
+        localStorage.setItem('sb-token', token)
+        navigate('/oauth-role', { replace: true })
+      }
+    }
+  }, [navigate])
+  return null
+}
 
 export default function App() {
   return (
     <>
       <Routes>
-        {/* Landing */}
         <Route path="/" element={<Landing />} />
-
-        {/* Auth */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/register/tenant" element={<RegisterTenant />} />
         <Route path="/register/manager" element={<RegisterManager />} />
         <Route path="/register/provider" element={<RegisterProvider />} />
-
-        {/* Tenant */}
         <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard" element={<><OAuthCallback /><Dashboard /></>} />
         <Route path="/documents" element={<Documents />} />
         <Route path="/profile" element={<Profile />} />
-
-        {/* Committee */}
         <Route path="/committee/*" element={<CommitteeDashboard />} />
-
-        {/* Manager */}
         <Route path="/manager/*" element={<ManagerDashboard />} />
-
-        {/* Service Provider */}
         <Route path="/provider/*" element={<ProviderDashboard />} />
+        <Route path="/oauth-role" element={<OAuthRoleSelect />} />
       </Routes>
       <FaqBot />
     </>

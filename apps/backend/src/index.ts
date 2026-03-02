@@ -15,3 +15,4 @@ app.get('/health', (_req: import('express').Request, res: import('express').Resp
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => console.log(`🚀 Silver Castle API running on :${PORT}`))
+// type declarations handled by tsconfig

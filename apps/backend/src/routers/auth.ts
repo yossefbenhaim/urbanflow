@@ -162,4 +162,25 @@ export const authRouter = router({
       }, { onConflict: 'id' })
       return { accessToken: data.session?.access_token ?? null, userId }
     }),
+
+  // ── Complete OAuth Profile ─────────────────────────────────────────────────
+  completeOAuthProfile: protectedProcedure
+    .input(z.object({
+      fullName: z.string().min(2),
+      role: z.enum(['tenant', 'manager', 'provider']),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user.id
+      const email = ctx.user.email!
+
+      const { error } = await ctx.supabase.from('profiles').upsert({
+        id: userId,
+        full_name: input.fullName,
+        email,
+        role: input.role,
+      }, { onConflict: 'id' })
+
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return { success: true, role: input.role }
+    }),
 })

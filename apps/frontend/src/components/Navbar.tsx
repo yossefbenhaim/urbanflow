@@ -30,9 +30,7 @@ export default function Navbar() {
 
         {/* Logo */}
         <Link to={dashboardLink} className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white text-sm font-bold">UF</span>
-          </div>
+          <img src="/logo.jpg" alt="Silver Castle" className="w-8 h-8 rounded-lg object-cover" />
           <span className="font-semibold text-gray-900 hidden sm:block">Silver Castle</span>
         </Link>
 
