@@ -1,4 +1,4 @@
-# Contributing to UrbanFlow
+# Contributing to Silver Castle
 
 ## Branch Strategy
 - `main` — stable, production-ready

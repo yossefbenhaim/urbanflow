@@ -9,7 +9,7 @@
     "noEmit": true,
     "skipLibCheck": true,
     "paths": {
-      "@urbanflow/backend": ["../backend/src/router"]
+      "@silver-castle/backend": ["../backend/src/router"]
     }
   },
   "include": ["src", "../backend/src/router.ts", "../backend/src/routers/*.ts", "../backend/src/middleware/auth.ts", "../backend/src/context.ts"]

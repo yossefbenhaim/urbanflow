@@ -33,7 +33,7 @@ export default function Navbar() {
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
             <span className="text-white text-sm font-bold">UF</span>
           </div>
-          <span className="font-semibold text-gray-900 hidden sm:block">UrbanFlow</span>
+          <span className="font-semibold text-gray-900 hidden sm:block">Silver Castle</span>
         </Link>
 
         {/* User menu */}

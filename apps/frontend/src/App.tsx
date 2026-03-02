@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
+import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import RegisterTenant from './pages/RegisterTenant'
@@ -15,8 +16,11 @@ import ProviderDashboard from './pages/ProviderDashboard'
 export default function App() {
   return (
     <Routes>
+      {/* Landing */}
+      <Route path="/" element={<Landing />} />
+
       {/* Auth */}
-      <Route path="/" element={<Login />} />
+      <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/register/tenant" element={<RegisterTenant />} />
       <Route path="/register/manager" element={<RegisterManager />} />
