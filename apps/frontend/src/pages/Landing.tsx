@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import styles from './Landing.module.css'
 import NumbersRain from '../components/NumbersRain'
 
@@ -22,7 +23,26 @@ const ROLES = [
   { icon: '🧑‍💼', title: 'מנהל מערכת', bullets: ['שליטה מלאה בכל ישויות', 'פתרון קונפליקטים', 'ניתוח נתונים ודוחות'] },
 ]
 
+const HERO_TEXTS = [
+  "הדירה שלך שווה יותר ממה שאתה חושב — אנחנו כאן כדי לוודא שתקבל את כל מה שמגיע לך, שקוף, מהיר, ובלי הפתעות.",
+  "עשרות מסמכים. עשרות ישיבות. ועדיין לא ברור מה קורה? Silver Castle שמה אותך במרכז — כל עדכון, כל מסמך, בלחיצה אחת.",
+  "מהרגע שחתמת — עד המפתח החדש. הכל במקום אחד.",
+]
+
 export default function Landing() {
+  const [textIdx, setTextIdx] = useState(0)
+  const [visible, setVisible] = useState(true)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setVisible(false)
+      setTimeout(() => {
+        setTextIdx(i => (i + 1) % HERO_TEXTS.length)
+        setVisible(true)
+      }, 400)
+    }, 3500)
+    return () => clearInterval(interval)
+  }, [])
   return (
     <div className={styles.page} dir="rtl">
 
@@ -53,8 +73,8 @@ export default function Landing() {
             עשרות מסמכים. עשרות ישיבות.<br />
             <span className={styles.heroGradientText}>ועדיין לא ברור מה קורה?</span>
           </h1>
-          <p className={styles.heroSub}>
-            Silver Castle שמה אותך במרכז — כל עדכון, כל מסמך, כל החלטה — בלחיצה אחת.
+          <p className={styles.heroSub} style={{ transition: "opacity 0.4s ease, transform 0.4s ease", opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(8px)" }}>
+            {HERO_TEXTS[textIdx]}
           </p>
           <div className={styles.heroButtons}>
             <Link to="/register" className={styles.heroPrimary}>התחל עכשיו בחינם</Link>
