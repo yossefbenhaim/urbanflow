@@ -14,6 +14,7 @@ import CommitteeDashboard from './pages/CommitteeDashboard'
 import ManagerDashboard from './pages/ManagerDashboard'
 import ProviderDashboard from './pages/ProviderDashboard'
 import FaqBot from './components/FaqBot/FaqBot'
+import AccessibilityWidget from './components/Accessibility/AccessibilityWidget'
 import OAuthRoleSelect from './pages/OAuthRoleSelect'
 
 function OAuthCallback() {
@@ -52,6 +53,7 @@ export default function App() {
         <Route path="/oauth-role" element={<OAuthRoleSelect />} />
       </Routes>
       <FaqBot />
+      <AccessibilityWidget />
     </>
   )
 }
