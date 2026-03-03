@@ -50,11 +50,10 @@ export default function Landing() {
         <div className={styles.heroContent}>
           <span className={styles.heroTag}>🚀 פלטפורמת ניהול התחדשות עירונית #1</span>
           <h1 className={styles.heroTitle}>
-            ניהול פינוי-בינוי.<br />
-            <span className={styles.heroGradientText}>פשוט. שקוף. יחד.</span>
+            עשרות מסמכים. עשרות ישיבות.<br />
+            <span className={styles.heroGradientText}>ועדיין לא ברור מה קורה?</span>
           </h1>
           <p className={styles.heroSub}>
-            עשרות מסמכים. עשרות ישיבות. ועדיין לא ברור מה קורה?<br />
             Silver Castle שמה אותך במרכז — כל עדכון, כל מסמך, כל החלטה — בלחיצה אחת.
           </p>
           <div className={styles.heroButtons}>
