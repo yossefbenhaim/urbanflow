@@ -159,16 +159,18 @@ export default function AccessibilityWidget() {
         </div>
       )}
 
-      {showTooltip && (
-        <div className={styles.tooltip}>
-          <span className={styles.tooltipWave}>👋</span>
-          <span>יש לך שאלה? אני כאן!</span>
-        </div>
-      )}
-      <button onClick={() => setOpen(o => !o)} className={styles.fab} aria-label="תפריט נגישות">
+      <div className={styles.fabWrap}>
+        {showTooltip && (
+          <div className={styles.tooltip}>
+            <span className={styles.tooltipWave}>👋</span>
+            <span>יש לך שאלה? אני כאן!</span>
+          </div>
+        )}
+        <button onClick={() => setOpen(o => !o)} className={styles.fab} aria-label="תפריט נגישות">
           <span style={{ fontSize: '26px', lineHeight: 1 }}>♿</span>
         {activeCount > 0 && <span className={styles.badge}>{activeCount}</span>}
-      </button>
+        </button>
+      </div>
     </div>
   )
 }

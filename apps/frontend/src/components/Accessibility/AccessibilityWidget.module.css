@@ -199,8 +199,19 @@
   color: #dc2626;
 }
 
+/* FAB wrapper for tooltip positioning */
+.fabWrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
 /* First-visit tooltip */
 .tooltip {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -213,17 +224,18 @@
   white-space: nowrap;
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
   animation: tooltipIn 0.3s ease, tooltipOut 0.4s ease 2.6s forwards;
-  order: -1;
+  pointer-events: none;
+  z-index: 1;
 }
 .tooltip::after {
   content: '';
   position: absolute;
-  bottom: -6px;
-  left: 22px;
-  width: 12px;
-  height: 12px;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
   background: #1e293b;
-  transform: rotate(45deg);
   border-radius: 2px;
 }
 .tooltipWave {
