@@ -24,9 +24,9 @@ const ROLES = [
 ]
 
 const HERO_TEXTS = [
-  "הדירה שלך שווה יותר ממה שאתה חושב — אנחנו כאן כדי לוודא שתקבל את כל מה שמגיע לך, שקוף, מהיר, ובלי הפתעות.",
-  "עשרות מסמכים. עשרות ישיבות. ועדיין לא ברור מה קורה? Silver Castle שמה אותך במרכז — כל עדכון, כל מסמך, בלחיצה אחת.",
-  "מהרגע שחתמת — עד המפתח החדש. הכל במקום אחד.",
+  "פשוט. שקוף. יחד.",
+  "ועדיין לא ברור מה קורה?",
+  "מהמפתח הישן למפתח החדש.",
 ]
 
 export default function Landing() {
@@ -73,8 +73,8 @@ export default function Landing() {
             עשרות מסמכים. עשרות ישיבות.<br />
             <span className={styles.heroGradientText}>ועדיין לא ברור מה קורה?</span>
           </h1>
-          <p className={styles.heroSub} style={{ transition: "opacity 0.4s ease, transform 0.4s ease", opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(8px)" }}>
-            {HERO_TEXTS[textIdx]}
+          <p className={styles.heroSub}>
+            Silver Castle שמה אותך במרכז — כל עדכון, כל מסמך, כל החלטה — בלחיצה אחת.
           </p>
           <div className={styles.heroButtons}>
             <Link to="/register" className={styles.heroPrimary}>התחל עכשיו בחינם</Link>
