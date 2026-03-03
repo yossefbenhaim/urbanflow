@@ -54,8 +54,8 @@ export default function Landing() {
             <span className={styles.heroGradientText}>פשוט. שקוף. יחד.</span>
           </h1>
           <p className={styles.heroSub}>
-            הפלטפורמה המובילה לניהול תהליך ההתחדשות העירונית —
-            מהדייר הראשון עד טופס 4.
+            עשרות מסמכים. עשרות ישיבות. ועדיין לא ברור מה קורה?<br />
+            Silver Castle שמה אותך במרכז — כל עדכון, כל מסמך, כל החלטה — בלחיצה אחת.
           </p>
           <div className={styles.heroButtons}>
             <Link to="/register" className={styles.heroPrimary}>התחל עכשיו בחינם</Link>
