@@ -34,6 +34,16 @@ export default function AccessibilityWidget() {
 
   const activeCount = Object.entries(s).filter(([k, v]) => k === 'fontSize' ? v > 0 : v).length
 
+  // First-visit tooltip
+  const [showTooltip, setShowTooltip] = useState(() => !localStorage.getItem('sc-a11y-seen'))
+  useEffect(() => {
+    if (showTooltip) {
+      localStorage.setItem('sc-a11y-seen', '1')
+      const t = setTimeout(() => setShowTooltip(false), 3000)
+      return () => clearTimeout(t)
+    }
+  }, [showTooltip])
+
   useEffect(() => {
     localStorage.setItem('sc-a11y', JSON.stringify(s))
     const root = document.documentElement
@@ -149,6 +159,12 @@ export default function AccessibilityWidget() {
         </div>
       )}
 
+      {showTooltip && (
+        <div className={styles.tooltip}>
+          <span className={styles.tooltipWave}>👋</span>
+          <span>יש לך שאלה? אני כאן!</span>
+        </div>
+      )}
       <button onClick={() => setOpen(o => !o)} className={styles.fab} aria-label="תפריט נגישות">
           <span style={{ fontSize: '26px', lineHeight: 1 }}>♿</span>
         {activeCount > 0 && <span className={styles.badge}>{activeCount}</span>}
