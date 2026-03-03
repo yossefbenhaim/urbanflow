@@ -147,10 +147,23 @@ export default function AccessibilityWidget() {
       )}
 
       <button onClick={() => setOpen(o => !o)} className={styles.fab} aria-label="תפריט נגישות">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-          <path d="M12 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-1 5h2l1 5 3-1 .5 2-3.5 1v5h-2v-5l-3.5-1 .5-2 3 1-1-5z"/>
-        </svg>
-        {activeCount > 0 && <span className={styles.badge}>{activeCount}</span>}
+          {open ? (
+          <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+          </svg>
+        ) : (
+          <svg viewBox="0 0 100 100" fill="currentColor" width="28" height="28">
+            {/* Head */}
+            <circle cx="50" cy="14" r="11"/>
+            {/* Body */}
+            <path d="M42 28 C42 28 38 30 38 40 L38 58 L54 58 L66 76 C67 78 70 79 72 77 C74 75 74 72 72 70 L59 50 L59 40 C59 40 62 44 65 46 C67 47 70 46 71 44 C72 42 71 39 69 38 L58 32 L54 28 Z"/>
+            {/* Wheel */}
+            <circle cx="44" cy="76" r="16" fill="none" stroke="currentColor" strokeWidth="7"/>
+            {/* Footrest */}
+            <path d="M58 58 L72 58" stroke="currentColor" strokeWidth="6" strokeLinecap="round" fill="none"/>
+          </svg>
+        )}
+        {!open && activeCount > 0 && <span className={styles.badge}>{activeCount}</span>}
       </button>
     </div>
   )
