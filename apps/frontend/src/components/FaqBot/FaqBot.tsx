@@ -89,6 +89,11 @@ interface ChatState {
 
 export default function FaqBot() {
   const [isOpen, setIsOpen] = useState(false)
+  const [showTooltip, setShowTooltip] = useState(true)
+  useEffect(() => {
+    const t = setTimeout(() => setShowTooltip(false), 3000)
+    return () => clearTimeout(t)
+  }, [])
   const [state, setState] = useState<ChatState>({
     mode: 'topics',
     selectedTopic: null,
@@ -135,11 +140,18 @@ export default function FaqBot() {
 
   return (
     <>
-      <button
-        className={styles.floatBtn}
-        onClick={() => setIsOpen(o => !o)}
-        aria-label="פתח בוט שאלות ותשובות"
-      >
+      <div className={styles.fabWrap}>
+        {showTooltip && !isOpen && (
+          <div className={styles.tooltip}>
+            <span className={styles.wave}>👋</span>
+            <span>יש לך שאלה? אני כאן!</span>
+          </div>
+        )}
+        <button
+          className={styles.floatBtn}
+          onClick={() => setIsOpen(o => !o)}
+          aria-label="פתח בוט שאלות ותשובות"
+        >
         {isOpen ? (
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="6" x2="6" y2="18" />
@@ -150,7 +162,8 @@ export default function FaqBot() {
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
         )}
-      </button>
+        </button>
+      </div>
 
       {isOpen && (
         <div className={styles.panel}>
