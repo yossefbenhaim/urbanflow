@@ -150,16 +150,7 @@ export default function AccessibilityWidget() {
       )}
 
       <button onClick={() => setOpen(o => !o)} className={styles.fab} aria-label="תפריט נגישות">
-          <svg viewBox="0 0 24 24" fill="white" width="26" height="26" xmlns="http://www.w3.org/2000/svg">
-          {/* Head */}
-          <circle cx="12" cy="3.5" r="2"/>
-          {/* Body + arm */}
-          <path d="M10 7.5C9 7.5 8 8.5 8 9.5V15H13L15.5 19.5C15.8 20.1 16.5 20.3 17.1 20C17.7 19.7 17.9 19 17.6 18.4L15 13.5V9.5C15 8.5 14.5 7.5 13.5 7.5H10Z"/>
-          {/* Wheel */}
-          <circle cx="10" cy="19" r="3.5" fill="none" stroke="white" strokeWidth="1.5"/>
-          {/* Footrest */}
-          <line x1="13" y1="15" x2="17" y2="15" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-        </svg>
+          <span style={{ fontSize: '26px', lineHeight: 1 }}>♿</span>
         {activeCount > 0 && <span className={styles.badge}>{activeCount}</span>}
       </button>
     </div>
