@@ -140,6 +140,30 @@ function ApartmentProfileWizard({ onComplete }: { onComplete: () => void }) {
 }
 
 // --- Main Dashboard ---
+function JoinProjectInline({ onJoined }: { onJoined: () => void }) {
+  const [code, setCode] = useState('')
+  const join = trpc.tenant.joinProject.useMutation({ onSuccess: onJoined })
+  return (
+    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+      <input
+        value={code}
+        onChange={e => setCode(e.target.value.toUpperCase().slice(0, 6))}
+        placeholder="קוד 6 ספרות"
+        maxLength={6}
+        style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid #fcd34d', fontSize: '13px', width: '120px', textAlign: 'center', letterSpacing: '0.15em', fontWeight: 600 }}
+      />
+      <button
+        onClick={() => join.mutate({ inviteCode: code })}
+        disabled={code.length !== 6 || join.isPending}
+        style={{ padding: '6px 14px', borderRadius: '8px', background: '#2563EB', color: '#fff', border: 'none', fontSize: '13px', fontWeight: 600, cursor: 'pointer', opacity: code.length !== 6 ? 0.5 : 1 }}
+      >
+        {join.isPending ? '...' : 'הצטרף'}
+      </button>
+      {join.isError && <span style={{ color: '#dc2626', fontSize: '12px' }}>קוד לא תקין</span>}
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const { data: myStatus, isLoading: statusLoading, refetch: refetchStatus } = trpc.tenant.getMyStatus.useQuery()
   const { data: project, isLoading } = trpc.tenant.getMyProject.useQuery()
@@ -156,16 +180,6 @@ export default function Dashboard() {
     </div>
   )
 
-  // Silver Castle flow: no project → join screen
-  if (!myStatus?.hasProject) {
-    return <JoinProjectScreen onJoined={() => refetchStatus()} />
-  }
-
-  // Silver Castle flow: has project but profile incomplete → wizard
-  if (myStatus?.hasProject && !myStatus?.profileComplete) {
-    return <ApartmentProfileWizard onComplete={() => refetchStatus()} />
-  }
-
   // Full dashboard
   const currentStage = StageIndex(project?.status)
   const signed = project?.signatures?.length ?? 0
@@ -174,6 +188,15 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
+      {/* Banner: no project */}
+      {myStatus && !myStatus.hasProject && (
+        <div style={{ background: '#fef3c7', borderBottom: '1px solid #fcd34d', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+          <span style={{ color: '#92400e', fontSize: '14px', fontWeight: 500 }}>
+            ⚠️ טרם הצטרפת לפרויקט — הכנס קוד הצטרפות שקיבלת מהמארגן שלך
+          </span>
+          <JoinProjectInline onJoined={() => refetchStatus()} />
+        </div>
+      )}
       <Navbar />
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
 
