@@ -6,6 +6,7 @@ import { managerRouter } from './routers/manager'
 import { committeeRouter } from './routers/committee'
 import { providerRouter } from './routers/provider'
 import { organizerRouter } from './routers/organizer'
+import { addressRouter } from './routers/address'
 import { chatRouter } from './routers/chat'
 import { directoryRouter } from './routers/directory'
 import { quotesRouter } from './routers/quotes'
@@ -18,6 +19,7 @@ export const appRouter = router({
   committee: committeeRouter,
   provider: providerRouter,
   organizer: organizerRouter,
+  address: addressRouter,
   chat: chatRouter,
   directory: directoryRouter,
   quotes: quotesRouter,

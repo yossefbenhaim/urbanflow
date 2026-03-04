@@ -1,15 +1,16 @@
 import { useState } from 'react'
 import Navbar from '../components/Navbar'
 import { trpc } from '../lib/trpc'
+import AddressPicker from '../components/AddressPicker/AddressPicker'
 
 export default function ManagerDashboard() {
   const { data: projects, isLoading, refetch } = trpc.organizer.getProjects.useQuery()
-  const createProject = trpc.organizer.createProject.useMutation({ onSuccess: () => { refetch(); setShowModal(false); setNewName(''); setNewAddress('') } })
+  const createProject = trpc.organizer.createProject.useMutation({ onSuccess: () => { refetch(); setShowModal(false); setNewName(''); setAddress({ city: '', street: '', buildingNumber: '' }) } })
   const inviteByEmail = trpc.organizer.inviteByEmail.useMutation({ onSuccess: () => setInviteEmail('') })
 
   const [showModal, setShowModal] = useState(false)
   const [newName, setNewName] = useState('')
-  const [newAddress, setNewAddress] = useState('')
+  const [address, setAddress] = useState({ city: '', street: '', buildingNumber: '' })
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
   const [inviteEmail, setInviteEmail] = useState('')
 
@@ -149,7 +150,7 @@ export default function ManagerDashboard() {
 
       {/* New Project Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setShowModal(false)}>
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => { setShowModal(false); setAddress({ city: '', street: '', buildingNumber: '' }) }}>
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm mx-4" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-lg font-bold text-gray-900 mb-4">פרויקט חדש</h2>
             <div className="space-y-3">
@@ -165,25 +166,19 @@ export default function ManagerDashboard() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">כתובת</label>
-                <input
-                  type="text"
-                  value={newAddress}
-                  onChange={(e) => setNewAddress(e.target.value)}
-                  placeholder="רחוב, עיר"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                <AddressPicker value={address} onChange={setAddress} />
               </div>
             </div>
             <div className="flex gap-3 mt-6">
               <button
-                onClick={() => createProject.mutate({ name: newName, address: newAddress || undefined })}
+                onClick={() => createProject.mutate({ name: newName, address: address.city && address.street ? `${address.street} ${address.buildingNumber}, ${address.city}` : undefined })}
                 disabled={!newName.trim() || createProject.isPending}
                 className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
               >
                 {createProject.isPending ? 'יוצר...' : 'צור פרויקט'}
               </button>
               <button
-                onClick={() => setShowModal(false)}
+                onClick={() => { setShowModal(false); setAddress({ city: '', street: '', buildingNumber: '' }) }}
                 className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
               >
                 ביטול
