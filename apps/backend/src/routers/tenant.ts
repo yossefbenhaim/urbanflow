@@ -3,6 +3,15 @@ import { router, protectedProcedure } from '../middleware/auth'
 import { TRPCError } from '@trpc/server'
 
 export const tenantRouter = router({
+  getMyProfile: protectedProcedure.query(async ({ ctx }) => {
+    const { data } = await ctx.supabase
+      .from('tenant_profiles')
+      .select('*')
+      .eq('user_id', ctx.user.id)
+      .single()
+    return data ?? null
+  }),
+
   getMyProject: protectedProcedure.query(async ({ ctx }) => {
     // New schema: project_tenants table
     const { data: pt } = await ctx.supabase
