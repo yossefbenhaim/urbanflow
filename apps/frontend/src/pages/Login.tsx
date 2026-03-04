@@ -1,12 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  'https://supabase.byclick.co.il',
-  'eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJyb2xlIjogImFub24iLCAiaXNzIjogInN1cGFiYXNlIiwgImlhdCI6IDE3MDAwMDAwMDAsICJleHAiOiAyMDAwMDAwMDAwfQ.wTmOz3TCdhnx-swY9p2aHf6gvg9zgI0_TLTs8W28Ris'
-)
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -27,10 +21,10 @@ export default function Login() {
   })
 
   const handleGoogle = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: 'https://urbanflow.byclick.co.il/dashboard' }
-    })
+    const SUPABASE_URL = 'https://supabase.byclick.co.il'
+    const ANON_KEY = 'eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJyb2xlIjogImFub24iLCAiaXNzIjogInN1cGFiYXNlIiwgImlhdCI6IDE3MDAwMDAwMDAsICJleHAiOiAyMDAwMDAwMDAwfQ.wTmOz3TCdhnx-swY9p2aHf6gvg9zgI0_TLTs8W28Ris'
+    const redirectTo = encodeURIComponent('https://urbanflow.byclick.co.il/dashboard')
+    window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${redirectTo}&apikey=${ANON_KEY}`
   }
 
   const handleLogin = (e: React.FormEvent) => {
