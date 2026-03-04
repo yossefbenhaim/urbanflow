@@ -4,7 +4,7 @@ import { trpc } from '../lib/trpc'
 
 const roles = [
   { key: 'tenant' as const, icon: '🏠', title: 'דייר', subtitle: 'אני גר בבניין המיועד לפינוי-בינוי' },
-  { key: 'manager' as const, icon: '🏢', title: 'מנהל פרויקט', subtitle: 'יזם / עו"ד / מנהל פרויקט' },
+  { key: 'manager' as const, icon: '🏢', title: 'מארגן דיירים', subtitle: 'יזם / עו"ד / מארגן דיירים' },
   { key: 'provider' as const, icon: '🔧', title: 'נותן שירות', subtitle: 'קבלן / אדריכל / מפקח' },
 ]
 

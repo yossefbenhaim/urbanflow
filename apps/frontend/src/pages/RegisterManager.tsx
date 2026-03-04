@@ -24,7 +24,7 @@ type FormData = {
 const ROLE_TYPES = [
   { value: 'developer', label: '🏗️ יזם נדל"ן' },
   { value: 'lawyer', label: '⚖️ עורך דין' },
-  { value: 'project_manager', label: '📋 מנהל פרויקט' },
+  { value: 'project_manager', label: '📋 מארגן דיירים' },
   { value: 'committee', label: '🏘️ ועד דיירים' },
 ]
 
@@ -104,7 +104,7 @@ export default function RegisterManager() {
           <div className="inline-flex items-center justify-center w-14 h-14 bg-purple-600 rounded-2xl mb-3 shadow-lg">
             <span className="text-2xl">🏢</span>
           </div>
-          <h1 className="text-xl font-bold text-gray-900">הרשמה כמנהל פרויקט</h1>
+          <h1 className="text-xl font-bold text-gray-900">הרשמה כמארגן דיירים</h1>
         </div>
 
         {/* Step indicator */}

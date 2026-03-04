@@ -22,8 +22,8 @@ const roles = [
   {
     key: 'manager',
     icon: '🏢',
-    title: 'מנהל פרויקט',
-    subtitle: 'יזם / עו"ד / מנהל פרויקט המלווה פינוי-בינוי',
+    title: 'מארגן דיירים',
+    subtitle: 'יזם / עו"ד / מארגן דיירים המלווה פינוי-בינוי',
     href: '/register/manager',
     border: 'border-purple-200',
     hover: 'hover:border-purple-400 hover:shadow-purple-100',

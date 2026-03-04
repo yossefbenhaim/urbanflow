@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import Navbar from '../components/Navbar'
 import { trpc } from '../lib/trpc'
 
@@ -16,13 +17,137 @@ function StageIndex(status?: string) {
   return order.indexOf(status ?? '') ?? 0
 }
 
+// --- Silver Castle: Join Project Screen ---
+function JoinProjectScreen({ onJoined }: { onJoined: () => void }) {
+  const [code, setCode] = useState('')
+  const joinProject = trpc.tenant.joinProject.useMutation({
+    onSuccess: () => onJoined(),
+  })
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center" dir="rtl">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 w-full max-w-sm mx-4 text-center">
+        <div className="text-5xl mb-4">🏢</div>
+        <h1 className="text-xl font-bold text-gray-900 mb-2">הצטרף לפרויקט</h1>
+        <p className="text-gray-500 text-sm mb-6">הזן את קוד ההצטרפות שקיבלת ממארגן הדיירים</p>
+        <input
+          type="text"
+          value={code}
+          onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 6))}
+          placeholder="XXXXXX"
+          maxLength={6}
+          className="w-full text-center text-2xl font-mono tracking-widest border-2 border-gray-200 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:border-blue-500"
+          dir="ltr"
+        />
+        {joinProject.isError && (
+          <p className="text-red-500 text-sm mb-3">קוד לא תקין, נסה שנית</p>
+        )}
+        <button
+          onClick={() => joinProject.mutate({ inviteCode: code })}
+          disabled={code.length !== 6 || joinProject.isPending}
+          className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+        >
+          {joinProject.isPending ? 'מצטרף...' : 'הצטרף'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// --- Silver Castle: Apartment Profile Wizard ---
+function ApartmentProfileWizard({ onComplete }: { onComplete: () => void }) {
+  const [form, setForm] = useState({
+    floor: '',
+    apartmentNumber: '',
+    rooms: '',
+    apartmentSizeSqm: '',
+    ownershipType: 'owner' as 'owner' | 'renter',
+  })
+  const updateProfile = trpc.tenant.updateApartmentProfile.useMutation({
+    onSuccess: () => onComplete(),
+  })
+
+  const handleSubmit = () => {
+    updateProfile.mutate({
+      floor: form.floor ? parseInt(form.floor) : undefined,
+      apartmentNumber: form.apartmentNumber || undefined,
+      rooms: form.rooms ? parseInt(form.rooms) : undefined,
+      apartmentSizeSqm: form.apartmentSizeSqm ? parseFloat(form.apartmentSizeSqm) : undefined,
+      ownershipType: form.ownershipType,
+    })
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center" dir="rtl">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 w-full max-w-sm mx-4">
+        <div className="text-4xl text-center mb-4">🏠</div>
+        <h1 className="text-xl font-bold text-gray-900 mb-1 text-center">פרטי הדירה</h1>
+        <p className="text-gray-500 text-sm mb-6 text-center">נא למלא את פרטי הדירה שלך</p>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">קומה</label>
+              <input type="number" value={form.floor} onChange={e => setForm(f => ({ ...f, floor: e.target.value }))}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">מס' דירה</label>
+              <input type="text" value={form.apartmentNumber} onChange={e => setForm(f => ({ ...f, apartmentNumber: e.target.value }))}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">חדרים</label>
+              <input type="number" value={form.rooms} onChange={e => setForm(f => ({ ...f, rooms: e.target.value }))}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">גודל (מ"ר)</label>
+              <input type="number" value={form.apartmentSizeSqm} onChange={e => setForm(f => ({ ...f, apartmentSizeSqm: e.target.value }))}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">סוג החזקה</label>
+            <div className="flex gap-3">
+              {(['owner', 'renter'] as const).map(type => (
+                <button
+                  key={type}
+                  onClick={() => setForm(f => ({ ...f, ownershipType: type }))}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                    form.ownershipType === type
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  {type === 'owner' ? '🔑 בעלים' : '🏠 שוכר'}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={handleSubmit}
+          disabled={updateProfile.isPending}
+          className="w-full mt-6 bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+        >
+          {updateProfile.isPending ? 'שומר...' : 'המשך'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// --- Main Dashboard ---
 export default function Dashboard() {
+  const { data: myStatus, isLoading: statusLoading, refetch: refetchStatus } = trpc.tenant.getMyStatus.useQuery()
   const { data: project, isLoading } = trpc.tenant.getMyProject.useQuery()
   const { data: docs } = trpc.tenant.getDocuments.useQuery()
   const { data: leadership } = trpc.tenant.getLeadership.useQuery()
   const signDoc = trpc.tenant.signDocument.useMutation()
 
-  if (isLoading) return (
+  if (statusLoading || isLoading) return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
       <Navbar />
       <div className="flex items-center justify-center h-64">
@@ -31,6 +156,17 @@ export default function Dashboard() {
     </div>
   )
 
+  // Silver Castle flow: no project → join screen
+  if (!myStatus?.hasProject) {
+    return <JoinProjectScreen onJoined={() => refetchStatus()} />
+  }
+
+  // Silver Castle flow: has project but profile incomplete → wizard
+  if (myStatus?.hasProject && !myStatus?.profileComplete) {
+    return <ApartmentProfileWizard onComplete={() => refetchStatus()} />
+  }
+
+  // Full dashboard
   const currentStage = StageIndex(project?.status)
   const signed = project?.signatures?.length ?? 0
   const total = project?.milestones?.length ?? 0
@@ -81,7 +217,7 @@ export default function Dashboard() {
         ) : (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-center text-gray-400">
             <div className="text-4xl mb-2">🏗️</div>
-            <p>טרם שויכת לפרויקט. פנה למנהל הפרויקט.</p>
+            <p>טרם שויכת לפרויקט. פנה למארגן הדיירים.</p>
           </div>
         )}
 
@@ -91,7 +227,7 @@ export default function Dashboard() {
             <h3 className="font-semibold text-gray-900 mb-4">מי מוביל</h3>
             <div className="space-y-3">
               {[
-                { label: 'מנהל פרויקט', name: leadership.manager?.full_name, phone: leadership.manager?.phone, icon: '🏢' },
+                { label: 'מארגן דיירים', name: leadership.manager?.full_name, phone: leadership.manager?.phone, icon: '🏢' },
               ].filter(p => p.name).map((p) => (
                 <div key={p.label} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
                   <span className="text-xl">{p.icon}</span>
