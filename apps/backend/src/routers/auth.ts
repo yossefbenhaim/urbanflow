@@ -167,7 +167,7 @@ export const authRouter = router({
   completeOAuthProfile: protectedProcedure
     .input(z.object({
       fullName: z.string().min(2),
-      role: z.enum(['tenant', 'manager', 'provider']),
+      role: z.enum(['tenant', 'manager', 'organizer', 'provider']),
     }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user.id
