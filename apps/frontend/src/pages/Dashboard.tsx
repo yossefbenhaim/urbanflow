@@ -169,12 +169,7 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const { data: myStatus, isLoading: statusLoading, refetch: refetchStatus } = trpc.tenant.getMyStatus.useQuery()
 
-  // Redirect to onboarding if profile not filled
-  useEffect(() => {
-    if (!statusLoading && myStatus && !myStatus.isOnboarded) {
-      navigate('/onboarding')
-    }
-  }, [statusLoading, myStatus, navigate])
+
   const { data: project, isLoading } = trpc.tenant.getMyProject.useQuery()
   const { data: docs } = trpc.tenant.getDocuments.useQuery()
   const { data: leadership } = trpc.tenant.getLeadership.useQuery()
