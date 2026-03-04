@@ -6,7 +6,7 @@ import Register from './pages/Register'
 import RegisterTenant from './pages/RegisterTenant'
 import RegisterManager from './pages/RegisterManager'
 import RegisterProvider from './pages/RegisterProvider'
-import Onboarding from './pages/Onboarding'
+import TenantOnboarding from './pages/TenantOnboarding'
 import Dashboard from './pages/Dashboard'
 import Documents from './pages/Documents'
 import Profile from './pages/Profile'
@@ -46,7 +46,7 @@ export default function App() {
         <Route path="/register/tenant" element={<RegisterTenant />} />
         <Route path="/register/manager" element={<RegisterManager />} />
         <Route path="/register/provider" element={<RegisterProvider />} />
-        <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/onboarding" element={<TenantOnboarding />} />
         <Route path="/dashboard" element={<><OAuthCallback /><Dashboard /></>} />
         <Route path="/documents" element={<Documents />} />
         <Route path="/profile" element={<Profile />} />
