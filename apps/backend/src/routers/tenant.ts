@@ -4,13 +4,18 @@ import { TRPCError } from '@trpc/server'
 
 export const tenantRouter = router({
   getMyProject: protectedProcedure.query(async ({ ctx }) => {
-    const { data: tp } = await ctx.supabase
-      .from('tenant_profiles').select('*, unit:units(*, building:buildings(*, project:projects(*)))').eq('user_id', ctx.user.id).single()
-    if (!tp) return null
-    const project = tp.unit?.building?.project
+    // New schema: project_tenants table
+    const { data: pt } = await ctx.supabase
+      .from('project_tenants')
+      .select('project_id, projects(id, name, address, invite_code, status, created_at)')
+      .eq('tenant_id', ctx.user.id)
+      .single()
+    if (!pt) return null
+    const project = (pt as any).projects
+    if (!project) return null
     const { data: milestones } = await ctx.supabase
-      .from('milestones').select('*').eq('project_id', project?.id).order('order_num')
-    return { ...project, milestones, unit: tp.unit, building: tp.unit?.building }
+      .from('milestones').select('*').eq('project_id', project.id).order('order_num')
+    return { ...project, milestones: milestones ?? [] }
   }),
 
   getDocuments: protectedProcedure.query(async ({ ctx }) => {
