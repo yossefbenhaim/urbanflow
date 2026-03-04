@@ -172,7 +172,8 @@ export default function RegisterTenant() {
             <div className="space-y-4">
               <h2 className="text-lg font-semibold text-gray-800 mb-4">פרטי הדירה</h2>
 
-              <Field label="כתובת הדירה *">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">כתובת הדירה *</label>
                 <AddressPicker
                   value={address}
                   onChange={(v) => {
@@ -182,7 +183,7 @@ export default function RegisterTenant() {
                     update('buildingNumber', v.buildingNumber)
                   }}
                 />
-              </Field>
+              </div>
 
               <Field label="מס' דירה *">
                 <input type="text" placeholder="5" value={form.apartmentNumber}
