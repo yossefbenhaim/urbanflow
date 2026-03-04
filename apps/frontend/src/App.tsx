@@ -29,7 +29,8 @@ function OAuthCallback() {
       const token = params.get('access_token')
       if (token) {
         localStorage.setItem('sb-token', token)
-        navigate('/oauth-role', { replace: true })
+        // Small delay to ensure token is stored before navigating
+        setTimeout(() => navigate('/oauth-role', { replace: true }), 50)
       }
     }
   }, [navigate])

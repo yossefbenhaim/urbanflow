@@ -13,20 +13,21 @@ export default function OAuthRoleSelect() {
   const [selectedRole, setSelectedRole] = useState<'tenant' | 'organizer' | 'provider' | null>(null)
   const [error, setError] = useState('')
 
-  const { data: me } = trpc.auth.me.useQuery()
+  const token = localStorage.getItem('sb-token')
+  const { data: me, isLoading } = trpc.auth.me.useQuery(undefined, { enabled: !!token })
 
   // Get name from Google user_metadata
   const googleName = (me as any)?.user_metadata?.full_name ?? (me as any)?.user_metadata?.name ?? ''
 
   // If user already has a role, redirect immediately
   useEffect(() => {
-    if (me?.role) {
+    if (!isLoading && me?.role) {
       const map: Record<string, string> = {
         tenant: '/dashboard', organizer: '/manager', manager: '/manager', provider: '/provider',
       }
       navigate(map[me.role] ?? '/dashboard', { replace: true })
     }
-  }, [me, navigate])
+  }, [me, isLoading, navigate])
 
   const complete = trpc.auth.completeOAuthProfile.useMutation({
     onSuccess: (data: { success: boolean; role: string }) => {
@@ -57,7 +58,7 @@ export default function OAuthRoleSelect() {
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <div style={{ fontSize: '48px', marginBottom: '12px' }}>👋</div>
           <h1 style={{ color: '#fff', fontSize: '28px', fontWeight: 700, margin: '0 0 8px' }}>
-            {googleName ? `שלום, ${googleName.split(' ')[0]}!` : 'ברוך הבא!'}
+            {isLoading ? '...' : googleName ? `שלום, ${googleName.split(' ')[0]}!` : 'ברוך הבא!'}
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.6)', margin: 0, fontSize: '15px' }}>
             רק שלב אחד לפני שמתחילים — מה התפקיד שלך?
