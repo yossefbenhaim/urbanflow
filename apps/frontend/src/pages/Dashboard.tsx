@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Navbar from '../components/Navbar'
+import { useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 
 const STAGES = ['סקר','ייצוג','מו"מ','הסכם','חתימות','תכנון','היתר','פינוי','בנייה','מסירה']
@@ -165,7 +166,15 @@ function JoinProjectInline({ onJoined }: { onJoined: () => void }) {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate()
   const { data: myStatus, isLoading: statusLoading, refetch: refetchStatus } = trpc.tenant.getMyStatus.useQuery()
+
+  // Redirect to onboarding if profile not filled
+  useEffect(() => {
+    if (!statusLoading && myStatus && !myStatus.isOnboarded) {
+      navigate('/onboarding')
+    }
+  }, [statusLoading, myStatus, navigate])
   const { data: project, isLoading } = trpc.tenant.getMyProject.useQuery()
   const { data: docs } = trpc.tenant.getDocuments.useQuery()
   const { data: leadership } = trpc.tenant.getLeadership.useQuery()

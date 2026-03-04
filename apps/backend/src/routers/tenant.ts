@@ -141,14 +141,48 @@ export const tenantRouter = router({
     }),
 
   // Silver Castle: get tenant status
+  saveProfile: protectedProcedure
+    .input(z.object({
+      idNumber: z.string().length(9),
+      phone: z.string(),
+      city: z.string(),
+      street: z.string(),
+      buildingNumber: z.string(),
+      floor: z.number(),
+      apartmentNumber: z.string(),
+      apartmentSqm: z.number(),
+      isOwner: z.boolean(),
+      moveInYear: z.number().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { error } = await ctx.supabase
+        .from('tenant_profiles')
+        .upsert({
+          user_id: ctx.user.id,
+          id_number: input.idNumber,
+          phone: input.phone,
+          address: `${input.street} ${input.buildingNumber}, ${input.city}`,
+          building_number: input.buildingNumber,
+          floor: input.floor,
+          apartment_number: input.apartmentNumber,
+          apartment_sqm: input.apartmentSqm,
+          is_owner: input.isOwner,
+          move_in_year: input.moveInYear,
+          is_onboarded: true,
+        }, { onConflict: 'user_id' })
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return { ok: true }
+    }),
+
   getMyStatus: protectedProcedure.query(async ({ ctx }) => {
     const [{ data: pt }, { data: tp }] = await Promise.all([
       ctx.supabase.from('project_tenants').select('project_id').eq('tenant_id', ctx.user.id).single(),
-      ctx.supabase.from('tenant_profiles').select('apartment_number').eq('id', ctx.user.id).single(),
+      ctx.supabase.from('tenant_profiles').select('apartment_number, is_onboarded').eq('user_id', ctx.user.id).single(),
     ])
     return {
       hasProject: !!pt?.project_id,
-      profileComplete: !!tp?.apartment_number,
+      isOnboarded: !!(tp as any)?.is_onboarded,
+      profileComplete: !!(tp as any)?.apartment_number,
     }
   }),
 })
