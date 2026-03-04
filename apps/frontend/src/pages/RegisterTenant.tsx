@@ -172,25 +172,22 @@ export default function RegisterTenant() {
             <div className="space-y-4">
               <h2 className="text-lg font-semibold text-gray-800 mb-4">פרטי הדירה</h2>
 
-              <Field label="עיר *">
-                <input type="text" placeholder="תל אביב" value={form.city}
-                  onChange={e => update('city', e.target.value)} className={inputCls} />
+              <Field label="כתובת הדירה *">
+                <AddressPicker
+                  value={address}
+                  onChange={(v) => {
+                    setAddress(v)
+                    update('city', v.city)
+                    update('street', v.street)
+                    update('buildingNumber', v.buildingNumber)
+                  }}
+                />
               </Field>
 
-              <div className="grid grid-cols-3 gap-3">
-                <Field label="רחוב *">
-                  <input type="text" placeholder="הרצל" value={form.street}
-                    onChange={e => update('street', e.target.value)} className={inputCls} />
-                </Field>
-                <Field label="מס' בניין *">
-                  <input type="text" placeholder="12" value={form.buildingNumber}
-                    onChange={e => update('buildingNumber', e.target.value)} className={inputCls} />
-                </Field>
-                <Field label="מס' דירה *">
-                  <input type="text" placeholder="5" value={form.apartmentNumber}
-                    onChange={e => update('apartmentNumber', e.target.value)} className={inputCls} />
-                </Field>
-              </div>
+              <Field label="מס' דירה *">
+                <input type="text" placeholder="5" value={form.apartmentNumber}
+                  onChange={e => update('apartmentNumber', e.target.value)} className={inputCls} />
+              </Field>
 
               <div className="grid grid-cols-2 gap-3">
                 <Field label="קומה">
