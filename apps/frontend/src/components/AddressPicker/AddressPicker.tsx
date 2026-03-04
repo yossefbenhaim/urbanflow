@@ -156,11 +156,7 @@ export default function AddressPicker({ value, onChange }: Props) {
             </span>
           </div>
           {buildingStatus === 'invalid' && (
-            <p style={{ fontSize: '11px', color: '#ef4444', margin: '4px 0 0', lineHeight: 1.4 }}>
-              {buildingCheck?.suggestion
-                ? `אין מספר בניין כזה ברחוב זה}?`
-                : 'אין מספר בניין כזה ברחוב זה'}
-            </p>
+            <p style={{ fontSize: '11px', color: '#ef4444', margin: '4px 0 0' }}>אין מספר בניין כזה ברחוב זה</p>
           )}
           {buildingStatus === 'unknown' && (
             <p style={{ fontSize: '11px', color: '#94a3b8', margin: '4px 0 0' }}>לא ניתן לאמת — המשך בכל מקרה</p>

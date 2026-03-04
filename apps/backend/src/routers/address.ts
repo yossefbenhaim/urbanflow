@@ -67,24 +67,22 @@ export const addressRouter = router({
       try {
         const address = encodeURIComponent(`${input.street} ${input.buildingNumber}`)
         const city = encodeURIComponent(input.city)
-        const url = `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?Address=${address}&City=${city}&CountryCode=ISR&f=json&maxLocations=3`
+        const url = `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?Address=${address}&City=${city}&CountryCode=ISR&f=json&maxLocations=1&outFields=Addr_type`
         const res = await fetch(url)
         const data = await res.json() as any
-        const candidates = data?.candidates ?? []
+        const best = data?.candidates?.[0]
 
-        if (!candidates.length) return { valid: false, suggestion: null }
+        if (!best) return { valid: false }
 
-        // Score >= 85 = good match
-        const best = candidates[0]
-        const valid = best.score >= 85
+        // PointAddress = exact building exists
+        // StreetAddress / StreetAddressExt = interpolated, building may not exist
+        // StreetName = street exists but number too high
+        const addrType: string = best.attributes?.Addr_type ?? ''
+        const valid = addrType === 'PointAddress' || addrType === 'Subaddress'
 
-        return {
-          valid,
-          suggestion: valid ? null : best.address ?? null,
-          score: best.score,
-        }
+        return { valid }
       } catch {
-        return { valid: null, suggestion: null }
+        return { valid: null } // unknown — don't block
       }
     }),
 })
