@@ -170,12 +170,12 @@ export default function Dashboard() {
   const { data: myStatus, isLoading: statusLoading, refetch: refetchStatus } = trpc.tenant.getMyStatus.useQuery()
 
 
-  const { data: project, isLoading } = trpc.tenant.getMyProject.useQuery()
+  const { data: project, isLoading, isFetched } = trpc.tenant.getMyProject.useQuery(undefined, { retry: false })
   const { data: docs } = trpc.tenant.getDocuments.useQuery()
   const { data: leadership } = trpc.tenant.getLeadership.useQuery()
   const signDoc = trpc.tenant.signDocument.useMutation()
 
-  if (statusLoading || isLoading) return (
+  if (statusLoading || (isLoading && !isFetched)) return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
       <Navbar />
       <div className="flex items-center justify-center h-64">
