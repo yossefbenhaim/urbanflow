@@ -44,7 +44,7 @@ export default function Login() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <img src="/logo.png" alt="Silver Castle" className="w-16 h-16 rounded-2xl mb-4 shadow-lg object-cover mx-auto block" />
+          <img src="/logo.svg" alt="Silver Castle" className="w-16 h-16 rounded-2xl mb-4 shadow-lg object-cover mx-auto block" />
           <h1 className="text-2xl font-bold text-gray-900">Silver Castle</h1>
           <p className="text-gray-500 text-sm mt-1">פלטפורמת ניהול התחדשות עירונית</p>
         </div>

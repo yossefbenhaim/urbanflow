@@ -48,7 +48,7 @@ export default function Landing() {
 
       {/* NAVBAR */}
       <nav className={styles.navbar}>
-        <Link to="/" className={styles.logo}><img src="/logo.png" alt="SC" className={styles.logoImg} />Silver <span className={styles.logoAccent}>Castle</span></Link>
+        <Link to="/" className={styles.logo}><img src="/logo.svg" alt="SC" className={styles.logoImg} />Silver <span className={styles.logoAccent}>Castle</span></Link>
         <ul className={styles.navLinks}>
           <li><a href="#how">כיצד זה עובד</a></li>
           <li><a href="#roles">למי זה מתאים</a></li>
@@ -144,7 +144,7 @@ export default function Landing() {
       <footer className={styles.footer}>
         <div className={styles.footerInner}>
           <div>
-            <div className={styles.footerLogo}><img src="/logo.png" alt="SC" className={styles.logoImg} />Silver Castle</div>
+            <div className={styles.footerLogo}><img src="/logo.svg" alt="SC" className={styles.logoImg} />Silver Castle</div>
             <p className={styles.footerDesc}>הפלטפורמה המובילה לניהול התחדשות עירונית בישראל.</p>
           </div>
           <div className={styles.footerLinks}>
