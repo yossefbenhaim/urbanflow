@@ -6,9 +6,18 @@ export const organizerRouter = router({
   createProject: protectedProcedure
     .input(z.object({ name: z.string().min(2), address: z.string().optional() }))
     .mutation(async ({ ctx, input }) => {
+      const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase()
       const { data, error } = await ctx.supabase
         .from('projects')
-        .insert({ name: input.name, address: input.address, organizer_id: ctx.user.id })
+        .insert({
+          name: input.name,
+          address: input.address,
+          organizer_id: ctx.user.id,
+          manager_id: ctx.user.id,
+          invite_code: inviteCode,
+          type: 'PINUI_BINUI',
+          status: 'INITIAL',
+        })
         .select()
         .single()
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
