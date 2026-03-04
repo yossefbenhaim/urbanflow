@@ -31,7 +31,7 @@ export const addressRouter = router({
   searchStreets: protectedProcedure
     .input(z.object({ cityName: z.string().min(1), query: z.string() }))
     .query(async ({ input }) => {
-      // First get city code
+      // Get city code
       const cityRecords = await govFetch(CITIES_RESOURCE, {
         q: input.cityName,
         limit: '5',
@@ -43,14 +43,21 @@ export const addressRouter = router({
       if (!city) return []
 
       const filters = JSON.stringify({ 'סמל_ישוב': city['סמל_ישוב'] })
-      const records = await govFetch(STREETS_RESOURCE, {
+      const params: Record<string, string> = {
         filters,
-        q: input.query || '',
-        limit: '15',
+        limit: '50',
         fields: 'שם_רחוב,סמל_רחוב',
-      })
+      }
+      // Only add q if user typed something — filters by content
+      if (input.query.trim().length >= 1) params.q = input.query.trim()
+
+      const records = await govFetch(STREETS_RESOURCE, params)
+
+      // Client-side filter: must START with query (more precise)
+      const q = input.query.trim().toLowerCase()
       return records
         .map((r: any) => ({ name: r['שם_רחוב']?.trim(), code: r['סמל_רחוב'] }))
-        .filter((r: any) => r.name)
+        .filter((r: any) => r.name && (q === '' || r.name.includes(input.query.trim())))
+        .slice(0, 30)
     }),
 })

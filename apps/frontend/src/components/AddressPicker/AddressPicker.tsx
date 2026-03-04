@@ -75,12 +75,12 @@ export default function AddressPicker({ value, onChange }: Props) {
   const [cityQuery, setCityQuery] = useState(value.city)
   const [streetQuery, setStreetQuery] = useState(value.street)
 
-  const { data: cities = [] } = trpc.address.searchCities.useQuery(
+  const { data: cities = [], isFetching: citiesLoading } = trpc.address.searchCities.useQuery(
     { query: cityQuery },
     { enabled: cityQuery.length >= 2, staleTime: 30000 }
   )
 
-  const { data: streets = [] } = trpc.address.searchStreets.useQuery(
+  const { data: streets = [], isFetching: streetsLoading } = trpc.address.searchStreets.useQuery(
     { cityName: value.city, query: streetQuery },
     { enabled: !!value.city && value.city.length >= 2, staleTime: 30000 }
   )
@@ -89,25 +89,31 @@ export default function AddressPicker({ value, onChange }: Props) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }} dir="rtl">
       <div>
         <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px' }}>עיר</label>
-        <Dropdown
-          query={cityQuery}
-          setQuery={q => { setCityQuery(q); onChange({ city: '', street: '', buildingNumber: value.buildingNumber }) }}
-          results={cities}
-          onSelect={name => { setCityQuery(name); setStreetQuery(''); onChange({ city: name, street: '', buildingNumber: value.buildingNumber }) }}
-          placeholder="חפש עיר..."
-        />
+        <div style={{ position: 'relative' }}>
+          <Dropdown
+            query={cityQuery}
+            setQuery={q => { setCityQuery(q); onChange({ city: '', street: '', buildingNumber: value.buildingNumber }) }}
+            results={cities}
+            onSelect={name => { setCityQuery(name); setStreetQuery(''); onChange({ city: name, street: '', buildingNumber: value.buildingNumber }) }}
+            placeholder="חפש עיר..."
+          />
+          {citiesLoading && <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '12px', color: '#94a3b8' }}>⏳</span>}
+        </div>
       </div>
 
       <div>
         <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px' }}>רחוב</label>
-        <Dropdown
-          query={streetQuery}
-          setQuery={q => { setStreetQuery(q); onChange({ ...value, street: '' }) }}
-          results={streets}
-          onSelect={name => { setStreetQuery(name); onChange({ ...value, street: name }) }}
-          placeholder={value.city ? 'חפש רחוב...' : 'בחר עיר תחילה'}
-          disabled={!value.city}
-        />
+        <div style={{ position: 'relative' }}>
+          <Dropdown
+            query={streetQuery}
+            setQuery={q => { setStreetQuery(q); onChange({ ...value, street: '' }) }}
+            results={streets}
+            onSelect={name => { setStreetQuery(name); onChange({ ...value, street: name }) }}
+            placeholder={value.city ? 'חפש רחוב...' : 'בחר עיר תחילה'}
+            disabled={!value.city}
+          />
+          {streetsLoading && <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '12px', color: '#94a3b8' }}>⏳</span>}
+        </div>
       </div>
 
       <div>
