@@ -204,6 +204,46 @@ export default function Dashboard() {
       <Navbar />
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
 
+        {/* Onboarding Tasks Card */}
+        {myStatus && !myStatus.isOnboarded && (
+          <div style={{
+            background: 'linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%)',
+            border: '1.5px solid #bfdbfe', borderRadius: '20px', padding: '24px',
+            boxShadow: '0 2px 16px rgba(37,99,235,0.08)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>📋</div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: '#1e293b' }}>השלם את הפרופיל שלך</h3>
+                <p style={{ margin: '2px 0 0', fontSize: '13px', color: '#64748b' }}>מלא את הפרטים כדי להשתמש בכל הפיצ׳רים</p>
+              </div>
+              <a href="/onboarding" style={{
+                marginRight: 'auto', padding: '10px 20px', borderRadius: '10px',
+                background: '#2563EB', color: '#fff', fontWeight: 700, fontSize: '14px',
+                textDecoration: 'none', whiteSpace: 'nowrap',
+              }}>מלא פרטים ←</a>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {[
+                { icon: '👤', text: 'תעודת זהות ומספר טלפון', done: !!myStatus.steps?.personal },
+                { icon: '🏠', text: 'כתובת הדירה (עיר, רחוב, מספר)', done: !!myStatus.steps?.address },
+                { icon: '📐', text: 'פרטי הדירה (קומה, גודל, שנת כניסה)', done: !!myStatus.steps?.apartment },
+              ].map((step, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                  <span style={{ fontSize: '18px' }}>{step.icon}</span>
+                  <span style={{ fontSize: '14px', color: step.done ? '#16a34a' : '#374151', flex: 1, textDecoration: step.done ? 'line-through' : 'none' }}>{step.text}</span>
+                  {step.done
+                    ? <span style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#22c55e', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '12px', fontWeight: 700 }}>✓</span>
+                    : <span style={{ width: '20px', height: '20px', borderRadius: '50%', border: '2px solid #d1d5db', display: 'inline-block' }} />
+                  }
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+
         {/* Project Status Card */}
         {project ? (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">

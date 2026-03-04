@@ -177,12 +177,19 @@ export const tenantRouter = router({
   getMyStatus: protectedProcedure.query(async ({ ctx }) => {
     const [{ data: pt }, { data: tp }] = await Promise.all([
       ctx.supabase.from('project_tenants').select('project_id').eq('tenant_id', ctx.user.id).single(),
-      ctx.supabase.from('tenant_profiles').select('apartment_number, is_onboarded').eq('user_id', ctx.user.id).single(),
+      ctx.supabase.from('tenant_profiles')
+        .select('apartment_number, is_onboarded, id_number, phone, floor, apartment_sqm')
+        .eq('user_id', ctx.user.id).single(),
     ])
+    const profile = tp as any
     return {
       hasProject: !!pt?.project_id,
-      isOnboarded: !!(tp as any)?.is_onboarded,
-      profileComplete: !!(tp as any)?.apartment_number,
+      isOnboarded: !!profile?.is_onboarded,
+      steps: {
+        personal: !!(profile?.id_number && profile?.phone),
+        address: !!(profile?.apartment_number || profile?.floor),
+        apartment: !!(profile?.apartment_sqm),
+      }
     }
   }),
 })
