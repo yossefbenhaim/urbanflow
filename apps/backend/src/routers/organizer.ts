@@ -15,7 +15,7 @@ export const organizerRouter = router({
           organizer_id: ctx.user.id,
           manager_id: ctx.user.id,
           invite_code: inviteCode,
-          type: 'PINUI_BINUI',
+          type: 'PINUY_BINUY',
           status: 'INITIAL',
         })
         .select()
