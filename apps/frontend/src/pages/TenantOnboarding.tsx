@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import AddressPicker from '../components/AddressPicker/AddressPicker'
+import Navbar from '../components/Navbar'
 
 const CURRENT_YEAR = new Date().getFullYear()
 const YEARS = Array.from({ length: 60 }, (_, i) => String(CURRENT_YEAR - i))
@@ -122,16 +123,16 @@ export default function TenantOnboarding() {
   const labelStyle = { fontSize: '13px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '5px' } as const
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} dir="rtl">
-      <div style={{ width: '100%', maxWidth: '480px' }}>
+    <div style={{ minHeight: '100vh', background: '#f8fafc' }} dir="rtl">
+      <Navbar />
+      <div style={{ maxWidth: '560px', margin: '0 auto', padding: '32px 16px' }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <img src="/logo.svg" alt="Silver Castle" style={{ height: '40px', marginBottom: '12px' }} />
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1e293b', margin: 0 }}>השלמת פרופיל דייר</h1>
-          <p style={{ color: '#64748b', fontSize: '14px', marginTop: '6px' }}>מלא את הפרטים הנדרשים כדי להתחיל</p>
+        <div style={{ marginBottom: '24px' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1e293b', margin: '0 0 4px' }}>השלמת פרופיל דייר</h1>
+          <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>מלא את הפרטים הנדרשים כדי להשתמש בכל הפיצ׳רים</p>
         </div>
 
-        <div style={{ background: '#fff', borderRadius: '20px', padding: '32px', boxShadow: '0 4px 24px rgba(0,0,0,0.07)', border: '1px solid #f1f5f9' }}>
+        <div style={{ background: '#fff', borderRadius: '20px', padding: '32px', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #f1f5f9' }}>
           <StepBar current={step} />
 
           {/* Step 1 - Personal */}
