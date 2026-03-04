@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import AddressPicker from '../components/AddressPicker/AddressPicker'
 import { useNavigate } from 'react-router-dom'
 
 const steps = ['פרטים אישיים', 'פרטי הדירה', 'אימות']
 
 export default function Onboarding() {
   const [step, setStep] = useState(0)
+  const [address, setAddress] = useState({ city: '', street: '', buildingNumber: '' })
   const [data, setData] = useState({
     fullName: '', idNumber: '', phone: '',
     address: '', unitNumber: '', floor: '', areaSqm: '', rooms: '', isOwner: 'true',
@@ -46,7 +48,16 @@ export default function Onboarding() {
 
           {step === 1 && (
             <div className="space-y-4">
-              <Field label="כתובת" value={data.address} onChange={v => update('address', v)} placeholder="רחוב הרצל 15, תל אביב" />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">כתובת *</label>
+                <AddressPicker
+                  value={address}
+                  onChange={(v) => {
+                    setAddress(v)
+                    update('address', `${v.street} ${v.buildingNumber}, ${v.city}`)
+                  }}
+                />
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="מספר דירה" value={data.unitNumber} onChange={v => update('unitNumber', v)} placeholder="5" />
                 <Field label="קומה" value={data.floor} onChange={v => update('floor', v)} placeholder="2" type="number" />
