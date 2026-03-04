@@ -82,9 +82,9 @@ export default function TenantOnboarding() {
     return null
   }
   const validateStep2 = () => {
-    if (!address.city) return 'עיר נדרשת'
-    if (!address.street) return 'רחוב נדרש'
-    if (!address.buildingNumber) return 'מספר בניין נדרש'
+    if (!address.city) return 'יש לבחור עיר מהרשימה'
+    if (!address.street) return 'יש לבחור רחוב מהרשימה'
+    if (!address.buildingNumber) return 'יש להזין מספר בניין'
     return null
   }
   const validateStep3 = () => {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
+import AddressPicker from '../components/AddressPicker/AddressPicker'
 
 type FormData = {
   // Auth
@@ -31,6 +32,7 @@ export default function RegisterTenant() {
   const [step, setStep] = useState(1)
   const [error, setError] = useState('')
 
+  const [address, setAddress] = useState({ city: '', street: '', buildingNumber: '' })
   const [form, setForm] = useState<FormData>({
     email: '', password: '', confirmPassword: '',
     fullName: '', idNumber: '', phone: '',
@@ -81,7 +83,7 @@ export default function RegisterTenant() {
     registerTenant.mutate({
       email: form.email, password: form.password,
       fullName: form.fullName, phone: form.phone, idNumber: form.idNumber,
-      city: form.city, street: form.street, buildingNumber: form.buildingNumber,
+      city: address.city, street: address.street, buildingNumber: address.buildingNumber,
       floor: form.floor, apartmentSqm: form.apartmentSqm,
       isOwner: form.isOwner,
       moveInYear: form.moveInYear || undefined,
@@ -238,7 +240,7 @@ export default function RegisterTenant() {
                 <SummaryRow label="ת.ז" value={form.idNumber} />
                 <SummaryRow label="טלפון" value={form.phone} />
                 <SummaryRow label="אימייל" value={form.email} />
-                <SummaryRow label="כתובת" value={`${form.street} ${form.buildingNumber} דירה ${form.apartmentNumber}, ${form.city}`} />
+                <SummaryRow label="כתובת" value={`${address.street} ${address.buildingNumber} דירה ${form.apartmentNumber}, ${address.city}`} />
                 {form.floor && <SummaryRow label="קומה" value={form.floor} />}
                 {form.apartmentSqm && <SummaryRow label="שטח" value={`${form.apartmentSqm} מ״ר`} />}
                 <SummaryRow label="סוג מחזיק" value={form.isOwner ? 'בעלים' : 'שוכר'} />
