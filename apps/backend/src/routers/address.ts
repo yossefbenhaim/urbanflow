@@ -13,6 +13,8 @@ async function govFetch(resource: string, params: Record<string, string>) {
   return json?.result?.records ?? []
 }
 
+const NOMINATIM = 'https://nominatim.openstreetmap.org/search'
+
 export const addressRouter = router({
   searchCities: protectedProcedure
     .input(z.object({ query: z.string().min(1) }))
@@ -59,5 +61,32 @@ export const addressRouter = router({
         .map((r: any) => ({ name: r['שם_רחוב']?.trim(), code: r['סמל_רחוב'] }))
         .filter((r: any) => r.name && (q === '' || r.name.includes(input.query.trim())))
         .slice(0, 30)
+    }),
+
+  validateBuilding: protectedProcedure
+    .input(z.object({ city: z.string(), street: z.string(), buildingNumber: z.string() }))
+    .query(async ({ input }) => {
+      try {
+        const q = encodeURIComponent(`${input.street} ${input.buildingNumber} ${input.city}`)
+        const url = `${NOMINATIM}?q=${q}&countrycodes=il&format=json&limit=3&addressdetails=1`
+        const res = await fetch(url, { headers: { 'User-Agent': 'SilverCastle/1.0' } })
+        const data = await res.json() as any[]
+        if (!data?.length) return { valid: false, suggestion: null }
+
+        // Check if any result has matching house number in the right city
+        const match = data.find((r: any) => {
+          const addr = r.address || {}
+          const houseMatch = !input.buildingNumber || addr.house_number === input.buildingNumber || r.display_name.includes(input.buildingNumber)
+          const cityMatch = r.display_name.includes(input.city)
+          return houseMatch && cityMatch
+        })
+
+        return {
+          valid: !!match,
+          suggestion: data[0]?.display_name ?? null,
+        }
+      } catch {
+        return { valid: null, suggestion: null } // null = unknown, don't block
+      }
     }),
 })
