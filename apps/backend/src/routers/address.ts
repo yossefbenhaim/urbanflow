@@ -13,8 +13,6 @@ async function govFetch(resource: string, params: Record<string, string>) {
   return json?.result?.records ?? []
 }
 
-const NOMINATIM = 'https://nominatim.openstreetmap.org/search'
-
 export const addressRouter = router({
   searchCities: protectedProcedure
     .input(z.object({ query: z.string().min(1) }))
@@ -67,26 +65,26 @@ export const addressRouter = router({
     .input(z.object({ city: z.string(), street: z.string(), buildingNumber: z.string() }))
     .query(async ({ input }) => {
       try {
-        const q = encodeURIComponent(`${input.street} ${input.buildingNumber} ${input.city}`)
-        const url = `${NOMINATIM}?q=${q}&countrycodes=il&format=json&limit=3&addressdetails=1`
-        const res = await fetch(url, { headers: { 'User-Agent': 'SilverCastle/1.0' } })
-        const data = await res.json() as any[]
-        if (!data?.length) return { valid: false, suggestion: null }
+        const address = encodeURIComponent(`${input.street} ${input.buildingNumber}`)
+        const city = encodeURIComponent(input.city)
+        const url = `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?Address=${address}&City=${city}&CountryCode=ISR&f=json&maxLocations=3`
+        const res = await fetch(url)
+        const data = await res.json() as any
+        const candidates = data?.candidates ?? []
 
-        // Check if any result has matching house number in the right city
-        const match = data.find((r: any) => {
-          const addr = r.address || {}
-          const houseMatch = !input.buildingNumber || addr.house_number === input.buildingNumber || r.display_name.includes(input.buildingNumber)
-          const cityMatch = r.display_name.includes(input.city)
-          return houseMatch && cityMatch
-        })
+        if (!candidates.length) return { valid: false, suggestion: null }
+
+        // Score >= 85 = good match
+        const best = candidates[0]
+        const valid = best.score >= 85
 
         return {
-          valid: !!match,
-          suggestion: data[0]?.display_name ?? null,
+          valid,
+          suggestion: valid ? null : best.address ?? null,
+          score: best.score,
         }
       } catch {
-        return { valid: null, suggestion: null } // null = unknown, don't block
+        return { valid: null, suggestion: null }
       }
     }),
 })
