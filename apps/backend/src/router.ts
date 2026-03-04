@@ -6,6 +6,9 @@ import { managerRouter } from './routers/manager'
 import { committeeRouter } from './routers/committee'
 import { providerRouter } from './routers/provider'
 import { organizerRouter } from './routers/organizer'
+import { chatRouter } from './routers/chat'
+import { directoryRouter } from './routers/directory'
+import { quotesRouter } from './routers/quotes'
 
 export const appRouter = router({
   auth: authRouter,
@@ -15,6 +18,9 @@ export const appRouter = router({
   committee: committeeRouter,
   provider: providerRouter,
   organizer: organizerRouter,
+  chat: chatRouter,
+  directory: directoryRouter,
+  quotes: quotesRouter,
 })
 
 export type AppRouter = typeof appRouter

@@ -24,15 +24,45 @@ export default function Navbar() {
     profile?.role === 'manager'  ? '/manager'  :
     profile?.role === 'provider' ? '/provider' : '/dashboard'
 
+  const isProviderOrDev = profile?.role === 'provider' || profile?.role === 'developer'
+
   return (
     <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm" dir="rtl">
       <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
 
-        {/* Logo */}
-        <Link to={dashboardLink} className="flex items-center gap-2">
-          <img src="/logo.svg" alt="Silver Castle" className="w-8 h-8 rounded-lg object-cover" />
-          <span className="font-semibold text-gray-900 hidden sm:block">Silver Castle</span>
-        </Link>
+        {/* Logo + nav links */}
+        <div className="flex items-center gap-6">
+          <Link to={dashboardLink} className="flex items-center gap-2">
+            <img src="/logo.svg" alt="Silver Castle" className="w-8 h-8 rounded-lg object-cover" />
+            <span className="font-semibold text-gray-900 hidden sm:block">Silver Castle</span>
+          </Link>
+
+          {!loading && profile && (
+            <div className="flex items-center gap-1">
+              {isProviderOrDev ? (
+                <Link
+                  to="/quotes"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                >
+                  📋 הצעות מחיר
+                </Link>
+              ) : (
+                <Link
+                  to="/directory"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                >
+                  🏢 שירותים
+                </Link>
+              )}
+              <Link
+                to="/chat"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+              >
+                💬 הודעות
+              </Link>
+            </div>
+          )}
+        </div>
 
         {/* User menu */}
         {!loading && (
@@ -87,6 +117,21 @@ export default function Navbar() {
                   <Link to={dashboardLink} onClick={() => setOpen(false)}
                     className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-sm text-gray-700 transition-colors">
                     <span>🏠</span> לוח הבקרה
+                  </Link>
+                  {isProviderOrDev ? (
+                    <Link to="/quotes" onClick={() => setOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-sm text-gray-700 transition-colors">
+                      <span>📋</span> הצעות מחיר
+                    </Link>
+                  ) : (
+                    <Link to="/directory" onClick={() => setOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-sm text-gray-700 transition-colors">
+                      <span>🏢</span> שירותים
+                    </Link>
+                  )}
+                  <Link to="/chat" onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-sm text-gray-700 transition-colors">
+                    <span>💬</span> הודעות
                   </Link>
                 </div>
 

@@ -13,6 +13,9 @@ import Profile from './pages/Profile'
 import CommitteeDashboard from './pages/CommitteeDashboard'
 import ManagerDashboard from './pages/ManagerDashboard'
 import ProviderDashboard from './pages/ProviderDashboard'
+import Directory from './pages/Directory'
+import ChatPage from './pages/ChatPage'
+import QuotesPage from './pages/QuotesPage'
 import FaqBot from './components/FaqBot/FaqBot'
 import AccessibilityWidget from './components/Accessibility/AccessibilityWidget'
 import OAuthRoleSelect from './pages/OAuthRoleSelect'
@@ -51,6 +54,10 @@ export default function App() {
         <Route path="/manager/*" element={<ManagerDashboard />} />
         <Route path="/provider/*" element={<ProviderDashboard />} />
         <Route path="/oauth-role" element={<OAuthRoleSelect />} />
+        <Route path="/directory" element={<Directory />} />
+        <Route path="/chat" element={<ChatPage />} />
+        <Route path="/chat/:conversationId" element={<ChatPage />} />
+        <Route path="/quotes" element={<QuotesPage />} />
       </Routes>
       <FaqBot />
       <AccessibilityWidget />

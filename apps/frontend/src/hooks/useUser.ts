@@ -8,13 +8,15 @@ export type UserProfile = {
   email: string | null
   phone: string | null
   idNumber: string | null
-  role: 'tenant' | 'manager' | 'provider' | null
+  role: 'tenant' | 'manager' | 'provider' | 'organizer' | 'developer' | null
 }
 
 export const ROLE_LABELS: Record<string, { label: string; color: string; icon: string }> = {
   tenant:   { label: 'דייר',         color: 'bg-blue-100 text-blue-700',    icon: '🏠' },
   manager:  { label: 'מנהל פרויקט', color: 'bg-purple-100 text-purple-700', icon: '🏢' },
   provider: { label: 'נותן שירות',  color: 'bg-green-100 text-green-700',   icon: '🔧' },
+  organizer: { label: 'מארגן',        color: 'bg-orange-100 text-orange-700',  icon: '📋' },
+  developer: { label: 'יזם',          color: 'bg-yellow-100 text-yellow-700',  icon: '👑' },
 }
 
 export function useUser() {
