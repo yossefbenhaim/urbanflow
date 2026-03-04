@@ -170,9 +170,11 @@ export default function Directory() {
             {filtered.map((p: any) => {
               const isDev = p.role === 'developer'
               const profile_data = isDev ? p.developer_profiles : p.provider_profiles
-              const bio = Array.isArray(profile_data) ? profile_data[0]?.bio : profile_data?.bio
-              const company = Array.isArray(profile_data) ? profile_data[0]?.company : profile_data?.company
-              const regions = Array.isArray(profile_data) ? profile_data[0]?.operating_regions : profile_data?.operating_regions
+              const pd = Array.isArray(profile_data) ? profile_data[0] : profile_data
+              const bio = pd?.bio
+              const company = pd?.company
+              const regions = pd?.operating_regions
+              const serviceTypes = pd?.service_types
 
               return (
                 <div
@@ -196,9 +198,22 @@ export default function Directory() {
                     )}
                   </div>
 
-                  {bio && <p className="text-sm text-gray-600 mb-2 line-clamp-2">{bio}</p>}
+                  {bio
+                    ? <p className="text-sm text-gray-600 mb-2 line-clamp-2">{bio}</p>
+                    : <p className="text-sm text-gray-400 mb-2 italic">לא הוזן תיאור עדיין</p>
+                  }
+                  {serviceTypes && serviceTypes.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {serviceTypes.slice(0,3).map((s: string) => (
+                        <span key={s} className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{s}</span>
+                      ))}
+                    </div>
+                  )}
                   {regions && regions.length > 0 && (
                     <p className="text-xs text-gray-400 mb-3">📍 {regions.join(', ')}</p>
+                  )}
+                  {p.phone && !bio && (
+                    <p className="text-xs text-gray-400 mb-3">📞 {p.phone}</p>
                   )}
 
                   <div className="flex gap-2 mt-3">
