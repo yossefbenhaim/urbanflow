@@ -1,88 +1,95 @@
 import { z } from 'zod'
-import { router, protectedProcedure } from '../middleware/auth'
+import { router, protectedProcedure, publicProcedure } from '../middleware/auth'
 
 const CITIES_RESOURCE = '5c78e9fa-c2e2-4771-93ff-7f400a12f7ba'
 const STREETS_RESOURCE = '9ad3862c-8391-4b2f-84a4-2d4c68625f4b'
 
-async function govFetch(resource: string, params: Record<string, string>) {
-  const url = new URL('https://data.gov.il/api/3/action/datastore_search')
-  url.searchParams.set('resource_id', resource)
-  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v)
-  const res = await fetch(url.toString())
-  const json = await res.json() as any
-  return json?.result?.records ?? []
+async function govFetch(resource: string, params: Record<string, string>, retries = 2): Promise<any[]> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const url = new URL('https://data.gov.il/api/3/action/datastore_search')
+      url.searchParams.set('resource_id', resource)
+      for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v)
+
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 8000)
+      const res = await fetch(url.toString(), { signal: controller.signal })
+      clearTimeout(timeout)
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const json = await res.json() as any
+      return json?.result?.records ?? []
+    } catch (e) {
+      if (attempt === retries) return []
+      await new Promise(r => setTimeout(r, 300 * (attempt + 1)))
+    }
+  }
+  return []
 }
 
 export const addressRouter = router({
-  searchCities: protectedProcedure
-    .input(z.object({ query: z.string().min(1) }))
+  searchCities: publicProcedure
+    .input(z.object({ query: z.string().min(2) }))
     .query(async ({ input }) => {
+      const q = input.query.trim()
       const records = await govFetch(CITIES_RESOURCE, {
-        q: input.query,
+        q,
+        limit: '30',
+        fields: 'שם_ישוב,סמל_ישוב',
+      })
+      return records
+        .map((r: any) => ({ name: (r['שם_ישוב'] ?? '').trim(), code: r['סמל_ישוב'] }))
+        .filter((r: any) => r.name && r.name.includes(q))
+        .slice(0, 12)
+    }),
+
+  searchStreets: publicProcedure
+    .input(z.object({ cityName: z.string().min(1), query: z.string().default('') }))
+    .query(async ({ input }) => {
+      const q = input.query.trim()
+
+      // Resolve city code
+      const cityRecords = await govFetch(CITIES_RESOURCE, {
+        q: input.cityName.trim(),
         limit: '10',
         fields: 'שם_ישוב,סמל_ישוב',
       })
-      return records
-        .map((r: any) => ({ name: r['שם_ישוב']?.trim(), code: r['סמל_ישוב'] }))
-        .filter((r: any) => r.name?.includes(input.query) || true)
-        .slice(0, 10)
-    }),
-
-  searchStreets: protectedProcedure
-    .input(z.object({ cityName: z.string().min(1), query: z.string() }))
-    .query(async ({ input }) => {
-      // Get city code
-      const cityRecords = await govFetch(CITIES_RESOURCE, {
-        q: input.cityName,
-        limit: '5',
-        fields: 'שם_ישוב,סמל_ישוב',
-      })
-      const city = cityRecords.find((r: any) =>
-        r['שם_ישוב']?.trim() === input.cityName.trim()
+      const city = cityRecords.find(
+        (r: any) => (r['שם_ישוב'] ?? '').trim() === input.cityName.trim()
       )
       if (!city) return []
 
-      const filters = JSON.stringify({ 'סמל_ישוב': city['סמל_ישוב'] })
       const params: Record<string, string> = {
-        filters,
-        limit: '50',
+        filters: JSON.stringify({ 'סמל_ישוב': String(city['סמל_ישוב']) }),
+        limit: '100',
         fields: 'שם_רחוב,סמל_רחוב',
       }
-      // Only add q if user typed something — filters by content
-      if (input.query.trim().length >= 1) params.q = input.query.trim()
+      if (q.length >= 1) params.q = q
 
       const records = await govFetch(STREETS_RESOURCE, params)
-
-      // Client-side filter: must START with query (more precise)
-      const q = input.query.trim().toLowerCase()
       return records
-        .map((r: any) => ({ name: r['שם_רחוב']?.trim(), code: r['סמל_רחוב'] }))
-        .filter((r: any) => r.name && (q === '' || r.name.includes(input.query.trim())))
+        .map((r: any) => ({ name: (r['שם_רחוב'] ?? '').trim(), code: r['סמל_רחוב'] }))
+        .filter((r: any) => r.name && (q === '' || r.name.includes(q)))
         .slice(0, 30)
     }),
 
-  validateBuilding: protectedProcedure
+  validateBuilding: publicProcedure
     .input(z.object({ city: z.string(), street: z.string(), buildingNumber: z.string() }))
     .query(async ({ input }) => {
       try {
         const address = encodeURIComponent(`${input.street} ${input.buildingNumber}`)
         const city = encodeURIComponent(input.city)
         const url = `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?Address=${address}&City=${city}&CountryCode=ISR&f=json&maxLocations=1&outFields=Addr_type`
-        const res = await fetch(url)
+        const controller = new AbortController()
+        setTimeout(() => controller.abort(), 6000)
+        const res = await fetch(url, { signal: controller.signal })
         const data = await res.json() as any
         const best = data?.candidates?.[0]
-
-        if (!best) return { valid: false }
-
-        // PointAddress = exact building exists
-        // StreetAddress / StreetAddressExt = interpolated, building may not exist
-        // StreetName = street exists but number too high
+        if (!best) return { valid: null }
         const addrType: string = best.attributes?.Addr_type ?? ''
-        const valid = addrType === 'PointAddress' || addrType === 'Subaddress'
-
-        return { valid }
+        return { valid: addrType === 'PointAddress' || addrType === 'Subaddress' }
       } catch {
-        return { valid: null } // unknown — don't block
+        return { valid: null }
       }
     }),
 })
