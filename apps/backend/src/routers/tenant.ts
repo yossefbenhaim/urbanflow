@@ -175,6 +175,12 @@ export const tenantRouter = router({
       idNumber: z.string().length(9), phone: z.string(), city: z.string(), street: z.string(),
       buildingNumber: z.string(), floor: z.number(), apartmentNumber: z.string(), apartmentSqm: z.number(),
       isOwner: z.boolean(), moveInYear: z.number().optional(), apartmentsInBuilding: z.number().optional(),
+      // New fields
+      specialRequests: z.array(z.string()).optional(),
+      specialRequestsNotes: z.string().optional(),
+      apartmentExtras: z.array(z.string()).optional(),
+      apartmentExtrasNotes: z.string().optional(),
+      hasSpecialAdvantage: z.boolean().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const buildingId = await findOrCreateBuilding(ctx.supabase, input.city, input.street, input.buildingNumber)
@@ -187,6 +193,11 @@ export const tenantRouter = router({
         building_number: input.buildingNumber, floor: input.floor, apartment_number: input.apartmentNumber,
         apartment_sqm: input.apartmentSqm, is_owner: input.isOwner, move_in_year: input.moveInYear,
         is_onboarded: true, building_id: buildingId, apartments_in_building: input.apartmentsInBuilding,
+        special_requests: input.specialRequests ?? [],
+        special_requests_notes: input.specialRequestsNotes ?? null,
+        apartment_extras: input.apartmentExtras ?? [],
+        apartment_extras_notes: input.apartmentExtrasNotes ?? null,
+        has_special_advantage: input.hasSpecialAdvantage ?? false,
       }, { onConflict: 'user_id' })
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
       try { await handleBuildingGroup(ctx.supabase, buildingId, ctx.user.id) } catch (e) { console.error('[buildingGroup]', e) }
