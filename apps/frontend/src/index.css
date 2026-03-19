@@ -3,3 +3,15 @@
 @tailwind components;
 @tailwind utilities;
 * { direction: rtl; font-family: 'Heebo', sans-serif; }
+
+/* Sidebar layout */
+@media (min-width: 768px) {
+  .page-content {
+    margin-right: 240px;
+  }
+}
+@media (max-width: 767px) {
+  .page-content {
+    padding-bottom: 80px;
+  }
+}

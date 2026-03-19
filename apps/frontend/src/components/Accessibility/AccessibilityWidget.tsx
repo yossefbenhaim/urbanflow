@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import styles from './AccessibilityWidget.module.css'
 
 interface A11yState {
@@ -36,6 +37,15 @@ export default function AccessibilityWidget() {
 
   // First-visit tooltip
   const [showTooltip, setShowTooltip] = useState(() => !localStorage.getItem('sc-a11y-seen'))
+  const location = useLocation()
+  const isLandingPage = location.pathname === '/'
+
+  // Listen for external trigger from Navbar drawer
+  useEffect(() => {
+    const handler = () => setOpen(true)
+    window.addEventListener('open-accessibility', handler)
+    return () => window.removeEventListener('open-accessibility', handler)
+  }, [])
   useEffect(() => {
     if (showTooltip) {
       localStorage.setItem('sc-a11y-seen', '1')
@@ -159,7 +169,7 @@ export default function AccessibilityWidget() {
         </div>
       )}
 
-      <div className={styles.fabWrap}>
+      <div className={styles.fabWrap} style={{ display: isLandingPage ? undefined : 'none' }}>
         {showTooltip && (
           <div className={styles.tooltip}>
             <span className={styles.tooltipWave}>👋</span>

@@ -66,7 +66,7 @@ export default function RegisterProvider() {
   const [step, setStep] = useState(1)
   const registerProvider = trpc.auth.registerProvider.useMutation({
     onSuccess: (data) => {
-      if (data.accessToken) localStorage.setItem('sb-token', data.accessToken)
+      if (data.accessToken) { localStorage.setItem('sb-token', data.accessToken); if ((data as any).refreshToken) localStorage.setItem('sb-refresh-token', (data as any).refreshToken) }
       navigate('/provider')
     },
     onError: (err) => setError(err.message || 'שגיאה בהרשמה'),

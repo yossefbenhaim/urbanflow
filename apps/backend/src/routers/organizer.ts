@@ -33,12 +33,22 @@ export const organizerRouter = router({
     return data ?? []
   }),
 
+  getMyProjects: protectedProcedure.query(async ({ ctx }) => {
+    const { data, error } = await ctx.supabase
+      .from('projects')
+      .select('*')
+      .eq('organizer_id', ctx.user.id)
+      .order('created_at', { ascending: false })
+    if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+    return data ?? []
+  }),
+
   getProjectTenants: protectedProcedure
     .input(z.object({ projectId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       const { data } = await ctx.supabase
         .from('project_tenants')
-        .select('*, profiles(id, full_name, email, phone)')
+        .select('*, profiles(id, full_name, email, phone, is_building_representative)')
         .eq('project_id', input.projectId)
       return data ?? []
     }),
@@ -62,5 +72,122 @@ export const organizerRouter = router({
         .eq('project_id', input.projectId)
         .order('sent_at', { ascending: false })
       return data ?? []
+    }),
+
+  joinByCode: protectedProcedure
+    .input(z.object({ code: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { data: project } = await ctx.supabase
+        .from('projects')
+        .select('id, name, organizer_id')
+        .eq('invite_code', input.code.toUpperCase())
+        .single()
+      if (!project) throw new TRPCError({ code: 'NOT_FOUND', message: 'קוד לא תקף' })
+
+      const { data: existing } = await ctx.supabase
+        .from('project_tenants')
+        .select('tenant_id')
+        .eq('project_id', project.id)
+        .eq('tenant_id', ctx.user.id)
+        .single()
+      if (existing) return { projectId: project.id, projectName: project.name, alreadyMember: true }
+
+      await ctx.supabase.from('project_tenants').insert({
+        project_id: project.id,
+        tenant_id: ctx.user.id,
+        status: 'active',
+      })
+      return { projectId: project.id, projectName: project.name, alreadyMember: false }
+    }),
+
+  saveContract: protectedProcedure
+    .input(z.object({
+      projectId: z.string().uuid(),
+      startDate: z.string(),
+      endDate: z.string(),
+      fileUrl: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { error } = await ctx.supabase
+        .from('projects')
+        .update({
+          contract_start_date: input.startDate,
+          contract_end_date: input.endDate,
+          contract_file_url: input.fileUrl ?? null,
+          contract_signed_at: new Date().toISOString(),
+          contract_signed_by: ctx.user.id,
+        })
+        .eq('id', input.projectId)
+        .eq('organizer_id', ctx.user.id)
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return { saved: true }
+    }),
+
+  getProjectGroup: protectedProcedure
+    .input(z.object({ projectId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data: buildings } = await ctx.supabase
+        .from('buildings')
+        .select('id')
+        .eq('project_id', input.projectId)
+      if (!buildings || buildings.length === 0) return null
+      const buildingIds = buildings.map((b: { id: string }) => b.id)
+      const { data: group } = await ctx.supabase
+        .from('building_groups')
+        .select('*')
+        .in('building_id', buildingIds)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+      return group ?? null
+    }),
+
+  createProjectGroup: protectedProcedure
+    .input(z.object({ projectId: z.string().uuid(), name: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { data: buildings } = await ctx.supabase
+        .from('buildings')
+        .select('id')
+        .eq('project_id', input.projectId)
+      let buildingId: string
+      if (!buildings || buildings.length === 0) {
+        const { data: project } = await ctx.supabase.from('projects').select('name, address').eq('id', input.projectId).single()
+        const { data: building, error: bErr } = await ctx.supabase
+          .from('buildings')
+          .insert({ project_id: input.projectId, name: project?.name ?? 'בניין', address: project?.address ?? '' })
+          .select('id').single()
+        if (bErr) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: bErr.message })
+        buildingId = building.id
+      } else {
+        buildingId = (buildings as { id: string }[])[0].id
+      }
+      const { data: group, error } = await ctx.supabase
+        .from('building_groups')
+        .insert({ building_id: buildingId, name: input.name })
+        .select().single()
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      await ctx.supabase.from('building_group_members').insert({ group_id: group.id, user_id: ctx.user.id })
+      return group
+    }),
+
+  getGroupMessages: protectedProcedure
+    .input(z.object({ groupId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data } = await ctx.supabase
+        .from('group_messages')
+        .select('*, sender:profiles!group_messages_sender_id_fkey(id, full_name)')
+        .eq('group_id', input.groupId)
+        .order('created_at', { ascending: true })
+      return data ?? []
+    }),
+
+  sendGroupMessage: protectedProcedure
+    .input(z.object({ groupId: z.string().uuid(), content: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const { error } = await ctx.supabase
+        .from('group_messages')
+        .insert({ group_id: input.groupId, sender_id: ctx.user.id, content: input.content })
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return { sent: true }
     }),
 })

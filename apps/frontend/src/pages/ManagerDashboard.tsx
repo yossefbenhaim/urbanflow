@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Navbar from '../components/Navbar'
 import { trpc } from '../lib/trpc'
 import AddressPicker from '../components/AddressPicker/AddressPicker'
+import BuildingLoader from '../components/BuildingLoader'
 
 export default function ManagerDashboard() {
   const { data: projects, isLoading, refetch } = trpc.organizer.getProjects.useQuery()
@@ -21,14 +22,7 @@ export default function ManagerDashboard() {
 
   const selectedProject = projects?.find((p: any) => p.id === selectedProjectId)
 
-  if (isLoading) return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
-      <Navbar />
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-400 text-lg">טוען...</div>
-      </div>
-    </div>
-  )
+  if (isLoading) return (<div className="flex justify-center items-center h-64"><BuildingLoader size="lg" /></div>)
 
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">

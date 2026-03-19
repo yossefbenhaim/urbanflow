@@ -71,7 +71,7 @@ export default function RegisterTenant() {
 
   const registerTenant = trpc.auth.registerTenant.useMutation({
     onSuccess: (data) => {
-      if (data.accessToken) localStorage.setItem('sb-token', data.accessToken)
+      if (data.accessToken) { localStorage.setItem('sb-token', data.accessToken); if ((data as any).refreshToken) localStorage.setItem('sb-refresh-token', (data as any).refreshToken) }
       navigate('/dashboard')
     },
     onError: (err) => setError(err.message || 'שגיאה בהרשמה'),

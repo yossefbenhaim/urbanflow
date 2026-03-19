@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar'
 import { useUser, ROLE_LABELS } from '../hooks/useUser'
 import { trpc } from '../lib/trpc'
 import AddressPicker from '../components/AddressPicker/AddressPicker'
+import BuildingLoader from '../components/BuildingLoader'
 
 const CURRENT_YEAR = new Date().getFullYear()
 const YEARS = Array.from({ length: 60 }, (_, i) => String(CURRENT_YEAR - i))
@@ -124,7 +125,7 @@ export default function Profile() {
       <div style={{ maxWidth: '600px', margin: '0 auto', padding: '32px 16px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1e293b', margin: '0 0 24px' }}>הפרופיל שלי</h1>
 
-        {loading ? <div style={{ textAlign: 'center', color: '#9ca3af', padding: '48px' }}>טוען...</div> : (
+        {loading ? <div style={{ textAlign: "center", padding: "48px" }}><BuildingLoader size="lg" /></div> : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
             {/* Role badge */}

@@ -18,6 +18,7 @@ type FormData = {
   apartmentSqm: string
   isOwner: boolean
   moveInYear: string
+  apartmentsInBuilding: string
 }
 
 const STEPS = [
@@ -66,7 +67,7 @@ export default function TenantOnboarding() {
     idNumber: '', phone: '',
     city: '', street: '', buildingNumber: '',
     floor: '', apartmentNumber: '', apartmentSqm: '',
-    isOwner: true, moveInYear: '',
+    isOwner: true, moveInYear: '', apartmentsInBuilding: '',
   })
 
   const update = (field: keyof FormData, value: string | boolean) =>
@@ -86,6 +87,7 @@ export default function TenantOnboarding() {
     if (!address.city) return 'יש לבחור עיר מהרשימה'
     if (!address.street) return 'יש לבחור רחוב מהרשימה'
     if (!address.buildingNumber) return 'יש להזין מספר בניין'
+    if (!form.apartmentsInBuilding || parseInt(form.apartmentsInBuilding) < 2) return 'יש להזין מספר דירות בבניין (מינימום 2)'
     return null
   }
   const validateStep3 = () => {
@@ -112,6 +114,7 @@ export default function TenantOnboarding() {
       apartmentSqm: parseFloat(form.apartmentSqm),
       isOwner: form.isOwner,
       moveInYear: form.moveInYear ? parseInt(form.moveInYear) : undefined,
+      apartmentsInBuilding: form.apartmentsInBuilding ? parseInt(form.apartmentsInBuilding) : undefined,
     })
   }
 
@@ -157,6 +160,18 @@ export default function TenantOnboarding() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#1e293b', margin: '0 0 4px' }}>🏠 כתובת הדירה</h2>
               <AddressPicker value={address} onChange={setAddress} />
+              <div>
+                <label style={labelStyle}>כמה דירות יש בבניין? *</label>
+                <input
+                  style={inputStyle}
+                  placeholder="לדוג׳ 24"
+                  type="number"
+                  min="2"
+                  value={form.apartmentsInBuilding}
+                  onChange={e => update('apartmentsInBuilding', e.target.value)}
+                />
+                <p style={{ fontSize: '11px', color: '#94a3b8', margin: '4px 0 0', lineHeight: 1.4 }}>מידע זה יסייע בארגון הדיירים</p>
+              </div>
             </div>
           )}
 

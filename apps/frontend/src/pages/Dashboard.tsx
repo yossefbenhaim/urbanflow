@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Navbar from '../components/Navbar'
+import BuildingLoader from '../components/BuildingLoader'
 import { useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 
@@ -26,7 +27,7 @@ function JoinProjectScreen({ onJoined }: { onJoined: () => void }) {
   })
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center" dir="rtl">
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f9fafb" }} dir="rtl">
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 w-full max-w-sm mx-4 text-center">
         <div className="text-5xl mb-4">🏢</div>
         <h1 className="text-xl font-bold text-gray-900 mb-2">הצטרף לפרויקט</h1>
@@ -165,9 +166,41 @@ function JoinProjectInline({ onJoined }: { onJoined: () => void }) {
   )
 }
 
+function TaskItem({ task }: { task: { icon: string; text: string; link: string; info: string } }) {
+  const [showInfo, setShowInfo] = useState(false)
+  return (
+    <div style={{ position: 'relative' }}>
+      <a href={task.link} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', background: '#fff', borderRadius: '10px', border: '1px solid #e9d5ff', textDecoration: 'none' }}>
+        <span style={{ fontSize: '18px' }}>{task.icon}</span>
+        <span style={{ fontSize: '14px', color: '#1e293b', fontWeight: 500, flex: 1 }}>{task.text}</span>
+        <button
+          onPointerDown={e => { e.preventDefault(); e.stopPropagation(); setShowInfo(v => !v) }}
+          style={{ background: showInfo ? '#7c3aed' : '#f3f4f6', border: 'none', borderRadius: '50%', width: 22, height: 22, fontSize: 12, cursor: 'pointer', color: showInfo ? '#fff' : '#6b7280', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+          ?
+        </button>
+        <span style={{ color: '#7c3aed', fontSize: 16 }}>←</span>
+      </a>
+      {showInfo && (
+        <div style={{
+          position: 'absolute', top: '100%', right: 0, left: 0, zIndex: 50, marginTop: 4,
+          background: '#1e1b4b', color: '#e0e7ff', fontSize: 13, lineHeight: 1.6,
+          borderRadius: 12, padding: '12px 14px', boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+            <span>{task.info}</span>
+            <button onPointerDown={() => setShowInfo(false)} style={{ background: 'none', border: 'none', color: '#a5b4fc', cursor: 'pointer', fontSize: 16, flexShrink: 0 }}>✕</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const navigate = useNavigate()
   const { data: myStatus, isLoading: statusLoading, refetch: refetchStatus } = trpc.tenant.getMyStatus.useQuery()
+  const { data: myRole } = trpc.tenant.getMyRole.useQuery()
+  const { data: buildingGroup } = trpc.tenant.getMyBuildingGroup.useQuery()
 
 
   const { data: project, isLoading, isFetched } = trpc.tenant.getMyProject.useQuery(undefined, { retry: false })
@@ -175,12 +208,10 @@ export default function Dashboard() {
   const { data: leadership } = trpc.tenant.getLeadership.useQuery()
   const signDoc = trpc.tenant.signDocument.useMutation()
 
+  // Silent load — LoadingScreen already covers initial wait
   if (statusLoading || (isLoading && !isFetched)) return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
       <Navbar />
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-400 text-lg">טוען...</div>
-      </div>
     </div>
   )
 
@@ -202,6 +233,13 @@ export default function Dashboard() {
         </div>
       )}
       <Navbar />
+      {(myRole as any)?.isRepresentative && (
+        <div style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ fontSize: '20px' }}>🏛️</span>
+          <span style={{ color: '#e0e7ff', fontWeight: 700, fontSize: '15px' }}>נציג ועד הבניין</span>
+          <span style={{ marginRight: 'auto', background: 'rgba(255,255,255,0.15)', color: '#c7d2fe', fontSize: '12px', padding: '4px 10px', borderRadius: '20px' }}>הרשאות מורחבות פעילות</span>
+        </div>
+      )}
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
 
         {/* Onboarding Tasks Card */}
@@ -243,6 +281,63 @@ export default function Dashboard() {
           </div>
         )}
 
+
+        {/* Building Group Card */}
+        {buildingGroup && (
+          <a
+            href={'/building-chat/' + (buildingGroup as any).id}
+            style={{ textDecoration: 'none', display: 'block' }}
+          >
+            <div style={{
+              background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+              borderRadius: '20px', padding: '20px',
+              boxShadow: '0 4px 16px rgba(124,58,237,0.35)',
+              cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div style={{ width: '50px', height: '50px', borderRadius: '14px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px', flexShrink: 0 }}>💬</div>
+                <div style={{ flex: 1 }}>
+                  <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: '#fff' }}>קבוצת הבניין שלי</h3>
+                  <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.8)' }}>לחץ לכניסה לצ׳אט עם הדיירים, סקרים ועוד</p>
+                </div>
+                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '24px' }}>←</span>
+              </div>
+            </div>
+          </a>
+        )}
+
+        {/* Representative Tasks */}
+        {(myRole as any)?.isRepresentative && (
+          <div style={{ background: 'linear-gradient(135deg, #ede9fe 0%, #f5f3ff 100%)', border: '1.5px solid #c4b5fd', borderRadius: '20px', padding: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>🏛️</div>
+              <div style={{ flex: 1 }}>
+                <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: '#1e293b' }}>משימות הועד</h3>
+                <p style={{ margin: '2px 0 0', fontSize: '13px', color: '#64748b' }}>פעולות נדרשות בשם הבניין</p>
+              </div>
+              <button
+                onClick={() => window.dispatchEvent(new Event('open-faqbot-committee'))}
+                style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: '#fff', border: 'none', borderRadius: 12, padding: '8px 14px', cursor: 'pointer', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, boxShadow: '0 2px 8px rgba(124,58,237,0.3)' }}
+              >
+                📖 מדריך
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {[
+                { icon: '📋', text: 'בחר ספק לפרויקט', link: '/directory',
+                  info: 'בחר ספק מקצועי (עורך דין, שמאי, אדריכל) שילווה את הפרויקט. בחירה נכונה תאיץ את קידום הפינוי-בינוי ותגן על זכויות הדיירים.' },
+                { icon: '📊', text: 'מעקב הצבעות דיירים', link: '/votes-tracker',
+                  info: 'עקוב מי הצביע ומי לא בסקרים הפתוחים. שלח תזכורות לדיירים שלא הצביעו כדי להגיע ל-60% הנדרשים לקבלת החלטה.' },
+                { icon: '🏛️', text: 'פעולות ועד', link: '/committee-actions',
+                  info: 'יצירת סקרים, שליחת הודעות לדיירים, קביעת ישיבות, העלאת מסמכים וניהול חתימות — כל הכלים לניהול פרויקט בינוי.' },
+                { icon: '📝', text: 'מסמכים וחתימות', link: '/documents',
+                  info: 'נהל חוזים, פרוטוקולים ומסמכים חשובים. איסוף חתימות דיגיטלי מהדיירים מאיץ תהליכים ומונע עיכובים בפרויקט.' },
+              ].map((task, i) => (
+                <TaskItem key={i} task={task} />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Project Status Card */}
         {project ? (

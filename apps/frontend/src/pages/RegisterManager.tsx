@@ -39,7 +39,7 @@ export default function RegisterManager() {
   const [step, setStep] = useState(1)
   const registerManager = trpc.auth.registerManager.useMutation({
     onSuccess: (data) => {
-      if (data.accessToken) localStorage.setItem('sb-token', data.accessToken)
+      if (data.accessToken) { localStorage.setItem('sb-token', data.accessToken); if ((data as any).refreshToken) localStorage.setItem('sb-refresh-token', (data as any).refreshToken) }
       navigate('/manager')
     },
     onError: (err) => setError(err.message || 'שגיאה בהרשמה'),

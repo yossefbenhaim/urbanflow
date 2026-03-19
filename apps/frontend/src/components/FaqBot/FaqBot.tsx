@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import styles from './FaqBot.module.css'
 
 interface Question {
@@ -15,6 +16,63 @@ interface Topic {
 }
 
 const FAQ_DATA: Topic[] = [
+  {
+    id: 'committee',
+    topic: 'מדריך ועד הבניין',
+    icon: '🏛️',
+    questions: [
+      {
+        id: 'c1',
+        q: 'מה תפקיד נציג הועד?',
+        a: 'נציג הועד הוא הגורם המרכזי שמייצג את כל דיירי הבניין מול היזם, עורך הדין והרשויות. תפקידו: לאסוף חתימות, לנהל סקרים, לתאם ישיבות ולוודא שזכויות כל הדיירים מוגנות לאורך כל התהליך.'
+      },
+      {
+        id: 'c2',
+        q: 'שלב 1 — איך מתחילים? (ארגון הדיירים)',
+        a: '🏁 השלב הראשון הוא ארגון הדיירים וקבלת ייצוג. שתף את כל הדיירים בקבוצת הבניין, הצג את עצמך כנציג ועד, וקבל הסכמה ב-60% מהדיירים לפחות. ב-Silver Castle תפתח סקר "בחירת נציג ועד" לצורך כך.'
+      },
+      {
+        id: 'c3',
+        q: 'שלב 2 — בחירת עורך דין לדיירים',
+        a: '⚖️ לאחר ארגון הדיירים, חיוני לבחור עורך דין שמייצג את הדיירים (לא את היזם). עורך הדין יגן על זכויותיכם, יבדוק את ההסכמות ויוודא שהתנאים הוגנים. השתמש ב-Directory של Silver Castle למצוא עורך דין מנוסה בתחום.'
+      },
+      {
+        id: 'c4',
+        q: 'שלב 3 — פרסום מכרז בין יזמים',
+        a: '🏗️ אחרי מינוי עורך הדין, פרסמו מכרז ליזמים ובקשו הצעות. השוו הצעות לפי: שטח הדירה החדשה, תקופת שכר הדירה החלופי, לוח זמנים, ניסיון היזם. אל תקבלו הצעה ראשונה — השוואה מביאה תנאים טובים יותר.'
+      },
+      {
+        id: 'c5',
+        q: 'שלב 4 — חתימה על הסכם עקרונות',
+        a: '📝 לאחר בחירת יזם, נחתם "הסכם עקרונות" הכולל את כל ההסכמות הבסיסיות. חיוני שעורך הדין שלכם יעבור על כל סעיף. הסכם זה הוא הבסיס לכל ההסכמים הבאים — שנה קשה בשלב הזה קלה יותר מלשנות אחרי.'
+      },
+      {
+        id: 'c6',
+        q: 'שלב 5 — קידום תוכנית בנייה ואיסוף חתימות',
+        a: '✍️ בשלב זה נדרשות חתימות של 80% מהדיירים לפחות. השתמש בסקרים ובפעולות הועד ב-Silver Castle לשלוח תזכורות ולעקוב מי עוד לא חתם. דיירים שמסרבים — שוחח איתם אישית להבין מה החשש שלהם.'
+      },
+      {
+        id: 'c7',
+        q: 'שלב 6 — תהליך הוועדות (2-4 שנים)',
+        a: '🏛️ לאחר איסוף החתימות, עורך הדין מגיש תוכניות לוועדה המחוזית. שלב זה לוקח 2-4 שנים. תפקידך כנציג ועד: לעדכן את הדיירים בהתקדמות, לתאם ישיבות מידע, ולוודא שהדיירים נשארים מעודכנים ומחויבים לתהליך.'
+      },
+      {
+        id: 'c8',
+        q: 'שלב 7 — בנייה ומסירת מפתח',
+        a: '🔑 לאחר קבלת היתר בנייה (1-3 שנים נוספים), מתחילה הבנייה. בשלב זה תפקידך: לוודא שהיזם עומד בלוחות זמנים, שדיירים מקבלים שכר דירה חלופי בזמן, ושהדירות החדשות תואמות למה שסוכם. הבנייה עצמה לוקחת 3-5 שנים.'
+      },
+      {
+        id: 'c9',
+        q: 'מה לעשות כשדייר מסרב לחתום?',
+        a: '🤝 ראשית — הקשב. לרוב יש חשש ספציפי (גודל דירה, שכר דירה, לוחות זמנים). שוחח איתו אישית, הבא את עורך הדין להסביר, וכשאפשר — שאל אם יש תנאי שישנה את דעתו. אל תלחץ — לחץ יוצר התנגדות. אם הבעיה כלכלית, בדוק אפשרות לסיוע מהיזם.'
+      },
+      {
+        id: 'c10',
+        q: 'כמה זמן לוקח כל התהליך?',
+        a: '⏳ התהליך כולו: 7-15 שנים. ארגון וחתימות: 6-18 חודשים. קידום בוועדות: 2-4 שנים. קבלת היתר: 1-3 שנים. בנייה: 3-5 שנים. הזמן הארוך הוא הסיבה שחשוב להתחיל מוקדם, לשמור על מומנטום ולעדכן דיירים בהתקדמות.'
+      },
+    ]
+  },
   {
     id: '1', topic: 'יסודות', icon: '🏗️',
     questions: [
@@ -90,6 +148,26 @@ interface ChatState {
 export default function FaqBot() {
   const [isOpen, setIsOpen] = useState(false)
   const [showTooltip, setShowTooltip] = useState(true)
+  const isLoggedIn = !!localStorage.getItem('sb-token')
+  const location = useLocation()
+  const isLandingPage = location.pathname === '/'
+
+  // Listen for external open trigger (from Navbar drawer)
+  useEffect(() => {
+    const handler = () => { setIsOpen(true); setShowTooltip(false) }
+    const committeeHandler = () => {
+      setIsOpen(true)
+      setShowTooltip(false)
+      const committeeTopic = FAQ_DATA.find(t => t.id === 'committee') || null
+      setState(s => ({ ...s, mode: 'questions', selectedTopic: committeeTopic, selectedQuestion: null }))
+    }
+    window.addEventListener('open-faqbot', handler)
+    window.addEventListener('open-faqbot-committee', committeeHandler)
+    return () => {
+      window.removeEventListener('open-faqbot', handler)
+      window.removeEventListener('open-faqbot-committee', committeeHandler)
+    }
+  }, [])
   useEffect(() => {
     const t = setTimeout(() => setShowTooltip(false), 3000)
     return () => clearTimeout(t)
@@ -140,7 +218,7 @@ export default function FaqBot() {
 
   return (
     <>
-      <div className={styles.fabWrap}>
+      <div className={styles.fabWrap} style={{ display: isLandingPage ? undefined : 'none' }}>
         {showTooltip && !isOpen && (
           <div className={styles.tooltip}>
             <span className={styles.wave}>👋</span>

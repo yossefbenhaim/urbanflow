@@ -11,19 +11,19 @@ const roles = [
 export default function OAuthRoleSelect() {
   const navigate = useNavigate()
   const [selectedRole, setSelectedRole] = useState<'tenant' | 'organizer' | 'provider' | null>(null)
+  const [manualName, setManualName] = useState('')
   const [error, setError] = useState('')
 
   const token = localStorage.getItem('sb-token')
   const { data: me, isLoading } = trpc.auth.me.useQuery(undefined, { enabled: !!token })
 
-  // Get name from Google user_metadata
   const googleName = (me as any)?.user_metadata?.full_name ?? (me as any)?.user_metadata?.name ?? ''
+  const needsName = !isLoading && !googleName
 
-  // If user already has a role, redirect immediately
   useEffect(() => {
     if (!isLoading && me?.role) {
       const map: Record<string, string> = {
-        tenant: '/dashboard', organizer: '/manager', manager: '/manager', provider: '/provider',
+        tenant: '/dashboard', organizer: '/organizer', manager: '/organizer', provider: '/provider',
       }
       navigate(map[me.role] ?? '/dashboard', { replace: true })
     }
@@ -31,7 +31,7 @@ export default function OAuthRoleSelect() {
 
   const complete = trpc.auth.completeOAuthProfile.useMutation({
     onSuccess: (data: { success: boolean; role: string }) => {
-      const map: Record<string, string> = { tenant: '/dashboard', organizer: '/manager', manager: '/manager', provider: '/provider' }
+      const map: Record<string, string> = { tenant: '/dashboard', organizer: '/organizer', manager: '/organizer', provider: '/provider' }
       navigate(map[data.role] ?? '/dashboard', { replace: true })
     },
     onError: (err: { message: string }) => setError(err.message),
@@ -39,8 +39,10 @@ export default function OAuthRoleSelect() {
 
   const handleSubmit = () => {
     if (!selectedRole) { setError('אנא בחר תפקיד'); return }
+    const name = googleName || manualName.trim()
+    if (!name) { setError('אנא הכנס את שמך'); return }
     setError('')
-    complete.mutate({ fullName: googleName, role: selectedRole })
+    complete.mutate({ fullName: name, role: selectedRole })
   }
 
   return (
@@ -64,6 +66,26 @@ export default function OAuthRoleSelect() {
             רק שלב אחד לפני שמתחילים — מה התפקיד שלך?
           </p>
         </div>
+
+        {/* Name field if Google didn't provide one */}
+        {needsName && (
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', display: 'block', marginBottom: '8px' }}>
+              שמך המלא
+            </label>
+            <input
+              type="text"
+              value={manualName}
+              onChange={e => setManualName(e.target.value)}
+              placeholder="ישראל ישראלי"
+              style={{
+                width: '100%', padding: '14px 16px', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.15)',
+                background: 'rgba(255,255,255,0.07)', color: '#fff', fontSize: '15px',
+                outline: 'none', boxSizing: 'border-box',
+              }}
+            />
+          </div>
+        )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
           {roles.map((r) => (

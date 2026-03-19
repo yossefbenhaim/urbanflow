@@ -22,7 +22,7 @@ export default function ProviderDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen page-content bg-gray-50" dir="rtl">
       <Navbar />
 
       <div className="bg-white border-b border-gray-100 sticky top-14 z-10">

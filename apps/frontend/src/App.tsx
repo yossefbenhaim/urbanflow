@@ -1,4 +1,7 @@
+import { useState } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
+import LoadingScreen from './components/LoadingScreen'
+import VotesTracker from './pages/VotesTracker'
 import { useEffect } from 'react'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
@@ -16,9 +19,15 @@ import ProviderDashboard from './pages/ProviderDashboard'
 import Directory from './pages/Directory'
 import ChatPage from './pages/ChatPage'
 import QuotesPage from './pages/QuotesPage'
+import BuildingChatPage from './pages/BuildingChatPage'
 import FaqBot from './components/FaqBot/FaqBot'
 import AccessibilityWidget from './components/Accessibility/AccessibilityWidget'
 import OAuthRoleSelect from './pages/OAuthRoleSelect'
+import InspectionsPage from './pages/InspectionsPage'
+import NewInspectionPage from './pages/NewInspectionPage'
+import OrganizerDashboard from './pages/OrganizerDashboard'
+import JoinProject from './pages/JoinProject'
+import CommitteeActions from './pages/CommitteeActions'
 
 function OAuthCallback() {
   const navigate = useNavigate()
@@ -27,9 +36,10 @@ function OAuthCallback() {
       const hash = window.location.hash.substring(1)
       const params = new URLSearchParams(hash)
       const token = params.get('access_token')
+      const refresh = params.get('refresh_token')
       if (token) {
         localStorage.setItem('sb-token', token)
-        // Small delay to ensure token is stored before navigating
+        if (refresh) localStorage.setItem('sb-refresh-token', refresh)
         setTimeout(() => navigate('/oauth-role', { replace: true }), 50)
       }
     }
@@ -38,8 +48,11 @@ function OAuthCallback() {
 }
 
 export default function App() {
+  const [showLoader, setShowLoader] = useState(true)
+
   return (
     <>
+      {showLoader && <LoadingScreen onDone={() => setShowLoader(false)} />}
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
@@ -54,11 +67,18 @@ export default function App() {
         <Route path="/committee/*" element={<CommitteeDashboard />} />
         <Route path="/manager/*" element={<ManagerDashboard />} />
         <Route path="/provider/*" element={<ProviderDashboard />} />
+        <Route path="/inspections" element={<InspectionsPage />} />
+        <Route path="/inspections/:projectId/new/:inspectionType" element={<NewInspectionPage />} />
         <Route path="/oauth-role" element={<OAuthRoleSelect />} />
         <Route path="/directory" element={<Directory />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/chat/:conversationId" element={<ChatPage />} />
         <Route path="/quotes" element={<QuotesPage />} />
+        <Route path="/organizer/*" element={<OrganizerDashboard />} />
+        <Route path="/join/:code" element={<JoinProject />} />
+        <Route path="/building-chat/:groupId" element={<BuildingChatPage />} />
+        <Route path="/committee-actions" element={<CommitteeActions />} />
+        <Route path="/votes-tracker" element={<VotesTracker />} />
       </Routes>
       <FaqBot />
       <AccessibilityWidget />

@@ -23,7 +23,6 @@ export const authRouter = router({
 
       return {
         accessToken: data.session.access_token,
-        refreshToken: data.session.refresh_token,
         user: {
           id: data.user.id,
           email: data.user.email!,
@@ -44,23 +43,7 @@ export const authRouter = router({
       if (error) throw new TRPCError({ code: 'BAD_REQUEST', message: error.message })
       return {
         accessToken: data.session?.access_token ?? null,
-        refreshToken: data.session?.refresh_token ?? null,
         userId: data.user?.id ?? null,
-      }
-    }),
-
-
-  // ── Refresh Token ────────────────────────────────────────────────────────
-  refreshToken: publicProcedure
-    .input(z.object({ refreshToken: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const { data, error } = await ctx.supabase.auth.refreshSession({ refresh_token: input.refreshToken })
-      if (error || !data.session) {
-        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Refresh token invalid' })
-      }
-      return {
-        accessToken: data.session.access_token,
-        refreshToken: data.session.refresh_token,
       }
     }),
 
@@ -126,8 +109,7 @@ export const authRouter = router({
         move_in_year: input.moveInYear ? parseInt(input.moveInYear) : null,
         invite_code: input.inviteCode || null, is_onboarded: true,
       }, { onConflict: 'user_id' })
-      return { accessToken: data.session?.access_token ?? null,
-        refreshToken: data.session?.refresh_token ?? null, userId }
+      return { accessToken: data.session?.access_token ?? null, userId }
     }),
 
   // ── Register Manager ───────────────────────────────────────────────────────
@@ -152,8 +134,7 @@ export const authRouter = router({
         years_experience: input.yearsExperience,
         specializations: input.specializations,
       }, { onConflict: 'id' })
-      return { accessToken: data.session?.access_token ?? null,
-        refreshToken: data.session?.refresh_token ?? null, userId }
+      return { accessToken: data.session?.access_token ?? null, userId }
     }),
 
   // ── Register Provider ──────────────────────────────────────────────────────
@@ -180,8 +161,7 @@ export const authRouter = router({
         license_number: input.licenseNumber, website: input.website,
         years_experience: input.yearsExperience, portfolio_urls: input.portfolioUrls,
       }, { onConflict: 'id' })
-      return { accessToken: data.session?.access_token ?? null,
-        refreshToken: data.session?.refresh_token ?? null, userId }
+      return { accessToken: data.session?.access_token ?? null, userId }
     }),
 
   // ── Complete OAuth Profile ─────────────────────────────────────────────────
