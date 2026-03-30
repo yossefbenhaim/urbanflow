@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import AddressPicker from '../components/AddressPicker/AddressPicker'
@@ -61,8 +61,9 @@ const STEPS = [
   { id: 1, title: 'פרטים אישיים', icon: '👤' },
   { id: 2, title: 'כתובת הדירה', icon: '🏠' },
   { id: 3, title: 'פרטי הדירה', icon: '📋' },
-  { id: 4, title: 'ציפיות לדירה חדשה', icon: '✨' },
-  { id: 5, title: 'חריגות והצמדות', icon: '📎' },
+  { id: 4, title: 'נסח טאבו', icon: '📄' },
+  { id: 5, title: 'ציפיות לדירה חדשה', icon: '✨' },
+  { id: 6, title: 'חריגות והצמדות', icon: '📎' },
 ]
 
 function StepBar({ current }: { current: number }) {
@@ -150,6 +151,23 @@ export default function TenantOnboarding() {
   const update = (field: keyof FormData, value: any) =>
     setForm(p => ({ ...p, [field]: value }))
 
+  const [tabuFile, setTabuFile] = useState<File | null>(null)
+  const [tabuUploading, setTabuUploading] = useState(false)
+  const [tabuUrl, setTabuUrl] = useState<string | null>(null)
+
+  const uploadTabu = trpc.tenant.uploadTabu.useMutation()
+
+  const handleTabuDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    const file = e.dataTransfer.files[0]
+    if (file && file.type === 'application/pdf') setTabuFile(file)
+  }, [])
+
+  const handleTabuSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file && file.type === 'application/pdf') setTabuFile(file)
+  }, [])
+
   const saveProfile = trpc.tenant.saveProfile.useMutation({
     onSuccess: () => navigate('/dashboard'),
     onError: (e) => setError(e.message || 'שגיאה בשמירה'),
@@ -179,8 +197,9 @@ export default function TenantOnboarding() {
     if (step === 1) { const err = validateStep1(); if (err) { setError(err); return } }
     if (step === 2) { const err = validateStep2(); if (err) { setError(err); return } }
     if (step === 3) { const err = validateStep3(); if (err) { setError(err); return } }
+    // Step 4 (tabu) is optional — no validation needed
 
-    if (step < 5) { setStep(s => s + 1); return }
+    if (step < 6) { setStep(s => s + 1); return }
 
     // Final submit
     saveProfile.mutate({
@@ -289,8 +308,58 @@ export default function TenantOnboarding() {
             </div>
           )}
 
-          {/* ─── Step 4 - Special Requests ─── */}
+          {/* ─── Step 4 - Tabu Upload ─── */}
           {step === 4 && (
+            <div className="flex flex-col gap-5">
+              <div>
+                <h2 className="text-[17px] font-bold text-sc-dark mb-1">📄 העלאת נסח טאבו</h2>
+                <p className="text-[13px] text-sc-gray mb-4">
+                  נסח טאבו מעיד על בעלות הדירה. ניתן לדלג — אך מומלץ להעלות לצורך אימות מהיר.
+                </p>
+              </div>
+
+              <div
+                onDrop={handleTabuDrop}
+                onDragOver={e => e.preventDefault()}
+                className="border-2 border-dashed border-sc-gray-light rounded-xl p-8 text-center cursor-pointer hover:border-sc-blue hover:bg-sc-blue-pale/30 transition-colors"
+                onClick={() => document.getElementById('tabu-input')?.click()}
+              >
+                <input id="tabu-input" type="file" accept="application/pdf" onChange={handleTabuSelect} className="hidden" />
+                {tabuFile ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-3xl">✅</span>
+                    <p className="text-sm font-semibold text-sc-dark">{tabuFile.name}</p>
+                    <p className="text-xs text-sc-gray">{(tabuFile.size / 1024).toFixed(0)} KB</p>
+                    <button
+                      onClick={e => { e.stopPropagation(); setTabuFile(null); setTabuUrl(null) }}
+                      className="text-xs text-sc-error underline bg-transparent border-none cursor-pointer mt-1"
+                    >הסר קובץ</button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-4xl">📄</span>
+                    <p className="text-sm font-semibold text-sc-dark">גרור קובץ PDF לכאן</p>
+                    <p className="text-xs text-sc-gray">או לחץ לבחירת קובץ</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-sc-warning/10 border border-sc-warning/30 rounded-xl p-3">
+                <p className="text-xs text-sc-warning m-0">
+                  ⏰ <strong>שים לב:</strong> לאחר שעה מההעלאה, הקובץ ננעל ולא ניתן לשנות אותו
+                </p>
+              </div>
+
+              <div className="bg-sc-blue-pale border border-sc-blue-light rounded-xl p-3">
+                <p className="text-xs text-sc-blue m-0">
+                  💡 <strong>אופציונלי</strong> — ניתן לדלג ולהעלות מאוחר יותר מהפרופיל שלך
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ─── Step 5 - Special Requests ─── */}
+          {step === 5 && (
             <div className="flex flex-col gap-5">
               <div>
                 <h2 className="text-[17px] font-bold text-sc-dark mb-1">✨ דרישות לדירה החדשה</h2>
@@ -332,8 +401,8 @@ export default function TenantOnboarding() {
             </div>
           )}
 
-          {/* ─── Step 5 - Apartment Extras ─── */}
-          {step === 5 && (
+          {/* ─── Step 6 - Apartment Extras ─── */}
+          {step === 6 && (
             <div className="flex flex-col gap-5">
               <div>
                 <h2 className="text-[17px] font-bold text-sc-dark mb-1">📎 חריגות והצמדות בדירה הנוכחית</h2>
@@ -414,13 +483,13 @@ export default function TenantOnboarding() {
             )}
             <button onClick={handleNext} disabled={saveProfile.isPending}
               className="sc-btn-primary flex-[2] text-[15px] disabled:opacity-70">
-              {saveProfile.isPending ? 'שומר...' : step === 5 ? '✓ סיום' : step >= 4 ? 'המשך ←' : 'המשך ←'}
+              {saveProfile.isPending ? 'שומר...' : step === 6 ? '✓ סיום' : step >= 4 ? 'המשך ←' : 'המשך ←'}
             </button>
           </div>
 
           {step >= 4 && (
             <button
-              onClick={() => step === 5 ? handleNext() : setStep(s => s + 1)}
+              onClick={() => step === 6 ? handleNext() : setStep(s => s + 1)}
               className="w-full mt-2.5 py-2.5 bg-transparent border-none text-sc-gray text-[13px] cursor-pointer underline"
             >
               דלג על שלב זה

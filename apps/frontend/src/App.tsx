@@ -28,6 +28,10 @@ import NewInspectionPage from './pages/NewInspectionPage'
 import OrganizerDashboard from './pages/OrganizerDashboard'
 import JoinProject from './pages/JoinProject'
 import CommitteeActions from './pages/CommitteeActions'
+import PowerOfAttorneyForm from './pages/PowerOfAttorneyForm'
+import UnlocatedTenantForm from './pages/UnlocatedTenantForm'
+import OwnershipDisputeForm from './pages/OwnershipDisputeForm'
+import TenantReportForm from './pages/TenantReportForm'
 
 function OAuthCallback() {
   const navigate = useNavigate()
@@ -79,6 +83,10 @@ export default function App() {
         <Route path="/building-chat/:groupId" element={<BuildingChatPage />} />
         <Route path="/committee-actions" element={<CommitteeActions />} />
         <Route path="/votes-tracker" element={<VotesTracker />} />
+        <Route path="/power-of-attorney" element={<PowerOfAttorneyForm />} />
+        <Route path="/unlocated-tenant" element={<UnlocatedTenantForm />} />
+        <Route path="/ownership-dispute" element={<OwnershipDisputeForm />} />
+        <Route path="/tenant-report" element={<TenantReportForm />} />
       </Routes>
       <FaqBot />
       <AccessibilityWidget />

@@ -307,4 +307,193 @@ export const tenantRouter = router({
     return { success: true }
   }),
 
+  // ─── A1: Upload Tabu PDF ───────────────────────────────
+  uploadTabu: protectedProcedure
+    .input(z.object({ fileUrl: z.string().url() }))
+    .mutation(async ({ ctx, input }) => {
+      // Check if already locked
+      const { data: existing } = await ctx.supabase.from('tenant_profiles').select('tabu_locked').eq('user_id', ctx.user.id).single()
+      if ((existing as any)?.tabu_locked) throw new TRPCError({ code: 'FORBIDDEN', message: 'נסח הטאבו ננעל ואינו ניתן לעדכון' })
+      const { error } = await ctx.supabase.from('tenant_profiles').update({
+        tabu_file_url: input.fileUrl,
+        tabu_uploaded_at: new Date().toISOString(),
+        tabu_locked: false,
+      }).eq('user_id', ctx.user.id)
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return { ok: true }
+    }),
+
+  getTabuStatus: protectedProcedure.query(async ({ ctx }) => {
+    const { data } = await ctx.supabase.from('tenant_profiles').select('tabu_file_url, tabu_uploaded_at, tabu_locked').eq('user_id', ctx.user.id).single()
+    if (!data) return { uploaded: false, locked: false, url: null, uploadedAt: null }
+    const d = data as any
+    // Auto-lock after 1 hour
+    if (d.tabu_uploaded_at && !d.tabu_locked) {
+      const elapsed = Date.now() - new Date(d.tabu_uploaded_at).getTime()
+      if (elapsed > 60 * 60 * 1000) {
+        await ctx.supabase.from('tenant_profiles').update({ tabu_locked: true }).eq('user_id', ctx.user.id)
+        d.tabu_locked = true
+      }
+    }
+    return { uploaded: !!d.tabu_file_url, locked: !!d.tabu_locked, url: d.tabu_file_url, uploadedAt: d.tabu_uploaded_at }
+  }),
+
+  // ─── A2: Complex Ownership ─────────────────────────────
+  addCoOwner: protectedProcedure
+    .input(z.object({
+      apartmentId: z.string().uuid(),
+      userId: z.string().uuid(),
+      ownershipType: z.enum(['owner', 'heir', 'divorced', 'proxy', 'abroad']),
+      ownershipPct: z.number().min(0).max(100).default(100),
+      hasProxy: z.boolean().default(false),
+      proxyUserId: z.string().uuid().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { error } = await ctx.supabase.from('apartment_owners').insert({
+        apartment_id: input.apartmentId,
+        user_id: input.userId,
+        ownership_type: input.ownershipType,
+        ownership_pct: input.ownershipPct,
+        has_proxy: input.hasProxy,
+        proxy_user_id: input.proxyUserId ?? null,
+      })
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return { ok: true }
+    }),
+
+  getCoOwners: protectedProcedure
+    .input(z.object({ apartmentId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data } = await ctx.supabase.from('apartment_owners')
+        .select('*, user:profiles(full_name, phone), proxy:profiles(full_name)')
+        .eq('apartment_id', input.apartmentId)
+        .order('created_at')
+      return data ?? []
+    }),
+
+  // ─── A3: Power of Attorney ─────────────────────────────
+  createPowerOfAttorney: protectedProcedure
+    .input(z.object({
+      receiverUserId: z.string().uuid(),
+      apartmentId: z.string().uuid(),
+      poaType: z.enum(['full', 'partial', 'voting_only']),
+      fileUrl: z.string().url().optional(),
+      notarized: z.boolean().default(false),
+      validFrom: z.string().optional(),
+      validUntil: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { error } = await ctx.supabase.from('power_of_attorney').insert({
+        granter_user_id: ctx.user.id,
+        receiver_user_id: input.receiverUserId,
+        apartment_id: input.apartmentId,
+        poa_type: input.poaType,
+        file_url: input.fileUrl ?? null,
+        notarized: input.notarized,
+        valid_from: input.validFrom ?? null,
+        valid_until: input.validUntil ?? null,
+      })
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return { ok: true }
+    }),
+
+  getMyPowerOfAttorneys: protectedProcedure.query(async ({ ctx }) => {
+    const { data } = await ctx.supabase.from('power_of_attorney')
+      .select('*, granter:profiles!power_of_attorney_granter_user_id_fkey(full_name), receiver:profiles!power_of_attorney_receiver_user_id_fkey(full_name)')
+      .or(`granter_user_id.eq.${ctx.user.id},receiver_user_id.eq.${ctx.user.id}`)
+      .order('created_at', { ascending: false })
+    return data ?? []
+  }),
+
+  // ─── A4: Report Unlocated Tenant ───────────────────────
+  reportUnlocated: protectedProcedure
+    .input(z.object({
+      apartmentId: z.string().uuid(),
+      attemptedPhone: z.boolean().default(false),
+      attemptedEmail: z.boolean().default(false),
+      attemptedVisit: z.boolean().default(false),
+      notes: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { error } = await ctx.supabase.from('unlocated_tenants').insert({
+        apartment_id: input.apartmentId,
+        reported_by: ctx.user.id,
+        attempted_phone: input.attemptedPhone,
+        attempted_email: input.attemptedEmail,
+        attempted_visit: input.attemptedVisit,
+        notes: input.notes ?? null,
+      })
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return { ok: true }
+    }),
+
+  getUnlocatedTenants: protectedProcedure
+    .input(z.object({ apartmentId: z.string().uuid().optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      let q = ctx.supabase.from('unlocated_tenants').select('*').order('created_at', { ascending: false })
+      if (input?.apartmentId) q = q.eq('apartment_id', input.apartmentId)
+      const { data } = await q
+      return data ?? []
+    }),
+
+  // ─── A5: Ownership Dispute ─────────────────────────────
+  reportOwnershipDispute: protectedProcedure
+    .input(z.object({
+      apartmentId: z.string().uuid(),
+      disputeType: z.enum(['inheritance', 'divorce', 'unclear', 'other']),
+      parties: z.array(z.string()).default([]),
+      description: z.string(),
+      documents: z.array(z.string()).default([]),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { error } = await ctx.supabase.from('ownership_disputes').insert({
+        apartment_id: input.apartmentId,
+        dispute_type: input.disputeType,
+        parties: input.parties,
+        description: input.description,
+        documents: input.documents,
+      })
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return { ok: true }
+    }),
+
+  getOwnershipDisputes: protectedProcedure
+    .input(z.object({ apartmentId: z.string().uuid().optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      let q = ctx.supabase.from('ownership_disputes').select('*').order('created_at', { ascending: false })
+      if (input?.apartmentId) q = q.eq('apartment_id', input.apartmentId)
+      const { data } = await q
+      return data ?? []
+    }),
+
+  // ─── A6: Report Problem Tenant ─────────────────────────
+  reportProblem: protectedProcedure
+    .input(z.object({
+      apartmentId: z.string().uuid(),
+      reportType: z.enum(['refusal', 'threat', 'disruption', 'other']),
+      description: z.string(),
+      frequency: z.enum(['one_time', 'recurring']),
+      blocksProject: z.boolean().default(false),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { error } = await ctx.supabase.from('tenant_reports').insert({
+        apartment_id: input.apartmentId,
+        reported_by: ctx.user.id,
+        report_type: input.reportType,
+        description: input.description,
+        frequency: input.frequency,
+        blocks_project: input.blocksProject,
+      })
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return { ok: true }
+    }),
+
+  getMyReports: protectedProcedure.query(async ({ ctx }) => {
+    const { data } = await ctx.supabase.from('tenant_reports')
+      .select('*')
+      .eq('reported_by', ctx.user.id)
+      .order('created_at', { ascending: false })
+    return data ?? []
+  }),
+
 })
