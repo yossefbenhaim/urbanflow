@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+    <linearGradient id="tower" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E2E8F0"/>
+      <stop offset="100%" stop-color="#94A3B8"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <!-- Main tower body -->
+  <rect x="196" y="160" width="120" height="232" rx="4" fill="url(#tower)"/>
+  <!-- Left tower -->
+  <rect x="116" y="210" width="80" height="182" rx="4" fill="url(#tower)" opacity="0.85"/>
+  <!-- Right tower -->
+  <rect x="316" y="210" width="80" height="182" rx="4" fill="url(#tower)" opacity="0.85"/>
+  <!-- Main tower battlements -->
+  <rect x="196" y="140" width="24" height="30" rx="2" fill="url(#tower)"/>
+  <rect x="232" y="140" width="24" height="30" rx="2" fill="url(#tower)"/>
+  <rect x="268" y="140" width="24" height="30" rx="2" fill="url(#tower)"/>
+  <rect x="304" y="140" width="12" height="30" rx="2" fill="url(#tower)"/>
+  <!-- Left tower battlements -->
+  <rect x="116" y="190" width="20" height="26" rx="2" fill="url(#tower)" opacity="0.85"/>
+  <rect x="146" y="190" width="20" height="26" rx="2" fill="url(#tower)" opacity="0.85"/>
+  <rect x="176" y="190" width="20" height="26" rx="2" fill="url(#tower)" opacity="0.85"/>
+  <!-- Right tower battlements -->
+  <rect x="316" y="190" width="20" height="26" rx="2" fill="url(#tower)" opacity="0.85"/>
+  <rect x="346" y="190" width="20" height="26" rx="2" fill="url(#tower)" opacity="0.85"/>
+  <rect x="376" y="190" width="20" height="26" rx="2" fill="url(#tower)" opacity="0.85"/>
+  <!-- Gate arch (gold accent) -->
+  <path d="M230 392 L230 340 Q256 310 282 340 L282 392 Z" fill="url(#gold)"/>
+  <!-- Windows on main tower -->
+  <rect x="220" y="200" width="16" height="24" rx="8" fill="#0F172A" opacity="0.6"/>
+  <rect x="276" y="200" width="16" height="24" rx="8" fill="#0F172A" opacity="0.6"/>
+  <rect x="220" y="260" width="16" height="24" rx="8" fill="#0F172A" opacity="0.6"/>
+  <rect x="276" y="260" width="16" height="24" rx="8" fill="#0F172A" opacity="0.6"/>
+  <!-- Windows on side towers -->
+  <rect x="142" y="260" width="14" height="20" rx="7" fill="#0F172A" opacity="0.5"/>
+  <rect x="142" y="320" width="14" height="20" rx="7" fill="#0F172A" opacity="0.5"/>
+  <rect x="348" y="260" width="14" height="20" rx="7" fill="#0F172A" opacity="0.5"/>
+  <rect x="348" y="320" width="14" height="20" rx="7" fill="#0F172A" opacity="0.5"/>
+  <!-- Gold crown/flag on top -->
+  <rect x="248" y="108" width="16" height="38" rx="2" fill="url(#gold)"/>
+  <polygon points="256,88 268,108 244,108" fill="url(#gold)"/>
+  <!-- Base line -->
+  <rect x="100" y="392" width="312" height="6" rx="3" fill="url(#gold)" opacity="0.7"/>
+</svg>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
+import { getDeviceInfo } from '../lib/deviceInfo'
 import AddressPicker from '../components/AddressPicker/AddressPicker'
 
 type FormData = {
@@ -88,6 +89,7 @@ export default function RegisterTenant() {
       isOwner: form.isOwner,
       moveInYear: form.moveInYear || undefined,
       inviteCode: form.inviteCode || undefined,
+      deviceInfo: getDeviceInfo(),
     })
   }
 

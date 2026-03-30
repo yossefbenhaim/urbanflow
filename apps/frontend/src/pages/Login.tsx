@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
+import { getDeviceInfo } from '../lib/deviceInfo'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -40,7 +41,11 @@ export default function Login() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    signIn.mutate({ email, password })
+    signIn.mutate({
+      email,
+      password,
+      deviceInfo: getDeviceInfo(),
+    })
   }
 
   return (

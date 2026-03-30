@@ -11,6 +11,7 @@ export default function ManagerDashboard() {
 
   const [showModal, setShowModal] = useState(false)
   const [newName, setNewName] = useState('')
+  const [renewalType, setRenewalType] = useState<'pinuy_binuy' | 'tama_38_b' | 'halufat_shaked' | 'binuy_pinuy'>('pinuy_binuy')
   const [address, setAddress] = useState({ city: '', street: '', buildingNumber: '' })
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
   const [inviteEmail, setInviteEmail] = useState('')
@@ -159,13 +160,26 @@ export default function ManagerDashboard() {
                 />
               </div>
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">סוג התחדשות</label>
+                <select
+                  value={renewalType}
+                  onChange={(e) => setRenewalType(e.target.value as any)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                >
+                  <option value="pinuy_binuy">פינוי בינוי</option>
+                  <option value="tama_38_b">תמ״א 38/ב</option>
+                  <option value="halufat_shaked">חלופת שקד</option>
+                  <option value="binuy_pinuy">בינוי פינוי</option>
+                </select>
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">כתובת</label>
                 <AddressPicker value={address} onChange={setAddress} />
               </div>
             </div>
             <div className="flex gap-3 mt-6">
               <button
-                onClick={() => createProject.mutate({ name: newName, address: address.city && address.street ? `${address.street} ${address.buildingNumber}, ${address.city}` : undefined })}
+                onClick={() => createProject.mutate({ name: newName, renewalType, address: address.city && address.street ? `${address.street} ${address.buildingNumber}, ${address.city}` : undefined })}
                 disabled={!newName.trim() || createProject.isPending}
                 className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
               >

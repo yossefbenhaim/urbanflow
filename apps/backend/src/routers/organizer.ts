@@ -4,7 +4,11 @@ import { TRPCError } from '@trpc/server'
 
 export const organizerRouter = router({
   createProject: protectedProcedure
-    .input(z.object({ name: z.string().min(2), address: z.string().optional() }))
+    .input(z.object({
+      name: z.string().min(2),
+      address: z.string().optional(),
+      renewalType: z.enum(['pinuy_binuy', 'tama_38_b', 'halufat_shaked', 'binuy_pinuy']).optional(),
+    }))
     .mutation(async ({ ctx, input }) => {
       const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase()
       const { data, error } = await ctx.supabase
@@ -17,6 +21,7 @@ export const organizerRouter = router({
           invite_code: inviteCode,
           type: 'PINUY_BINUY',
           status: 'INITIAL',
+          renewal_type: input.renewalType ?? 'pinuy_binuy',
         })
         .select()
         .single()

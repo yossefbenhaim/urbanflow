@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
+import { getDeviceInfo } from '../lib/deviceInfo'
 
 type PastProject = { name: string; city: string; year: string; role: string }
 
@@ -147,6 +148,7 @@ export default function RegisterProvider() {
       licenseNumber: form.licenseNumber || undefined,
       website: form.portfolioUrl || undefined,
       yearsExperience: form.experienceYears ? parseInt(form.experienceYears) : undefined,
+      deviceInfo: getDeviceInfo(),
     })
   }
 

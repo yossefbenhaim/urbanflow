@@ -248,6 +248,13 @@ const PROJECT_TYPE_LABELS: Record<string, string> = {
   TAMA_38_2: 'תמ"א 38/2',
 }
 
+const RENEWAL_TYPE_LABELS: Record<string, string> = {
+  pinuy_binuy: 'פינוי בינוי',
+  tama_38_b: 'תמ״א 38/ב',
+  halufat_shaked: 'חלופת שקד',
+  binuy_pinuy: 'בינוי פינוי',
+}
+
 export default function OrganizerDashboard() {
   const navigate = useNavigate()
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
@@ -372,6 +379,12 @@ export default function OrganizerDashboard() {
                     <label className="text-xs text-gray-400 font-medium">סוג</label>
                     <p className="text-gray-800 mt-0.5">{PROJECT_TYPE_LABELS[selectedProject.type] ?? selectedProject.type}</p>
                   </div>
+                  {selectedProject.renewal_type && (
+                    <div>
+                      <label className="text-xs text-gray-400 font-medium">סוג התחדשות</label>
+                      <p className="text-gray-800 mt-0.5">{RENEWAL_TYPE_LABELS[selectedProject.renewal_type] ?? selectedProject.renewal_type}</p>
+                    </div>
+                  )}
                   {selectedProject.address && (
                     <div>
                       <label className="text-xs text-gray-400 font-medium">כתובת</label>
