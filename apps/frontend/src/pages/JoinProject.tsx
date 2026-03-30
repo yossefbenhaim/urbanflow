@@ -34,26 +34,26 @@ export default function JoinProject() {
   }, [code])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 flex items-center justify-center" dir="rtl">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 text-center max-w-sm w-full">
+    <div className="min-h-screen bg-sc-bg flex items-center justify-center" dir="rtl">
+      <div className="sc-card p-10 text-center max-w-sm w-full">
         {status === 'checking' || status === 'joining' ? (
           <>
             <BuildingLoader size="lg" />
-            <p className="text-gray-600">מצטרף לפרויקט...</p>
+            <p className="text-sc-gray">מצטרף לפרויקט...</p>
           </>
         ) : status === 'done' ? (
           <>
             <div className="text-4xl mb-4">✅</div>
-            <p className="text-green-700 font-semibold text-lg">{message}</p>
-            <p className="text-gray-500 text-sm mt-2">מועבר לדשבורד...</p>
+            <p className="text-sc-success font-semibold text-lg">{message}</p>
+            <p className="text-sc-gray text-sm mt-2">מועבר לדשבורד...</p>
           </>
         ) : (
           <>
             <div className="text-4xl mb-4">❌</div>
-            <p className="text-red-600 font-semibold">{message}</p>
+            <p className="text-sc-error font-semibold">{message}</p>
             <button
               onClick={() => navigate('/dashboard')}
-              className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
+              className="sc-btn-primary mt-4"
             >
               חזרה לדשבורד
             </button>

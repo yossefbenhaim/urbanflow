@@ -27,27 +27,27 @@ function JoinProjectScreen({ onJoined }: { onJoined: () => void }) {
   })
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f9fafb" }} dir="rtl">
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 w-full max-w-sm mx-4 text-center">
+    <div className="min-h-screen flex items-center justify-center bg-sc-bg" dir="rtl">
+      <div className="sc-card p-8 w-full max-w-sm mx-4 text-center">
         <div className="text-5xl mb-4">🏢</div>
-        <h1 className="text-xl font-bold text-gray-900 mb-2">הצטרף לפרויקט</h1>
-        <p className="text-gray-500 text-sm mb-6">הזן את קוד ההצטרפות שקיבלת ממארגן הדיירים</p>
+        <h1 className="text-xl font-bold text-sc-dark mb-2">הצטרף לפרויקט</h1>
+        <p className="text-sc-gray text-sm mb-6">הזן את קוד ההצטרפות שקיבלת ממארגן הדיירים</p>
         <input
           type="text"
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 6))}
           placeholder="XXXXXX"
           maxLength={6}
-          className="w-full text-center text-2xl font-mono tracking-widest border-2 border-gray-200 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:border-blue-500"
+          className="sc-input text-center text-2xl font-mono tracking-widest mb-4"
           dir="ltr"
         />
         {joinProject.isError && (
-          <p className="text-red-500 text-sm mb-3">קוד לא תקין, נסה שנית</p>
+          <p className="text-sc-error text-sm mb-3">קוד לא תקין, נסה שנית</p>
         )}
         <button
           onClick={() => joinProject.mutate({ inviteCode: code })}
           disabled={code.length !== 6 || joinProject.isPending}
-          className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          className="sc-btn-primary w-full disabled:opacity-50"
         >
           {joinProject.isPending ? 'מצטרף...' : 'הצטרף'}
         </button>
@@ -80,38 +80,38 @@ function ApartmentProfileWizard({ onComplete }: { onComplete: () => void }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center" dir="rtl">
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 w-full max-w-sm mx-4">
+    <div className="min-h-screen bg-sc-bg flex items-center justify-center" dir="rtl">
+      <div className="sc-card p-8 w-full max-w-sm mx-4">
         <div className="text-4xl text-center mb-4">🏠</div>
-        <h1 className="text-xl font-bold text-gray-900 mb-1 text-center">פרטי הדירה</h1>
-        <p className="text-gray-500 text-sm mb-6 text-center">נא למלא את פרטי הדירה שלך</p>
+        <h1 className="text-xl font-bold text-sc-dark mb-1 text-center">פרטי הדירה</h1>
+        <p className="text-sc-gray text-sm mb-6 text-center">נא למלא את פרטי הדירה שלך</p>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">קומה</label>
+              <label className="block text-sm font-medium text-sc-dark mb-1">קומה</label>
               <input type="number" value={form.floor} onChange={e => setForm(f => ({ ...f, floor: e.target.value }))}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="sc-input" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">מס' דירה</label>
+              <label className="block text-sm font-medium text-sc-dark mb-1">מס' דירה</label>
               <input type="text" value={form.apartmentNumber} onChange={e => setForm(f => ({ ...f, apartmentNumber: e.target.value }))}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="sc-input" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">חדרים</label>
+              <label className="block text-sm font-medium text-sc-dark mb-1">חדרים</label>
               <input type="number" value={form.rooms} onChange={e => setForm(f => ({ ...f, rooms: e.target.value }))}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="sc-input" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">גודל (מ"ר)</label>
+              <label className="block text-sm font-medium text-sc-dark mb-1">גודל (מ"ר)</label>
               <input type="number" value={form.apartmentSizeSqm} onChange={e => setForm(f => ({ ...f, apartmentSizeSqm: e.target.value }))}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="sc-input" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">סוג החזקה</label>
+            <label className="block text-sm font-medium text-sc-dark mb-2">סוג החזקה</label>
             <div className="flex gap-3">
               {(['owner', 'renter'] as const).map(type => (
                 <button
@@ -119,8 +119,8 @@ function ApartmentProfileWizard({ onComplete }: { onComplete: () => void }) {
                   onClick={() => setForm(f => ({ ...f, ownershipType: type }))}
                   className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
                     form.ownershipType === type
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                      ? 'bg-sc-blue text-white border-sc-blue'
+                      : 'bg-white text-sc-dark border-sc-gray-light hover:bg-sc-bg'
                   }`}
                 >
                   {type === 'owner' ? '🔑 בעלים' : '🏠 שוכר'}
@@ -132,7 +132,7 @@ function ApartmentProfileWizard({ onComplete }: { onComplete: () => void }) {
         <button
           onClick={handleSubmit}
           disabled={updateProfile.isPending}
-          className="w-full mt-6 bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          className="sc-btn-primary w-full mt-6 disabled:opacity-50"
         >
           {updateProfile.isPending ? 'שומר...' : 'המשך'}
         </button>
@@ -146,22 +146,22 @@ function JoinProjectInline({ onJoined }: { onJoined: () => void }) {
   const [code, setCode] = useState('')
   const join = trpc.tenant.joinProject.useMutation({ onSuccess: onJoined })
   return (
-    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+    <div className="flex gap-2 items-center">
       <input
         value={code}
         onChange={e => setCode(e.target.value.toUpperCase().slice(0, 6))}
         placeholder="קוד 6 ספרות"
         maxLength={6}
-        style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid #fcd34d', fontSize: '13px', width: '120px', textAlign: 'center', letterSpacing: '0.15em', fontWeight: 600 }}
+        className="sc-input w-[120px] text-center tracking-wider font-semibold text-[13px]"
       />
       <button
         onClick={() => join.mutate({ inviteCode: code })}
         disabled={code.length !== 6 || join.isPending}
-        style={{ padding: '6px 14px', borderRadius: '8px', background: '#2563EB', color: '#fff', border: 'none', fontSize: '13px', fontWeight: 600, cursor: 'pointer', opacity: code.length !== 6 ? 0.5 : 1 }}
+        className="sc-btn-primary px-4 py-1.5 text-[13px] disabled:opacity-50"
       >
         {join.isPending ? '...' : 'הצטרף'}
       </button>
-      {join.isError && <span style={{ color: '#dc2626', fontSize: '12px' }}>קוד לא תקין</span>}
+      {join.isError && <span className="text-sc-error text-xs">קוד לא תקין</span>}
     </div>
   )
 }
@@ -169,26 +169,24 @@ function JoinProjectInline({ onJoined }: { onJoined: () => void }) {
 function TaskItem({ task }: { task: { icon: string; text: string; link: string; info: string } }) {
   const [showInfo, setShowInfo] = useState(false)
   return (
-    <div style={{ position: 'relative' }}>
-      <a href={task.link} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', background: '#fff', borderRadius: '10px', border: '1px solid #e9d5ff', textDecoration: 'none' }}>
-        <span style={{ fontSize: '18px' }}>{task.icon}</span>
-        <span style={{ fontSize: '14px', color: '#1e293b', fontWeight: 500, flex: 1 }}>{task.text}</span>
+    <div className="relative">
+      <a href={task.link} className="flex items-center gap-3 p-3 bg-white rounded-[10px] border border-sc-gray-light no-underline hover:bg-sc-blue-pale transition-colors">
+        <span className="text-lg">{task.icon}</span>
+        <span className="text-sm text-sc-dark font-medium flex-1">{task.text}</span>
         <button
           onPointerDown={e => { e.preventDefault(); e.stopPropagation(); setShowInfo(v => !v) }}
-          style={{ background: showInfo ? '#7c3aed' : '#f3f4f6', border: 'none', borderRadius: '50%', width: 22, height: 22, fontSize: 12, cursor: 'pointer', color: showInfo ? '#fff' : '#6b7280', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+          className={`w-[22px] h-[22px] rounded-full border-none text-xs cursor-pointer flex-shrink-0 flex items-center justify-center font-bold ${
+            showInfo ? 'bg-sc-blue-deep text-white' : 'bg-sc-gray-light text-sc-gray'
+          }`}>
           ?
         </button>
-        <span style={{ color: '#7c3aed', fontSize: 16 }}>←</span>
+        <span className="text-sc-blue text-base">←</span>
       </a>
       {showInfo && (
-        <div style={{
-          position: 'absolute', top: '100%', right: 0, left: 0, zIndex: 50, marginTop: 4,
-          background: '#1e1b4b', color: '#e0e7ff', fontSize: 13, lineHeight: 1.6,
-          borderRadius: 12, padding: '12px 14px', boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+        <div className="absolute top-full right-0 left-0 z-50 mt-1 bg-sc-blue-deep text-sc-blue-pale text-[13px] leading-relaxed rounded-xl p-3 shadow-lg">
+          <div className="flex justify-between items-start gap-2">
             <span>{task.info}</span>
-            <button onPointerDown={() => setShowInfo(false)} style={{ background: 'none', border: 'none', color: '#a5b4fc', cursor: 'pointer', fontSize: 16, flexShrink: 0 }}>✕</button>
+            <button onPointerDown={() => setShowInfo(false)} className="bg-transparent border-none text-sc-blue-light cursor-pointer text-base flex-shrink-0">✕</button>
           </div>
         </div>
       )}
@@ -210,7 +208,7 @@ export default function Dashboard() {
 
   // Silent load — LoadingScreen already covers initial wait
   if (statusLoading || (isLoading && !isFetched)) return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-sc-bg" dir="rtl">
       <Navbar />
     </div>
   )
@@ -222,11 +220,11 @@ export default function Dashboard() {
   const pct = total ? Math.round((signed / total) * 100) : 0
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-sc-bg" dir="rtl">
       {/* Banner: no project */}
       {myStatus && !myStatus.hasProject && (
-        <div style={{ background: '#fef3c7', borderBottom: '1px solid #fcd34d', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-          <span style={{ color: '#92400e', fontSize: '14px', fontWeight: 500 }}>
+        <div className="bg-sc-warning/10 border-b border-sc-warning/30 px-6 py-3 flex items-center justify-between gap-4">
+          <span className="text-sc-warning text-sm font-medium">
             ⚠️ טרם הצטרפת לפרויקט — הכנס קוד הצטרפות שקיבלת מהמארגן שלך
           </span>
           <JoinProjectInline onJoined={() => refetchStatus()} />
@@ -234,46 +232,40 @@ export default function Dashboard() {
       )}
       <Navbar />
       {(myRole as any)?.isRepresentative && (
-        <div style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '20px' }}>🏛️</span>
-          <span style={{ color: '#e0e7ff', fontWeight: 700, fontSize: '15px' }}>נציג ועד הבניין</span>
-          <span style={{ marginRight: 'auto', background: 'rgba(255,255,255,0.15)', color: '#c7d2fe', fontSize: '12px', padding: '4px 10px', borderRadius: '20px' }}>הרשאות מורחבות פעילות</span>
+        <div className="bg-sc-blue-deep px-6 py-3 flex items-center gap-3">
+          <span className="text-xl">🏛️</span>
+          <span className="text-white font-bold text-[15px]">נציג ועד הבניין</span>
+          <span className="mr-auto bg-white/15 text-sc-blue-pale text-xs px-3 py-1 rounded-full">הרשאות מורחבות פעילות</span>
         </div>
       )}
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
 
         {/* Onboarding Tasks Card */}
         {myStatus && !myStatus.isOnboarded && (
-          <div style={{
-            background: 'linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%)',
-            border: '1.5px solid #bfdbfe', borderRadius: '20px', padding: '24px',
-            boxShadow: '0 2px 16px rgba(37,99,235,0.08)',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>📋</div>
+          <div className="sc-card p-6 border-t-4 border-t-sc-blue">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-11 h-11 rounded-xl bg-sc-blue flex items-center justify-center text-[22px]">📋</div>
               <div>
-                <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: '#1e293b' }}>השלם את הפרופיל שלך</h3>
-                <p style={{ margin: '2px 0 0', fontSize: '13px', color: '#64748b' }}>מלא את הפרטים כדי להשתמש בכל הפיצ׳רים</p>
+                <h3 className="text-[17px] font-bold text-sc-dark m-0">השלם את הפרופיל שלך</h3>
+                <p className="text-[13px] text-sc-gray mt-0.5">מלא את הפרטים כדי להשתמש בכל הפיצ׳רים</p>
               </div>
-              <a href="/onboarding" style={{
-                marginRight: 'auto', padding: '10px 20px', borderRadius: '10px',
-                background: '#2563EB', color: '#fff', fontWeight: 700, fontSize: '14px',
-                textDecoration: 'none', whiteSpace: 'nowrap',
-              }}>מלא פרטים ←</a>
+              <a href="/onboarding" className="sc-btn-primary mr-auto px-5 py-2.5 text-sm no-underline whitespace-nowrap">
+                מלא פרטים ←
+              </a>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div className="flex flex-col gap-2.5">
               {[
                 { icon: '👤', text: 'תעודת זהות ומספר טלפון', done: !!myStatus.steps?.personal },
                 { icon: '🏠', text: 'כתובת הדירה (עיר, רחוב, מספר)', done: !!myStatus.steps?.address },
                 { icon: '📐', text: 'פרטי הדירה (קומה, גודל, שנת כניסה)', done: !!myStatus.steps?.apartment },
               ].map((step, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                  <span style={{ fontSize: '18px' }}>{step.icon}</span>
-                  <span style={{ fontSize: '14px', color: step.done ? '#16a34a' : '#374151', flex: 1, textDecoration: step.done ? 'line-through' : 'none' }}>{step.text}</span>
+                <div key={i} className="flex items-center gap-3 p-2.5 bg-white rounded-[10px] border border-sc-gray-light">
+                  <span className="text-lg">{step.icon}</span>
+                  <span className={`text-sm flex-1 ${step.done ? 'text-sc-success line-through' : 'text-sc-dark'}`}>{step.text}</span>
                   {step.done
-                    ? <span style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#22c55e', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '12px', fontWeight: 700 }}>✓</span>
-                    : <span style={{ width: '20px', height: '20px', borderRadius: '50%', border: '2px solid #d1d5db', display: 'inline-block' }} />
+                    ? <span className="w-5 h-5 rounded-full bg-sc-success inline-flex items-center justify-center text-white text-xs font-bold">✓</span>
+                    : <span className="w-5 h-5 rounded-full border-2 border-sc-gray-light inline-block" />
                   }
                 </div>
               ))}
@@ -286,21 +278,16 @@ export default function Dashboard() {
         {buildingGroup && (
           <a
             href={'/building-chat/' + (buildingGroup as any).id}
-            style={{ textDecoration: 'none', display: 'block' }}
+            className="no-underline block"
           >
-            <div style={{
-              background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
-              borderRadius: '20px', padding: '20px',
-              boxShadow: '0 4px 16px rgba(124,58,237,0.35)',
-              cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <div style={{ width: '50px', height: '50px', borderRadius: '14px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px', flexShrink: 0 }}>💬</div>
-                <div style={{ flex: 1 }}>
-                  <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: '#fff' }}>קבוצת הבניין שלי</h3>
-                  <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.8)' }}>לחץ לכניסה לצ׳אט עם הדיירים, סקרים ועוד</p>
+            <div className="bg-sc-blue-deep rounded-[20px] p-5 shadow-lg cursor-pointer transition-transform hover:scale-[1.01]">
+              <div className="flex items-center gap-3.5">
+                <div className="w-[50px] h-[50px] rounded-[14px] bg-white/20 flex items-center justify-center text-[26px] flex-shrink-0">💬</div>
+                <div className="flex-1">
+                  <h3 className="m-0 text-[17px] font-extrabold text-white">קבוצת הבניין שלי</h3>
+                  <p className="mt-1 text-[13px] text-white/80">לחץ לכניסה לצ׳אט עם הדיירים, סקרים ועוד</p>
                 </div>
-                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '24px' }}>←</span>
+                <span className="text-white/90 text-2xl">←</span>
               </div>
             </div>
           </a>
@@ -308,21 +295,21 @@ export default function Dashboard() {
 
         {/* Representative Tasks */}
         {(myRole as any)?.isRepresentative && (
-          <div style={{ background: 'linear-gradient(135deg, #ede9fe 0%, #f5f3ff 100%)', border: '1.5px solid #c4b5fd', borderRadius: '20px', padding: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>🏛️</div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: '#1e293b' }}>משימות הועד</h3>
-                <p style={{ margin: '2px 0 0', fontSize: '13px', color: '#64748b' }}>פעולות נדרשות בשם הבניין</p>
+          <div className="sc-card p-6 border-t-4 border-t-sc-blue">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-11 h-11 rounded-xl bg-sc-blue flex items-center justify-center text-[22px]">🏛️</div>
+              <div className="flex-1">
+                <h3 className="m-0 text-[17px] font-bold text-sc-dark">משימות הועד</h3>
+                <p className="mt-0.5 text-[13px] text-sc-gray">פעולות נדרשות בשם הבניין</p>
               </div>
               <button
                 onClick={() => window.dispatchEvent(new Event('open-faqbot-committee'))}
-                style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: '#fff', border: 'none', borderRadius: 12, padding: '8px 14px', cursor: 'pointer', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, boxShadow: '0 2px 8px rgba(124,58,237,0.3)' }}
+                className="sc-btn-primary px-3.5 py-2 text-[13px] flex items-center gap-1.5 flex-shrink-0"
               >
                 📖 מדריך
               </button>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div className="flex flex-col gap-2.5">
               {[
                 { icon: '📋', text: 'בחר ספק לפרויקט', link: '/directory',
                   info: 'בחר ספק מקצועי (עורך דין, שמאי, אדריכל) שילווה את הפרויקט. בחירה נכונה תאיץ את קידום הפינוי-בינוי ותגן על זכויות הדיירים.' },
@@ -341,27 +328,27 @@ export default function Dashboard() {
 
         {/* Project Status Card */}
         {project ? (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div className="sc-card p-6 border-t-4 border-t-sc-blue">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="font-semibold text-gray-900 text-lg">{project.name}</h3>
-                <span className="inline-block mt-1 px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                <h3 className="font-semibold text-sc-dark text-lg">{project.name}</h3>
+                <span className="sc-badge mt-1 bg-sc-blue-pale text-sc-blue">
                   {project.type?.replace('_', ' ')}
                 </span>
               </div>
-              <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
+              <span className="sc-badge bg-sc-warning/15 text-sc-warning">
                 {STATUS_LABELS[project.status] ?? project.status}
               </span>
             </div>
 
             {total > 0 && (
               <div className="mb-4">
-                <div className="flex justify-between text-sm text-gray-600 mb-2">
+                <div className="flex justify-between text-sm text-sc-gray mb-2">
                   <span>חתימות שנאספו</span>
                   <span className="font-medium">{signed} / {total} ({pct}%)</span>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-2">
-                  <div className="bg-blue-500 h-2 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                <div className="w-full bg-sc-gray-light rounded-full h-2">
+                  <div className="bg-sc-blue h-2 rounded-full transition-all" style={{ width: `${pct}%` }} />
                 </div>
               </div>
             )}
@@ -369,15 +356,15 @@ export default function Dashboard() {
             <div className="flex flex-wrap gap-1">
               {STAGES.map((s, i) => (
                 <span key={i} className={`text-xs px-2 py-1 rounded-full ${
-                  i < currentStage ? 'bg-green-100 text-green-700' :
-                  i === currentStage ? 'bg-blue-600 text-white font-medium' :
-                  'bg-gray-100 text-gray-400'
+                  i < currentStage ? 'bg-sc-success/15 text-sc-success' :
+                  i === currentStage ? 'bg-sc-blue text-white font-medium' :
+                  'bg-sc-gray-light text-sc-gray'
                 }`}>{s}</span>
               ))}
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-center text-gray-400">
+          <div className="sc-card p-6 text-center text-sc-gray">
             <div className="text-4xl mb-2">🏗️</div>
             <p>טרם שויכת לפרויקט. פנה למארגן הדיירים.</p>
           </div>
@@ -385,18 +372,18 @@ export default function Dashboard() {
 
         {/* Leadership */}
         {leadership && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">מי מוביל</h3>
+          <div className="sc-card p-6">
+            <h3 className="sc-section-title text-base mb-4">מי מוביל</h3>
             <div className="space-y-3">
               {[
                 { label: 'מארגן דיירים', name: leadership.manager?.full_name, phone: leadership.manager?.phone, icon: '🏢' },
               ].filter(p => p.name).map((p) => (
-                <div key={p.label} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                <div key={p.label} className="flex items-center gap-3 p-3 bg-sc-bg rounded-xl">
                   <span className="text-xl">{p.icon}</span>
                   <div>
-                    <p className="text-xs text-gray-500">{p.label}</p>
-                    <p className="text-sm font-medium text-gray-900">{p.name}</p>
-                    {p.phone && <p className="text-xs text-blue-600">{p.phone}</p>}
+                    <p className="text-xs text-sc-gray">{p.label}</p>
+                    <p className="text-sm font-medium text-sc-dark">{p.name}</p>
+                    {p.phone && <p className="text-xs text-sc-blue">{p.phone}</p>}
                   </div>
                 </div>
               ))}
@@ -406,27 +393,27 @@ export default function Dashboard() {
 
         {/* Documents */}
         {docs && docs.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">מסמכים לחתימה</h3>
+          <div className="sc-card p-6">
+            <h3 className="sc-section-title text-base mb-4">מסמכים לחתימה</h3>
             <div className="space-y-3">
               {docs.map((doc: any) => {
                 const isSigned = doc.signatures?.length > 0
                 return (
                   <div key={doc.id} className={`flex items-center justify-between p-3 rounded-xl border ${
-                    isSigned ? 'border-green-200 bg-green-50' :
-                    doc.type === 'SIGN_REQUIRED' ? 'border-red-200 bg-red-50' : 'border-gray-100 bg-gray-50'
+                    isSigned ? 'border-sc-success/30 bg-sc-success/5' :
+                    doc.type === 'SIGN_REQUIRED' ? 'border-sc-error/30 bg-sc-error/5' : 'border-sc-gray-light bg-sc-bg'
                   }`}>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{doc.title}</p>
-                      {doc.due_date && <p className="text-xs text-gray-500">עד {doc.due_date}</p>}
+                      <p className="text-sm font-medium text-sc-dark">{doc.title}</p>
+                      {doc.due_date && <p className="text-xs text-sc-gray">עד {doc.due_date}</p>}
                     </div>
                     {isSigned ? (
-                      <span className="text-green-600 text-sm font-medium">✅ חתום</span>
+                      <span className="text-sc-success text-sm font-medium">✅ חתום</span>
                     ) : doc.type === 'SIGN_REQUIRED' ? (
                       <button
                         onClick={() => signDoc.mutate({ docId: doc.id })}
                         disabled={signDoc.isPending}
-                        className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors"
+                        className="sc-btn-primary text-xs px-3 py-1.5"
                       >
                         חתום עכשיו
                       </button>

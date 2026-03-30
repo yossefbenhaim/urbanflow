@@ -49,33 +49,75 @@ export default function Login() {
   }
 
   return (
-    <div dir="rtl" style={{ minHeight: '100vh', background: '#020817', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, fontFamily: 'system-ui, Arial, sans-serif', position: 'relative', overflow: 'hidden' }}>
+    <div dir="rtl" className="min-h-screen flex font-heebo">
+      {/* LEFT SIDE — Login Form */}
+      <div className="flex-1 flex items-center justify-center bg-white px-6 py-12">
+        <div className="w-full max-w-[400px]">
+          <h2 className="text-2xl font-bold text-sc-dark mb-1">ברוכים השבים</h2>
+          <p className="text-sc-gray text-sm mb-8">התחברו לחשבון שלכם</p>
 
-      {/* Background glow */}
-      <div style={{ position: 'absolute', top: '20%', left: '50%', transform: 'translateX(-50%)', width: 600, height: 400, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(37,99,235,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: '10%', right: '10%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(124,58,237,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
-
-      <div style={{ width: '100%', maxWidth: 420, position: 'relative', zIndex: 1 }}>
-
-        {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <Link to="/" style={{ textDecoration: 'none' }}>
-            <img src="/logo.svg" alt="SC" style={{ height: 52, marginBottom: 12, filter: 'drop-shadow(0 0 16px rgba(37,99,235,0.4))' }} />
-            <div style={{ color: 'white', fontWeight: 900, fontSize: 22, letterSpacing: -0.5 }}>
-              Silver <span style={{ color: '#F59E0B' }}>Castle</span>
+          {/* Form */}
+          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+            <div>
+              <label className="block text-sc-dark text-sm font-medium mb-1.5">אימייל</label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                placeholder="your@email.com"
+                className="sc-input"
+              />
             </div>
-            <div style={{ color: '#475569', fontSize: 13, marginTop: 4 }}>פלטפורמת ניהול התחדשות עירונית</div>
-          </Link>
-        </div>
 
-        {/* Card */}
-        <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 24, padding: '36px 32px', backdropFilter: 'blur(12px)' }}>
-          <h2 style={{ color: 'white', fontWeight: 800, fontSize: 22, margin: '0 0 24px', textAlign: 'center' }}>כניסה למערכת</h2>
+            <div>
+              <label className="block text-sc-dark text-sm font-medium mb-1.5">סיסמה</label>
+              <div className="relative">
+                <input
+                  type={showPass ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  placeholder="••••••••"
+                  className="sc-input pl-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPass(s => !s)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 bg-transparent border-none text-sc-gray cursor-pointer text-base p-0"
+                >
+                  {showPass ? '🙈' : '👁️'}
+                </button>
+              </div>
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-sc-error/30 rounded-[10px] px-4 py-3 text-sc-error text-sm">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={signIn.isPending}
+              className="sc-btn-primary w-full text-center disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {signIn.isPending ? 'מתחבר...' : 'התחברות'}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 my-6">
+            <div className="flex-1 h-px bg-sc-gray-light" />
+            <span className="text-sc-gray text-sm">או</span>
+            <div className="flex-1 h-px bg-sc-gray-light" />
+          </div>
 
           {/* Google */}
-          <button onClick={handleGoogle} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, padding: '12px 0', color: '#E2E8F0', fontSize: 15, fontWeight: 600, cursor: 'pointer', marginBottom: 20, transition: 'all .2s' }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}>
+          <button
+            onClick={handleGoogle}
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white border border-sc-gray-light rounded-lg hover:bg-sc-bg transition-colors text-sm font-medium text-sc-dark cursor-pointer"
+          >
             <svg width="18" height="18" viewBox="0 0 18 18">
               <path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/>
               <path fill="#34A353" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z"/>
@@ -85,62 +127,48 @@ export default function Login() {
             המשך עם Google
           </button>
 
-          {/* Divider */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
-            <span style={{ color: '#475569', fontSize: 13 }}>או</span>
-            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+          {/* Footer */}
+          <p className="text-center text-sm text-sc-gray mt-8">
+            אין לך חשבון?{' '}
+            <Link to="/register" className="text-sc-blue font-semibold hover:underline">
+              הירשם עכשיו
+            </Link>
+          </p>
+        </div>
+      </div>
+
+      {/* RIGHT SIDE — Branding Panel */}
+      <div className="hidden lg:flex flex-col items-center justify-center w-[480px] bg-sc-blue-deep text-white px-10 py-12 relative">
+        {/* Logo + Badge */}
+        <div className="flex items-center gap-3 mb-10">
+          <img src="/logo.svg" alt="SC" className="h-10" />
+          <span className="text-xl font-bold tracking-tight">
+            Silver <span className="text-amber-400">Castle</span>
+          </span>
+        </div>
+
+        {/* Headlines */}
+        <h2 className="text-2xl font-bold text-center leading-relaxed mb-3">
+          הפלטפורמה שמלווה את<br />ההתחדשות העירונית
+        </h2>
+        <p className="text-white/70 text-center text-sm mb-12">
+          מהדייר הראשון ועד המפתח
+        </p>
+
+        {/* Stats */}
+        <div className="flex gap-8 text-center">
+          <div>
+            <div className="text-3xl font-extrabold">500+</div>
+            <div className="text-white/60 text-xs mt-1">פרויקטים</div>
           </div>
-
-          {/* Form */}
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div>
-              <label style={{ display: 'block', color: '#94A3B8', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>אימייל</label>
-              <input
-                type="email" value={email} onChange={e => setEmail(e.target.value)} required
-                placeholder="your@email.com"
-                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '13px 16px', color: 'white', fontSize: 15, outline: 'none', boxSizing: 'border-box', transition: 'border-color .2s' }}
-                onFocus={e => (e.currentTarget.style.borderColor = '#2563EB')}
-                onBlur={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)')}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', color: '#94A3B8', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>סיסמה</label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required
-                  placeholder="••••••••"
-                  style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '13px 16px', paddingLeft: 44, color: 'white', fontSize: 15, outline: 'none', boxSizing: 'border-box', transition: 'border-color .2s' }}
-                  onFocus={e => (e.currentTarget.style.borderColor = '#2563EB')}
-                  onBlur={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)')}
-                />
-                <button type="button" onClick={() => setShowPass(s => !s)} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#475569', cursor: 'pointer', fontSize: 16, padding: 0 }}>
-                  {showPass ? '🙈' : '👁️'}
-                </button>
-              </div>
-            </div>
-
-            {error && (
-              <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '12px 16px', color: '#FCA5A5', fontSize: 14 }}>
-                ⚠️ {error}
-              </div>
-            )}
-
-            <button type="submit" disabled={signIn.isPending} style={{ width: '100%', padding: '14px 0', borderRadius: 12, background: signIn.isPending ? '#1E3A5F' : 'linear-gradient(135deg, #2563EB, #7C3AED)', color: 'white', fontWeight: 700, fontSize: 16, border: 'none', cursor: signIn.isPending ? 'not-allowed' : 'pointer', boxShadow: signIn.isPending ? 'none' : '0 6px 24px rgba(37,99,235,0.35)', transition: 'all .2s' }}>
-              {signIn.isPending ? '⏳ מתחבר...' : 'כניסה ←'}
-            </button>
-          </form>
-        </div>
-
-        {/* Footer */}
-        <div style={{ textAlign: 'center', marginTop: 20 }}>
-          <span style={{ color: '#475569', fontSize: 14 }}>אין לך חשבון? </span>
-          <Link to="/register" style={{ color: '#3B82F6', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>הרשמה חינם</Link>
-        </div>
-
-        <div style={{ textAlign: 'center', marginTop: 12 }}>
-          <Link to="/" style={{ color: '#334155', fontSize: 12, textDecoration: 'none' }}>← חזרה לדף הבית</Link>
+          <div>
+            <div className="text-3xl font-extrabold">12K</div>
+            <div className="text-white/60 text-xs mt-1">דיירים</div>
+          </div>
+          <div>
+            <div className="text-3xl font-extrabold">98%</div>
+            <div className="text-white/60 text-xs mt-1">שביעות רצון</div>
+          </div>
         </div>
       </div>
     </div>

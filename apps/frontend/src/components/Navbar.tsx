@@ -25,59 +25,44 @@ function NotificationBell() {
   }, [])
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
+    <div ref={ref} className="relative">
       <button
         onClick={() => { setOpen(o => !o); if (!open && unread > 0) markRead.mutate() }}
-        style={{
-          position: 'relative', width: 40, height: 40, borderRadius: 10,
-          border: 'none', background: open ? '#eff6ff' : '#f8fafc',
-          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 18, transition: 'background 0.15s', WebkitTapHighlightColor: 'transparent',
-        }}
+        className="relative w-10 h-10 rounded-[10px] border-none bg-white/15 cursor-pointer flex items-center justify-center text-lg transition-colors"
+        style={{ WebkitTapHighlightColor: 'transparent' }}
       >
-        🔔
+        <span className="text-white">🔔</span>
         {unread > 0 && (
-          <span style={{
-            position: 'absolute', top: 5, right: 5,
-            background: '#ef4444', color: '#fff', fontSize: 9, fontWeight: 800,
-            width: 15, height: 15, borderRadius: '50%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: '1.5px solid #fff',
-          }}>{unread > 9 ? '9+' : unread}</span>
+          <span className="absolute top-[5px] right-[5px] bg-sc-error text-white text-[9px] font-extrabold w-[15px] h-[15px] rounded-full flex items-center justify-center border-[1.5px] border-white">
+            {unread > 9 ? '9+' : unread}
+          </span>
         )}
       </button>
 
       {open && (
-        <div style={{
-          position: 'fixed', top: 56, left: 8, right: 8,
-          width: 300, background: '#fff', borderRadius: 16,
-          boxShadow: '0 16px 48px rgba(0,0,0,0.15)', border: '1px solid #e5e7eb', zIndex: 9999,
-        }}>
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', fontWeight: 700, fontSize: 14, color: '#111827' }}>
-            🔔 התראות {unread > 0 && <span style={{ color: '#6b7280', fontWeight: 400, fontSize: 12 }}>({unread} חדשות)</span>}
+        <div className="fixed top-14 left-2 right-2 w-[300px] bg-white rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.15)] border border-gray-200 z-[9999]">
+          <div className="px-4 py-3 border-b border-gray-100 font-bold text-sm text-sc-dark">
+            🔔 התראות {unread > 0 && <span className="text-sc-gray font-normal text-xs">({unread} חדשות)</span>}
           </div>
-          <div style={{ maxHeight: 320, overflowY: 'auto' }}>
+          <div className="max-h-80 overflow-y-auto">
             {(notifications as any[]).length === 0 ? (
-              <div style={{ padding: '20px 16px', textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>
+              <div className="py-5 px-4 text-center text-sc-gray text-[13px]">
                 🎉 אין התראות חדשות
               </div>
             ) : (
               (notifications as any[]).map((n: any) => (
                 <div key={n.id}
                   onClick={() => { if (n.action_url) { setOpen(false); navigate(n.action_url) } }}
-                  style={{
-                    padding: '10px 14px', borderBottom: '1px solid #f9fafb',
-                    background: n.is_read ? '#fff' : '#eff6ff',
-                    cursor: n.action_url ? 'pointer' : 'default',
-                  }}>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                    <span style={{ fontSize: 16, flexShrink: 0 }}>
+                  className={`px-3.5 py-2.5 border-b border-gray-50 ${n.is_read ? 'bg-white' : 'bg-sc-blue-pale'} ${n.action_url ? 'cursor-pointer' : 'cursor-default'}`}
+                >
+                  <div className="flex gap-2 items-start">
+                    <span className="text-base flex-shrink-0">
                       {n.type === 'message' ? '💬' : n.type?.includes('meeting') ? '📅' : n.type?.includes('signature') ? '✍️' : '🔔'}
                     </span>
                     <div>
-                      <p style={{ margin: 0, fontSize: 13, fontWeight: n.is_read ? 400 : 600, color: '#111827' }}>{n.title}</p>
-                      {n.message && <p style={{ margin: '2px 0 0', fontSize: 11, color: '#6b7280' }}>{n.message}</p>}
-                      <p style={{ margin: '3px 0 0', fontSize: 10, color: '#9ca3af' }}>
+                      <p className={`m-0 text-[13px] text-sc-dark ${n.is_read ? 'font-normal' : 'font-semibold'}`}>{n.title}</p>
+                      {n.message && <p className="m-0 mt-0.5 text-[11px] text-sc-gray">{n.message}</p>}
+                      <p className="m-0 mt-[3px] text-[10px] text-sc-gray">
                         {new Date(n.created_at).toLocaleString('he-IL', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
                       </p>
                     </div>
@@ -128,63 +113,45 @@ function RightDrawer({ open, onClose, profile, isRepresentative, signOut }: {
       {open && (
         <div
           onClick={onClose}
-          style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
-            zIndex: 200, backdropFilter: 'blur(2px)',
-          }}
+          className="fixed inset-0 bg-black/40 z-[200] backdrop-blur-sm"
         />
       )}
 
       {/* Drawer */}
-      <div style={{
-        position: 'fixed', top: 0, right: 0, bottom: 0, width: 280,
-        background: '#fff', zIndex: 201,
-        boxShadow: '-8px 0 32px rgba(0,0,0,0.15)',
-        transform: open ? 'translateX(0)' : 'translateX(100%)',
-        transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1)',
-        display: 'flex', flexDirection: 'column',
-      }} dir="rtl">
-
+      <div
+        className={`fixed top-0 right-0 bottom-0 w-[280px] bg-white z-[201] shadow-[-8px_0_32px_rgba(0,0,0,0.15)] flex flex-col transition-transform duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${open ? 'translate-x-0' : 'translate-x-full'}`}
+        dir="rtl"
+      >
         {/* Header */}
-        <div style={{
-          padding: '20px 16px 16px',
-          background: 'linear-gradient(135deg, #1e3a8a, #2563EB)',
-          color: '#fff',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <img src="/logo.svg" alt="logo" style={{ width: 32, height: 32, borderRadius: 8 }} />
-              <span style={{ fontWeight: 800, fontSize: 16 }}>Silver Castle</span>
+        <div className="px-4 pt-5 pb-4 bg-gradient-to-br from-sc-blue-deep to-sc-blue text-white">
+          <div className="flex items-center justify-between mb-3.5">
+            <div className="flex items-center gap-2.5">
+              <img src="/logo.svg" alt="logo" className="w-8 h-8 rounded-lg" />
+              <span className="font-extrabold text-base">Silver Castle</span>
             </div>
-            <button onClick={onClose} style={{
-              background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 8,
-              width: 32, height: 32, cursor: 'pointer', color: '#fff', fontSize: 16,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>✕</button>
+            <button onClick={onClose} className="bg-white/20 border-none rounded-lg w-8 h-8 cursor-pointer text-white text-base flex items-center justify-center">
+              ✕
+            </button>
           </div>
 
           {/* User card */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 42, height: 42, borderRadius: '50%', background: 'rgba(255,255,255,0.25)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 800, fontSize: 18, color: '#fff', flexShrink: 0,
-            }}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-[42px] h-[42px] rounded-full bg-white/25 flex items-center justify-center font-extrabold text-lg text-white flex-shrink-0">
               {(profile?.fullName || profile?.email || '?')[0].toUpperCase()}
             </div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 14, color: '#fff' }}>{profile?.fullName || profile?.email}</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 2 }}>
+              <div className="font-bold text-sm text-white">{profile?.fullName || profile?.email}</div>
+              <div className="text-xs text-white/80 mt-0.5">
                 {roleInfo.icon} {roleInfo.label}
-                {isRepresentative && <span style={{ marginRight: 6 }}>• ועד 🏛️</span>}
+                {isRepresentative && <span className="mr-1.5">• ועד 🏛️</span>}
               </div>
             </div>
           </div>
         </div>
 
         {/* Nav items */}
-        <nav style={{ flex: 1, padding: '12px 10px', overflowY: 'auto' }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', padding: '0 8px', marginBottom: 6, letterSpacing: 1 }}>תפריט</div>
+        <nav className="flex-1 p-3 overflow-y-auto">
+          <div className="text-[11px] font-semibold text-sc-gray px-2 mb-1.5 tracking-wider">תפריט</div>
           {navItems.map(item => {
             const active = isActive(item.to)
             return (
@@ -192,59 +159,44 @@ function RightDrawer({ open, onClose, profile, isRepresentative, signOut }: {
                 key={item.to}
                 to={item.to}
                 onClick={onClose}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '12px 12px', borderRadius: 12, textDecoration: 'none',
-                  background: active ? '#eff6ff' : 'transparent',
-                  color: active ? '#2563EB' : '#374151',
-                  fontWeight: active ? 700 : 500, fontSize: 15,
-                  marginBottom: 2, transition: 'background 0.12s',
-                  borderRight: active ? '3px solid #2563EB' : '3px solid transparent',
-                }}
+                className={`flex items-center gap-3 px-3 py-3 rounded-[12px] no-underline mb-0.5 transition-colors border-r-[3px] ${
+                  active
+                    ? 'bg-sc-blue-pale text-sc-blue font-bold border-r-sc-blue'
+                    : 'bg-transparent text-sc-dark font-medium border-r-transparent hover:bg-gray-50'
+                }`}
+                style={{ fontSize: 15 }}
               >
-                <span style={{ fontSize: 20, width: 28, textAlign: 'center' }}>{item.icon}</span>
+                <span className="text-xl w-7 text-center">{item.icon}</span>
                 {item.label}
               </Link>
             )
           })}
         </nav>
 
-        {/* Sign out */}
-        <div style={{ padding: '12px 10px', borderTop: '1px solid #f3f4f6' }}>
+        {/* Bottom actions */}
+        <div className="p-2.5 border-t border-sc-gray-light">
           <button
             onClick={() => { window.dispatchEvent(new Event('open-faqbot')); onClose() }}
-            style={{
-              width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-              padding: '12px 12px', borderRadius: 12, border: 'none', marginBottom: 6,
-              background: '#f0fdf4', cursor: 'pointer', color: '#15803d',
-              fontSize: 14, fontWeight: 600, WebkitTapHighlightColor: 'transparent',
-            }}
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-[12px] border-none mb-1.5 bg-green-50 cursor-pointer text-sc-success text-sm font-semibold"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
           >
-            <span style={{ fontSize: 20, width: 28, textAlign: 'center' }}>💬</span>
+            <span className="text-xl w-7 text-center">💬</span>
             שאלות נפוצות
           </button>
           <button
             onClick={() => { window.dispatchEvent(new Event('open-accessibility')); onClose() }}
-            style={{
-              width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-              padding: '12px 12px', borderRadius: 12, border: 'none', marginBottom: 6,
-              background: '#fefce8', cursor: 'pointer', color: '#a16207',
-              fontSize: 14, fontWeight: 600, WebkitTapHighlightColor: 'transparent',
-            }}
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-[12px] border-none mb-1.5 bg-yellow-50 cursor-pointer text-sc-warning text-sm font-semibold"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
           >
-            <span style={{ fontSize: 20, width: 28, textAlign: 'center' }}>♿</span>
+            <span className="text-xl w-7 text-center">♿</span>
             נגישות
           </button>
           <button
             onClick={() => { signOut(); onClose() }}
-            style={{
-              width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-              padding: '12px 12px', borderRadius: 12, border: 'none',
-              background: '#fef2f2', cursor: 'pointer', color: '#ef4444',
-              fontSize: 14, fontWeight: 600, WebkitTapHighlightColor: 'transparent',
-            }}
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-[12px] border-none bg-red-50 cursor-pointer text-sc-error text-sm font-semibold"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
           >
-            <span style={{ fontSize: 20, width: 28, textAlign: 'center' }}>🚪</span>
+            <span className="text-xl w-7 text-center">🚪</span>
             התנתק
           </button>
         </div>
@@ -276,60 +228,52 @@ export default function Navbar() {
 
   return (
     <>
-      <nav style={{
-        background: '#fff', borderBottom: '1px solid #e5e7eb',
-        position: 'sticky', top: 0, zIndex: 50,
-        boxShadow: '0 1px 8px rgba(0,0,0,0.06)',
-      }} dir="rtl">
-        <div style={{
-          maxWidth: 960, margin: '0 auto', padding: '0 16px',
-          height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        }}>
+      <nav className="bg-sc-blue-deep sticky top-0 z-50 shadow-[0_1px_8px_rgba(0,0,0,0.1)]" dir="rtl">
+        <div className="max-w-[960px] mx-auto px-4 h-[54px] flex items-center justify-between">
 
-          {/* Right side: hamburger menu */}
-          {!loading && profile && (
-            <button
-              onClick={() => setDrawerOpen(true)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                background: '#f8fafc', border: '1px solid #e5e7eb',
-                borderRadius: 10, padding: '7px 12px', cursor: 'pointer',
-                fontSize: 14, color: '#374151', fontWeight: 600,
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <line x1="3" y1="6" x2="21" y2="6"/>
-                <line x1="3" y1="12" x2="21" y2="12"/>
-                <line x1="3" y1="18" x2="21" y2="18"/>
-              </svg>
-              תפריט
-            </button>
-          )}
-
-          {/* Center: Logo + back button */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {!isHome && (
+          {/* Right side: SC badge + text */}
+          <div className="flex items-center gap-2.5">
+            {!loading && profile && (
               <button
-                onClick={() => navigate(-1)}
-                style={{
-                  background: '#f1f5f9', border: 'none', borderRadius: 9,
-                  padding: '6px 12px', cursor: 'pointer', color: '#2563EB',
-                  fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4,
-                  WebkitTapHighlightColor: 'transparent',
-                }}
+                onClick={() => setDrawerOpen(true)}
+                className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg bg-white/15 border-none cursor-pointer text-white"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
               >
-                ‹ חזרה
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="3" y1="6" x2="21" y2="6"/>
+                  <line x1="3" y1="12" x2="21" y2="12"/>
+                  <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
               </button>
             )}
-            <Link to={dashLink} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-              <img src="/logo.svg" alt="Silver Castle" style={{ width: 32, height: 32, borderRadius: 8 }} />
-              <span style={{ fontWeight: 700, color: '#111827', fontSize: 15 }} className="hidden sm:block">Silver Castle</span>
+            <Link to={dashLink} className="flex items-center gap-2 no-underline">
+              <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center">
+                <img src="/logo.svg" alt="SC" className="w-5 h-5" />
+              </div>
+              <span className="font-bold text-[15px] text-white hidden sm:block">Silver Castle</span>
             </Link>
           </div>
 
-          {/* Left side: bell */}
-          {!loading && profile && <NotificationBell />}
+          {/* Center: back button */}
+          {!isHome && (
+            <button
+              onClick={() => navigate(-1)}
+              className="bg-white/15 border-none rounded-[9px] px-3 py-1.5 cursor-pointer text-white text-sm font-bold flex items-center gap-1"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
+            >
+              ‹ חזרה
+            </button>
+          )}
+
+          {/* Left side: notification bell + avatar */}
+          <div className="flex items-center gap-2">
+            {!loading && profile && <NotificationBell />}
+            {!loading && profile && (
+              <div className="w-9 h-9 rounded-full bg-white/25 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                {(profile.fullName || profile.email || '?')[0].toUpperCase()}
+              </div>
+            )}
+          </div>
         </div>
       </nav>
 

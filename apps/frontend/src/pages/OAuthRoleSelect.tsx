@@ -46,31 +46,22 @@ export default function OAuthRoleSelect() {
   }
 
   return (
-    <div dir="rtl" style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontFamily: "'Segoe UI', Tahoma, sans-serif", padding: '24px',
-    }}>
-      <div style={{
-        background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px',
-        padding: '48px 40px', maxWidth: '520px', width: '100%',
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <div style={{ fontSize: '48px', marginBottom: '12px' }}>👋</div>
-          <h1 style={{ color: '#fff', fontSize: '28px', fontWeight: 700, margin: '0 0 8px' }}>
+    <div dir="rtl" className="min-h-screen bg-sc-bg flex items-center justify-center font-heebo p-6">
+      <div className="bg-white border border-sc-gray-light rounded-3xl shadow-sm p-10 sm:p-12 max-w-[520px] w-full">
+        <div className="text-center mb-10">
+          <div className="text-5xl mb-3">👋</div>
+          <h1 className="text-sc-dark text-2xl font-extrabold mb-2">
             {isLoading ? '...' : googleName ? `שלום, ${googleName.split(' ')[0]}!` : 'ברוך הבא!'}
           </h1>
-          <p style={{ color: 'rgba(255,255,255,0.6)', margin: 0, fontSize: '15px' }}>
+          <p className="text-sc-gray text-sm">
             רק שלב אחד לפני שמתחילים — מה התפקיד שלך?
           </p>
         </div>
 
         {/* Name field if Google didn't provide one */}
         {needsName && (
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', display: 'block', marginBottom: '8px' }}>
+          <div className="mb-6">
+            <label className="text-sc-gray text-sm block mb-2">
               שמך המלא
             </label>
             <input
@@ -78,43 +69,31 @@ export default function OAuthRoleSelect() {
               value={manualName}
               onChange={e => setManualName(e.target.value)}
               placeholder="ישראל ישראלי"
-              style={{
-                width: '100%', padding: '14px 16px', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.15)',
-                background: 'rgba(255,255,255,0.07)', color: '#fff', fontSize: '15px',
-                outline: 'none', boxSizing: 'border-box',
-              }}
+              className="sc-input"
             />
           </div>
         )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+        <div className="flex flex-col gap-3 mb-8">
           {roles.map((r) => (
-            <button key={r.key} onClick={() => setSelectedRole(r.key)} style={{
-              display: 'flex', alignItems: 'center', gap: '16px',
-              padding: '16px 20px', borderRadius: '14px',
-              border: selectedRole === r.key ? '2px solid #2563EB' : '2px solid rgba(255,255,255,0.1)',
-              background: selectedRole === r.key ? 'rgba(37,99,235,0.2)' : 'rgba(255,255,255,0.04)',
-              cursor: 'pointer', transition: 'all 0.2s', textAlign: 'right', width: '100%',
-            }}>
-              <span style={{ fontSize: '28px' }}>{r.icon}</span>
-              <div>
-                <div style={{ color: '#fff', fontWeight: 600, fontSize: '16px' }}>{r.title}</div>
-                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', marginTop: '2px' }}>{r.subtitle}</div>
+            <button key={r.key} onClick={() => setSelectedRole(r.key)}
+              className={`flex items-center gap-4 p-4 rounded-[14px] border-2 text-right w-full transition-all
+                ${selectedRole === r.key ? 'border-sc-blue bg-sc-blue-pale' : 'border-sc-gray-light bg-white hover:bg-sc-bg'}`}
+            >
+              <span className="text-3xl">{r.icon}</span>
+              <div className="flex-1">
+                <div className="text-sc-dark font-semibold">{r.title}</div>
+                <div className="text-sc-gray text-sm mt-0.5">{r.subtitle}</div>
               </div>
-              {selectedRole === r.key && <span style={{ marginRight: 'auto', color: '#2563EB', fontSize: '20px' }}>✓</span>}
+              {selectedRole === r.key && <span className="text-sc-blue text-xl">✓</span>}
             </button>
           ))}
         </div>
 
-        {error && <p style={{ color: '#f87171', textAlign: 'center', marginBottom: '16px', fontSize: '14px' }}>{error}</p>}
+        {error && <p className="text-sc-error text-center mb-4 text-sm">{error}</p>}
 
-        <button onClick={handleSubmit} disabled={complete.isPending || !selectedRole} style={{
-          width: '100%', padding: '16px', borderRadius: '14px', border: 'none',
-          background: selectedRole ? 'linear-gradient(135deg, #2563EB, #7c3aed)' : 'rgba(255,255,255,0.1)',
-          color: '#fff', fontSize: '16px', fontWeight: 700,
-          cursor: !selectedRole || complete.isPending ? 'not-allowed' : 'pointer',
-          opacity: !selectedRole || complete.isPending ? 0.6 : 1, transition: 'all 0.2s',
-        }}>
+        <button onClick={handleSubmit} disabled={complete.isPending || !selectedRole}
+          className="sc-btn-primary w-full py-4 text-base disabled:opacity-50">
           {complete.isPending ? 'שומר...' : 'כניסה למערכת →'}
         </button>
       </div>

@@ -22,14 +22,14 @@ export default function ProviderDashboard() {
   }
 
   return (
-    <div className="min-h-screen page-content bg-gray-50" dir="rtl">
+    <div className="min-h-screen page-content bg-sc-bg" dir="rtl">
       <Navbar />
 
-      <div className="bg-white border-b border-gray-100 sticky top-14 z-10">
+      <div className="bg-white border-b border-sc-gray-light sticky top-14 z-10">
         <div className="max-w-lg mx-auto flex">
           {([['jobs','משרות פתוחות'],['applications','המועמדויות שלי'],['profile','הפרופיל שלי']] as [Tab,string][]).map(([v,l]) => (
             <button key={v} onClick={() => setTab(v)}
-              className={`flex-1 py-3 text-xs font-medium border-b-2 transition-colors ${tab === v ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'}`}>
+              className={`flex-1 py-3 text-xs font-medium border-b-2 transition-colors ${tab === v ? 'border-sc-blue text-sc-blue' : 'border-transparent text-sc-gray'}`}>
               {l}
             </button>
           ))}
@@ -41,36 +41,36 @@ export default function ProviderDashboard() {
           <>
             {applying && (
               <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
-                <div className="bg-white rounded-t-2xl w-full p-6 space-y-4">
-                  <h3 className="font-bold text-gray-900">הגשת מועמדות</h3>
+                <div className="sc-card rounded-t-2xl rounded-b-none w-full p-6 space-y-4">
+                  <h3 className="font-bold text-sc-dark">הגשת מועמדות</h3>
                   <textarea value={coverLetter} onChange={e => setCoverLetter(e.target.value)}
                     rows={6} placeholder="מכתב מקדים — תאר את הניסיון שלך בפרויקטי התחדשות עירונית..."
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+                    className="sc-input resize-none" />
                   <div className="flex gap-3">
-                    <button onClick={() => setApplying(null)} className="flex-1 border border-gray-200 text-gray-700 py-3 rounded-xl text-sm font-medium">ביטול</button>
-                    <button onClick={() => submitApp(applying)} className="flex-1 bg-blue-600 text-white py-3 rounded-xl text-sm font-medium hover:bg-blue-700">שלח מועמדות</button>
+                    <button onClick={() => setApplying(null)} className="sc-btn-secondary flex-1">ביטול</button>
+                    <button onClick={() => submitApp(applying)} className="sc-btn-primary flex-1">שלח מועמדות</button>
                   </div>
                 </div>
               </div>
             )}
 
             {mockJobs.map(job => (
-              <div key={job.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div key={job.id} className="sc-card p-5">
                 <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold text-gray-900">{job.title}</h3>
-                  <span className="text-xs text-gray-400">{job.published}</span>
+                  <h3 className="font-semibold text-sc-dark">{job.title}</h3>
+                  <span className="text-xs text-sc-gray">{job.published}</span>
                 </div>
-                <p className="text-sm text-blue-600 mb-3">{job.project}</p>
+                <p className="text-sm text-sc-blue mb-3">{job.project}</p>
                 <div className="flex flex-wrap gap-2 mb-4">
                   {[job.type, job.location, job.engagement].map(tag => (
-                    <span key={tag} className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">{tag}</span>
+                    <span key={tag} className="sc-badge bg-sc-blue-pale text-sc-blue">{tag}</span>
                   ))}
                 </div>
                 {applied.has(job.id) ? (
-                  <div className="text-center py-2 bg-green-50 rounded-xl text-sm text-green-700 font-medium">✅ מועמדות הוגשה</div>
+                  <div className="text-center py-2 bg-sc-success/10 rounded-xl text-sm text-sc-success font-medium">✅ מועמדות הוגשה</div>
                 ) : (
                   <button onClick={() => setApplying(job.id)}
-                    className="w-full bg-blue-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-blue-700">
+                    className="w-full bg-sc-brown text-white py-2.5 rounded-xl text-sm font-medium hover:bg-sc-brown-light transition-colors">
                     הגש מועמדות →
                   </button>
                 )}
@@ -82,22 +82,22 @@ export default function ProviderDashboard() {
         {tab === 'applications' && (
           <div className="space-y-3">
             {applied.size === 0 ? (
-              <div className="text-center py-16 text-gray-400">
+              <div className="text-center py-16 text-sc-gray">
                 <div className="text-5xl mb-3">📋</div>
                 <p>לא הגשת מועמדויות עדיין</p>
-                <button onClick={() => setTab('jobs')} className="mt-4 text-blue-600 text-sm">עיין במשרות</button>
+                <button onClick={() => setTab('jobs')} className="mt-4 text-sc-blue text-sm">עיין במשרות</button>
               </div>
             ) : (
               [...applied].map(id => {
                 const job = mockJobs.find(j => j.id === id)!
                 return (
-                  <div key={id} className="bg-white rounded-2xl border border-gray-100 p-4">
+                  <div key={id} className="sc-card p-4">
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-medium text-gray-900 text-sm">{job.title}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{job.project}</p>
+                        <p className="font-medium text-sc-dark text-sm">{job.title}</p>
+                        <p className="text-xs text-sc-gray mt-0.5">{job.project}</p>
                       </div>
-                      <span className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full">ממתין</span>
+                      <span className="sc-badge bg-sc-warning/10 text-sc-warning">ממתין</span>
                     </div>
                   </div>
                 )
@@ -107,12 +107,12 @@ export default function ProviderDashboard() {
         )}
 
         {tab === 'profile' && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+          <div className="sc-card p-6 space-y-4">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center text-white text-xl font-bold">ד</div>
+              <div className="w-16 h-16 bg-sc-blue-deep rounded-full flex items-center justify-center text-white text-xl font-bold">ד</div>
               <div>
-                <p className="font-bold text-gray-900">עו"ד דנה כהן</p>
-                <p className="text-sm text-gray-500">כהן ושות' — משרד עורכי דין</p>
+                <p className="font-bold text-sc-dark">עו"ד דנה כהן</p>
+                <p className="text-sm text-sc-gray">כהן ושות' — משרד עורכי דין</p>
               </div>
             </div>
             <div className="space-y-3 pt-2">
@@ -122,13 +122,13 @@ export default function ProviderDashboard() {
                 { label: 'מספר רישיון', value: '12345' },
                 { label: 'ניסיון', value: '15 שנות ניסיון בפרויקטי פינוי-בינוי' },
               ].map(f => (
-                <div key={f.label} className="border-b border-gray-50 pb-3">
-                  <p className="text-xs text-gray-400">{f.label}</p>
-                  <p className="text-sm text-gray-800 mt-0.5">{f.value}</p>
+                <div key={f.label} className="border-b border-sc-gray-light/50 pb-3">
+                  <p className="text-xs text-sc-gray">{f.label}</p>
+                  <p className="text-sm text-sc-dark mt-0.5">{f.value}</p>
                 </div>
               ))}
             </div>
-            <button className="w-full border border-blue-200 text-blue-600 py-3 rounded-xl text-sm font-medium hover:bg-blue-50">
+            <button className="sc-btn-secondary w-full">
               עריכת פרופיל
             </button>
           </div>

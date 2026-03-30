@@ -28,15 +28,15 @@ export default function CommitteeDashboard() {
   })
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-sc-bg" dir="rtl">
       <Navbar />
 
       {/* Tabs */}
-      <div className="bg-white border-b border-gray-100 sticky top-14 z-10">
+      <div className="bg-white border-b border-sc-gray-light sticky top-14 z-10">
         <div className="max-w-lg mx-auto flex overflow-x-auto">
           {([['overview','סקירה'],['tenants','דיירים'],['broadcast','הודעה'],['minutes','פרוטוקול']] as [Tab,string][]).map(([v,label]) => (
             <button key={v} onClick={() => setTab(v)}
-              className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${tab === v ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'}`}>
+              className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${tab === v ? 'border-sc-blue text-sc-blue' : 'border-transparent text-sc-gray'}`}>
               {label}
             </button>
           ))}
@@ -47,38 +47,38 @@ export default function CommitteeDashboard() {
         {tab === 'overview' && (
           <>
             {/* Signature progress */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h3 className="font-semibold text-gray-900 mb-4">סטטוס חתימות הבניין</h3>
+            <div className="sc-card p-6">
+              <h3 className="sc-section-title text-base mb-4">סטטוס חתימות הבניין</h3>
               <div className="flex items-center gap-4 mb-4">
-                <div className="text-4xl font-bold text-blue-600">{pct}%</div>
+                <div className="text-4xl font-bold text-sc-blue">{pct}%</div>
                 <div>
-                  <p className="text-sm text-gray-600">{signed} מתוך {total} דיירים חתמו</p>
-                  <p className="text-xs text-amber-600 mt-0.5">נדרש 80% לפינוי בינוי</p>
+                  <p className="text-sm text-sc-gray">{signed} מתוך {total} דיירים חתמו</p>
+                  <p className="text-xs text-sc-warning mt-0.5">נדרש 80% לפינוי בינוי</p>
                 </div>
               </div>
-              <div className="w-full bg-gray-100 rounded-full h-3">
-                <div className="bg-blue-500 h-3 rounded-full transition-all relative" style={{ width: `${pct}%` }}>
-                  <div className="absolute left-0 top-0 h-full bg-blue-600 rounded-full" style={{ width: `${pct}%` }} />
+              <div className="w-full bg-sc-gray-light rounded-full h-3">
+                <div className="bg-sc-blue h-3 rounded-full transition-all relative" style={{ width: `${pct}%` }}>
+                  <div className="absolute left-0 top-0 h-full bg-sc-blue-deep rounded-full" style={{ width: `${pct}%` }} />
                 </div>
               </div>
-              <div className="mt-3 flex justify-between text-xs text-gray-500">
+              <div className="mt-3 flex justify-between text-xs text-sc-gray">
                 <span>0%</span>
-                <span className="text-amber-600 font-medium">80% (סף)</span>
+                <span className="text-sc-warning font-medium">80% (סף)</span>
                 <span>100%</span>
               </div>
             </div>
 
             {/* Quick alerts */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">התראות</h3>
+            <div className="sc-card p-6">
+              <h3 className="sc-section-title text-base mb-3">התראות</h3>
               <div className="space-y-2">
                 {mockTenants.filter(t => !t.signed).map(t => (
-                  <div key={t.id} className="flex items-center justify-between p-3 bg-amber-50 rounded-xl">
+                  <div key={t.id} className="flex items-center justify-between p-3 bg-sc-warning/10 rounded-xl">
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{t.name} — {t.unit}</p>
-                      <p className="text-xs text-amber-600">טרם חתם</p>
+                      <p className="text-sm font-medium text-sc-dark">{t.name} — {t.unit}</p>
+                      <p className="text-xs text-sc-warning">טרם חתם</p>
                     </div>
-                    <a href={`tel:${t.phone}`} className="text-blue-600 text-sm">📞</a>
+                    <a href={`tel:${t.phone}`} className="text-sc-blue text-sm">📞</a>
                   </div>
                 ))}
               </div>
@@ -91,26 +91,26 @@ export default function CommitteeDashboard() {
             <div className="flex gap-2">
               {([['ALL','הכל'],['UNSIGNED','לא חתמו'],['INCOMPLETE','פרטים חסרים']] as ['ALL'|'UNSIGNED'|'INCOMPLETE',string][]).map(([v,l]) => (
                 <button key={v} onClick={() => setFilter(v)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${filter === v ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-600'}`}>{l}</button>
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${filter === v ? 'bg-sc-blue text-white' : 'bg-sc-bg border border-sc-gray-light text-sc-gray'}`}>{l}</button>
               ))}
             </div>
             {filtered.map(t => (
-              <div key={t.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+              <div key={t.id} className="sc-card p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-gray-900">{t.name}</p>
-                    <p className="text-xs text-gray-500">{t.unit} | קומה {t.floor}</p>
+                    <p className="font-medium text-sc-dark">{t.name}</p>
+                    <p className="text-xs text-sc-gray">{t.unit} | קומה {t.floor}</p>
                   </div>
                   <div className="flex gap-2">
-                    <span className={`px-2 py-1 text-xs rounded-full ${t.signed ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                    <span className={`sc-badge ${t.signed ? 'bg-sc-success/15 text-sc-success' : 'bg-sc-warning/15 text-sc-warning'}`}>
                       {t.signed ? 'חתם ✓' : 'לא חתם'}
                     </span>
-                    {!t.onboarded && <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-600">פרטים חסרים</span>}
+                    {!t.onboarded && <span className="sc-badge bg-sc-error/15 text-sc-error">פרטים חסרים</span>}
                   </div>
                 </div>
                 <div className="flex gap-2 mt-3">
-                  <a href={`tel:${t.phone}`} className="flex-1 text-center border border-gray-200 text-gray-700 py-1.5 rounded-lg text-xs hover:bg-gray-50">📞 {t.phone}</a>
-                  <button className="flex-1 border border-blue-200 text-blue-600 py-1.5 rounded-lg text-xs hover:bg-blue-50">שלח תזכורת</button>
+                  <a href={`tel:${t.phone}`} className="sc-btn-secondary flex-1 text-center text-xs py-1.5">📞 {t.phone}</a>
+                  <button className="flex-1 border border-sc-blue-light text-sc-blue py-1.5 rounded-lg text-xs hover:bg-sc-blue-pale transition-colors">שלח תזכורת</button>
                 </div>
               </div>
             ))}
@@ -118,35 +118,35 @@ export default function CommitteeDashboard() {
         )}
 
         {tab === 'broadcast' && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
-            <h3 className="font-semibold text-gray-900">הודעה לכל הדיירים</h3>
+          <div className="sc-card p-6 space-y-4">
+            <h3 className="sc-section-title text-base">הודעה לכל הדיירים</h3>
             {broadcastSent ? (
               <div className="text-center py-8">
                 <div className="text-5xl mb-3">📢</div>
-                <p className="font-medium text-gray-900">ההודעה נשלחה!</p>
-                <p className="text-sm text-gray-500 mt-1">ל-{total} דיירים</p>
+                <p className="font-medium text-sc-dark">ההודעה נשלחה!</p>
+                <p className="text-sm text-sc-gray mt-1">ל-{total} דיירים</p>
                 <button onClick={() => { setBroadcastSent(false); setBroadcast({ title: '', body: '' }) }}
-                  className="mt-4 text-blue-600 text-sm">שלח הודעה נוספת</button>
+                  className="mt-4 text-sc-blue text-sm">שלח הודעה נוספת</button>
               </div>
             ) : (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">כותרת</label>
+                  <label className="block text-sm font-medium text-sc-dark mb-1">כותרת</label>
                   <input value={broadcast.title} onChange={e => setBroadcast(p => ({ ...p, title: e.target.value }))}
                     placeholder="עדכון חשוב לדיירי הבניין"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    className="sc-input" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">גוף ההודעה</label>
+                  <label className="block text-sm font-medium text-sc-dark mb-1">גוף ההודעה</label>
                   <textarea value={broadcast.body} onChange={e => setBroadcast(p => ({ ...p, body: e.target.value }))}
                     rows={5} placeholder="תוכן ההודעה לדיירים..."
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+                    className="sc-input resize-none" />
                 </div>
-                <div className="bg-blue-50 rounded-xl p-3 text-sm text-blue-700">
+                <div className="bg-sc-blue-pale rounded-xl p-3 text-sm text-sc-blue">
                   📧 תישלח ל-{total} דיירים באימייל
                 </div>
                 <button onClick={() => setBroadcastSent(true)}
-                  className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700">
+                  className="sc-btn-primary w-full">
                   שלח הודעה
                 </button>
               </>
@@ -156,15 +156,15 @@ export default function CommitteeDashboard() {
 
         {tab === 'minutes' && (
           <div className="space-y-4">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">ישיבה אחרונה</h3>
-              <div className="text-sm text-gray-600 space-y-2">
-                <p><span className="font-medium">תאריך:</span> 20/02/2026</p>
-                <p><span className="font-medium">משתתפים:</span> דוד כהן, שרה לוי, יוסי אלון</p>
-                <p><span className="font-medium">החלטות:</span> לשלוח תזכורת לדיירים שלא חתמו עד סוף השבוע. לתאם פגישה עם נציג היזם.</p>
+            <div className="sc-card p-6">
+              <h3 className="sc-section-title text-base mb-3">ישיבה אחרונה</h3>
+              <div className="text-sm text-sc-gray space-y-2">
+                <p><span className="font-medium text-sc-dark">תאריך:</span> 20/02/2026</p>
+                <p><span className="font-medium text-sc-dark">משתתפים:</span> דוד כהן, שרה לוי, יוסי אלון</p>
+                <p><span className="font-medium text-sc-dark">החלטות:</span> לשלוח תזכורת לדיירים שלא חתמו עד סוף השבוע. לתאם פגישה עם נציג היזם.</p>
               </div>
             </div>
-            <button className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700">
+            <button className="sc-btn-primary w-full">
               + פרוטוקול ישיבה חדש
             </button>
           </div>

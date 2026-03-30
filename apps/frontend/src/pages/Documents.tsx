@@ -28,9 +28,9 @@ const mockDocs = [
 ]
 
 const statusMap = {
-  PENDING: { label: 'ממתין לחתימה', cls: 'bg-amber-100 text-amber-700' },
-  SIGNED:  { label: 'נחתם',         cls: 'bg-green-100 text-green-700'  },
-  INFO:    { label: 'לעיון',         cls: 'bg-gray-100 text-gray-600'    },
+  PENDING: { label: 'ממתין לחתימה', cls: 'bg-sc-warning/15 text-sc-warning' },
+  SIGNED:  { label: 'נחתם',         cls: 'bg-sc-success/15 text-sc-success'  },
+  INFO:    { label: 'לעיון',         cls: 'bg-sc-gray-light text-sc-gray'    },
 }
 
 type Filter = 'ALL' | 'PENDING' | 'SIGNED'
@@ -41,46 +41,46 @@ function DocCard({ doc }: { doc: typeof mockDocs[0] }) {
   const st = statusMap[doc.status as keyof typeof statusMap]
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="sc-card overflow-hidden">
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 text-base">{doc.title}</h3>
-            <p className="text-xs text-gray-500 mt-1">{doc.date}</p>
+            <h3 className="font-semibold text-sc-dark text-base">{doc.title}</h3>
+            <p className="text-xs text-sc-gray mt-1">{doc.date}</p>
             {doc.status === 'PENDING' && (
-              <p className="text-xs text-amber-600 mt-1">⏰ יש לחתום עד {(doc as any).dueDate}</p>
+              <p className="text-xs text-sc-warning mt-1">⏰ יש לחתום עד {(doc as any).dueDate}</p>
             )}
           </div>
-          <span className={`px-2 py-1 text-xs rounded-full font-medium flex-shrink-0 ${st.cls}`}>{st.label}</span>
+          <span className={`sc-badge flex-shrink-0 ${st.cls}`}>{st.label}</span>
         </div>
 
         {/* Summary + expand toggle */}
-        <div className="mt-3 bg-blue-50 rounded-xl px-3 py-2.5">
+        <div className="mt-3 bg-sc-blue-pale rounded-xl px-3 py-2.5">
           <div className="flex items-start justify-between gap-2">
-            <p className="text-xs text-blue-700 leading-relaxed flex-1">
+            <p className="text-xs text-sc-blue leading-relaxed flex-1">
               💡 {info.summary}
             </p>
             <button
               onClick={() => setExpanded(v => !v)}
-              className="text-blue-500 text-xs font-semibold flex-shrink-0 flex items-center gap-1"
+              className="text-sc-blue text-xs font-semibold flex-shrink-0 flex items-center gap-1"
             >
               {expanded ? 'פחות ▲' : 'עוד ▼'}
             </button>
           </div>
 
           {expanded && (
-            <p className="text-xs text-blue-600 mt-2 leading-relaxed border-t border-blue-100 pt-2">
+            <p className="text-xs text-sc-blue mt-2 leading-relaxed border-t border-sc-blue-light/30 pt-2">
               {info.full}
             </p>
           )}
         </div>
 
         <div className="flex gap-2 mt-3">
-          <button className="flex-1 border border-gray-200 text-gray-700 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 active:bg-gray-100 transition-colors">
+          <button className="sc-btn-secondary flex-1 text-sm py-2">
             📄 צפה
           </button>
           {doc.status === 'PENDING' && (
-            <button className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-sm font-medium hover:bg-blue-700 active:bg-blue-800 transition-colors">
+            <button className="sc-btn-primary flex-1 text-sm py-2">
               ✍️ חתום
             </button>
           )}
@@ -95,14 +95,14 @@ export default function Documents() {
   const filtered = mockDocs.filter(d => filter === 'ALL' || d.status === filter)
 
   return (
-    <div className="min-h-screen bg-gray-50 page-content" dir="rtl">
+    <div className="min-h-screen bg-sc-bg page-content" dir="rtl">
       <Navbar />
       <div className="max-w-lg mx-auto p-4">
         <div className="flex gap-2 mb-4">
           {([['ALL','הכל'],['PENDING','ממתינים'],['SIGNED','נחתמו']] as [Filter,string][]).map(([v, label]) => (
             <button key={v} onClick={() => setFilter(v)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                filter === v ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-600'
+                filter === v ? 'bg-sc-blue text-white' : 'bg-sc-bg border border-sc-gray-light text-sc-gray'
               }`}>
               {label}
             </button>

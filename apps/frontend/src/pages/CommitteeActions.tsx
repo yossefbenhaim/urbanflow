@@ -18,9 +18,9 @@ function BottomSheet({ open, onClose, title, children }: {
         className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-lg max-h-[85vh] overflow-y-auto animate-slide-up"
         onClick={e => e.stopPropagation()}
       >
-        <div className="sticky top-0 bg-white rounded-t-3xl sm:rounded-t-2xl border-b border-gray-100 px-5 py-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 text-xl">×</button>
+        <div className="sticky top-0 bg-white rounded-t-3xl sm:rounded-t-2xl border-b border-sc-gray-light px-5 py-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-sc-dark">{title}</h2>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-sc-gray-light text-sc-gray text-xl">×</button>
         </div>
         <div className="p-5">{children}</div>
       </div>
@@ -67,57 +67,47 @@ function PollWizard({ groupId, onSuccess }: { groupId: string; onSuccess: () => 
       <div className="flex items-center gap-2 mb-6">
         {[1, 2, 3].map(s => (
           <div key={s} className="flex items-center gap-2">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${s <= step ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400'}`}>{s}</div>
-            {s < 3 && <div className={`flex-1 h-0.5 w-8 ${s < step ? 'bg-blue-600' : 'bg-gray-200'}`} />}
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${s <= step ? 'bg-sc-blue text-white' : 'bg-sc-gray-light text-sc-gray'}`}>{s}</div>
+            {s < 3 && <div className={`flex-1 h-0.5 w-8 ${s < step ? 'bg-sc-blue' : 'bg-sc-gray-light'}`} />}
           </div>
         ))}
-        <span className="text-sm text-gray-500 mr-auto">שלב {step} מתוך 3</span>
+        <span className="text-sm text-sc-gray mr-auto">שלב {step} מתוך 3</span>
       </div>
 
       {step === 1 && (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">שאלת הסקר *</label>
+            <label className="block text-sm font-medium text-sc-dark mb-1">שאלת הסקר *</label>
             <textarea
               value={question}
               onChange={e => setQuestion(e.target.value)}
-              className={`w-full border rounded-xl px-3 py-2 text-sm resize-none h-24 focus:ring-2 focus:ring-blue-500 focus:outline-none ${errors.question ? 'border-red-400' : 'border-gray-200'}`}
+              className={`sc-input resize-none h-24 ${errors.question ? 'border-sc-error' : ''}`}
               placeholder="מה ברצונכם לשאול את הדיירים?"
             />
-            {errors.question && <p className="text-red-500 text-xs mt-1">{errors.question}</p>}
+            {errors.question && <p className="text-sc-error text-xs mt-1">{errors.question}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">סוג הסקר</label>
+            <label className="block text-sm font-medium text-sc-dark mb-1">סוג הסקר</label>
             <div className="flex gap-2">
               {[{ v: 'single', l: '⚪ בחירה יחידה' }, { v: 'multiple', l: '☑️ ריבוי בחירות' }].map(({ v, l }) => (
                 <button key={v} onClick={() => setPollType(v as any)}
-                  className={`flex-1 py-2 px-3 rounded-xl border text-sm font-medium transition-colors active:scale-95 ${pollType === v ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600'}`}>
+                  className={`flex-1 py-2 px-3 rounded-xl border text-sm font-medium transition-colors active:scale-95 ${pollType === v ? 'border-sc-blue bg-sc-blue-pale text-sc-blue' : 'border-sc-gray-light text-sc-gray'}`}>
                   {l}
                 </button>
               ))}
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f8fafc', borderRadius: 12, padding: '12px 14px' }}>
-            <span style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>🔒 סקר אנונימי</span>
+          <div className="flex items-center justify-between bg-sc-bg rounded-xl p-3">
+            <span className="text-sm font-medium text-sc-dark">🔒 סקר אנונימי</span>
             <div
               onClick={() => setIsAnonymous(!isAnonymous)}
-              style={{
-                width: 44, height: 24, borderRadius: 12, cursor: 'pointer', flexShrink: 0,
-                background: isAnonymous ? '#2563EB' : '#d1d5db',
-                position: 'relative', transition: 'background 0.2s',
-              }}
+              className={`w-11 h-6 rounded-xl cursor-pointer flex-shrink-0 relative transition-colors ${isAnonymous ? 'bg-sc-blue' : 'bg-sc-gray-light'}`}
             >
-              <div style={{
-                position: 'absolute', top: 2, width: 20, height: 20,
-                borderRadius: '50%', background: '#fff',
-                boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-                transition: 'left 0.2s',
-                left: isAnonymous ? 22 : 2,
-              }} />
+              <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all ${isAnonymous ? 'left-[22px]' : 'left-0.5'}`} />
             </div>
           </div>
           <button onClick={() => validateStep1() && setStep(2)}
-            className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold active:scale-95 transition-transform">
+            className="sc-btn-primary w-full active:scale-95 transition-transform">
             המשך →
           </button>
         </div>
@@ -125,29 +115,29 @@ function PollWizard({ groupId, onSuccess }: { groupId: string; onSuccess: () => 
 
       {step === 2 && (
         <div className="space-y-4">
-          <h3 className="font-semibold text-gray-800">אפשרויות תשובה</h3>
-          {errors.options && <p className="text-red-500 text-sm">{errors.options}</p>}
+          <h3 className="font-semibold text-sc-dark">אפשרויות תשובה</h3>
+          {errors.options && <p className="text-sc-error text-sm">{errors.options}</p>}
           {options.map((opt, i) => (
             <div key={i} className="flex gap-2">
               <input
                 value={opt}
                 onChange={e => { const o = [...options]; o[i] = e.target.value; setOptions(o) }}
-                className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="sc-input flex-1"
                 placeholder={`אפשרות ${i + 1}`}
               />
               {options.length > 2 && (
                 <button onClick={() => setOptions(options.filter((_, j) => j !== i))}
-                  className="w-9 h-9 flex items-center justify-center text-red-400 hover:bg-red-50 rounded-xl">✕</button>
+                  className="w-9 h-9 flex items-center justify-center text-sc-error hover:bg-sc-error/10 rounded-xl">✕</button>
               )}
             </div>
           ))}
           <button onClick={() => setOptions([...options, ''])}
-            className="w-full border-2 border-dashed border-gray-300 rounded-xl py-2 text-sm text-gray-500 hover:border-blue-400 hover:text-blue-500 transition-colors">
+            className="w-full border-2 border-dashed border-sc-gray-light rounded-xl py-2 text-sm text-sc-gray hover:border-sc-blue hover:text-sc-blue transition-colors">
             + הוסף אפשרות
           </button>
           <div className="flex gap-2">
-            <button onClick={() => setStep(1)} className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl font-semibold active:scale-95">← חזרה</button>
-            <button onClick={() => validateStep2() && setStep(3)} className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold active:scale-95">המשך →</button>
+            <button onClick={() => setStep(1)} className="sc-btn-secondary flex-1 active:scale-95">← חזרה</button>
+            <button onClick={() => validateStep2() && setStep(3)} className="sc-btn-primary flex-1 active:scale-95">המשך →</button>
           </div>
         </div>
       )}
@@ -155,33 +145,33 @@ function PollWizard({ groupId, onSuccess }: { groupId: string; onSuccess: () => 
       {step === 3 && (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">תאריך סגירה (אופציונלי)</label>
+            <label className="block text-sm font-medium text-sc-dark mb-1">תאריך סגירה (אופציונלי)</label>
             <input type="date" value={closeAt} onChange={e => setCloseAt(e.target.value)}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+              className="sc-input" />
           </div>
           <div>
             <div className="flex justify-between text-sm mb-1">
-              <span className="font-medium text-gray-700">רף רוב</span>
-              <span className="font-bold text-blue-600">{thresholdPct}%</span>
+              <span className="font-medium text-sc-dark">רף רוב</span>
+              <span className="font-bold text-sc-blue">{thresholdPct}%</span>
             </div>
             <input type="range" min={50} max={90} value={thresholdPct} onChange={e => setThresholdPct(Number(e.target.value))}
-              className="w-full accent-blue-600" />
-            <div className="flex justify-between text-xs text-gray-400 mt-1"><span>50%</span><span>90%</span></div>
+              className="w-full accent-sc-blue" />
+            <div className="flex justify-between text-xs text-sc-gray mt-1"><span>50%</span><span>90%</span></div>
           </div>
 
           {/* Preview */}
-          <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-            <p className="text-xs font-semibold text-blue-600 mb-2 uppercase tracking-wide">תצוגה מקדימה</p>
-            <p className="font-semibold text-gray-800 text-sm mb-2">{question || '(שאלה)'}</p>
+          <div className="bg-sc-blue-pale rounded-xl p-4 border border-sc-blue-light">
+            <p className="text-xs font-semibold text-sc-blue mb-2 uppercase tracking-wide">תצוגה מקדימה</p>
+            <p className="font-semibold text-sc-dark text-sm mb-2">{question || '(שאלה)'}</p>
             <div className="space-y-1">
               {options.filter(o => o.trim()).map((o, i) => (
-                <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
-                  <div className={`w-4 h-4 rounded-${pollType === 'single' ? 'full' : 'sm'} border-2 border-blue-400`} />
+                <div key={i} className="flex items-center gap-2 text-sm text-sc-gray">
+                  <div className={`w-4 h-4 rounded-${pollType === 'single' ? 'full' : 'sm'} border-2 border-sc-blue`} />
                   {o}
                 </div>
               ))}
             </div>
-            <div className="mt-2 flex gap-2 text-xs text-gray-500">
+            <div className="mt-2 flex gap-2 text-xs text-sc-gray">
               <span>{isAnonymous ? '🔒 אנונימי' : '👁 גלוי'}</span>
               <span>•</span>
               <span>רף: {thresholdPct}%</span>
@@ -190,13 +180,13 @@ function PollWizard({ groupId, onSuccess }: { groupId: string; onSuccess: () => 
           </div>
 
           <div className="flex gap-2">
-            <button onClick={() => setStep(2)} className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl font-semibold active:scale-95">← חזרה</button>
+            <button onClick={() => setStep(2)} className="sc-btn-secondary flex-1 active:scale-95">← חזרה</button>
             <button onClick={handleSubmit} disabled={createPoll.isPending}
-              className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold active:scale-95 disabled:opacity-60">
+              className="sc-btn-primary flex-1 active:scale-95 disabled:opacity-60">
               {createPoll.isPending ? 'מפרסם...' : '📊 פרסם לקבוצה'}
             </button>
           </div>
-          {createPoll.error && <p className="text-red-500 text-sm text-center">{createPoll.error.message}</p>}
+          {createPoll.error && <p className="text-sc-error text-sm text-center">{createPoll.error.message}</p>}
         </div>
       )}
     </div>
@@ -254,16 +244,16 @@ function DocumentUpload({ buildingId, groupId, onSuccess }: { buildingId: string
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">שם המסמך *</label>
+        <label className="block text-sm font-medium text-sc-dark mb-1">שם המסמך *</label>
         <input value={name} onChange={e => setName(e.target.value)}
-          className={`w-full border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none ${errors.name ? 'border-red-400' : 'border-gray-200'}`}
+          className={`sc-input ${errors.name ? 'border-sc-error' : ''}`}
           placeholder="לדוגמה: חוזה שירות 2024" />
-        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+        {errors.name && <p className="text-sc-error text-xs mt-1">{errors.name}</p>}
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">סוג המסמך</label>
+        <label className="block text-sm font-medium text-sc-dark mb-1">סוג המסמך</label>
         <select value={docType} onChange={e => setDocType(e.target.value as any)}
-          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none">
+          className="sc-input">
           <option value="contract">📜 חוזה</option>
           <option value="protocol">📋 פרוטוקול</option>
           <option value="letter">✉️ מכתב</option>
@@ -271,29 +261,29 @@ function DocumentUpload({ buildingId, groupId, onSuccess }: { buildingId: string
         </select>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">קובץ (PDF / תמונה, עד 10MB) *</label>
-        <label className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 cursor-pointer transition-colors ${errors.file ? 'border-red-400' : 'border-gray-300 hover:border-orange-400'}`}>
+        <label className="block text-sm font-medium text-sc-dark mb-1">קובץ (PDF / תמונה, עד 10MB) *</label>
+        <label className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 cursor-pointer transition-colors ${errors.file ? 'border-sc-error' : 'border-sc-gray-light hover:border-sc-blue'}`}>
           <span className="text-2xl mb-1">📎</span>
-          <span className="text-sm text-gray-500">{file ? file.name : 'לחץ לבחירת קובץ'}</span>
+          <span className="text-sm text-sc-gray">{file ? file.name : 'לחץ לבחירת קובץ'}</span>
           <input type="file" accept=".pdf,image/*" className="hidden" onChange={e => setFile(e.target.files?.[0] ?? null)} />
         </label>
-        {errors.file && <p className="text-red-500 text-xs mt-1">{errors.file}</p>}
+        {errors.file && <p className="text-sc-error text-xs mt-1">{errors.file}</p>}
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">תיאור (אופציונלי)</label>
+        <label className="block text-sm font-medium text-sc-dark mb-1">תיאור (אופציונלי)</label>
         <textarea value={description} onChange={e => setDescription(e.target.value)}
-          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm resize-none h-16 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+          className="sc-input resize-none h-16"
           placeholder="תיאור קצר של המסמך..." />
       </div>
       {groupId && (
-        <label className="flex items-center gap-3 bg-orange-50 rounded-xl px-4 py-3 cursor-pointer">
-          <input type="checkbox" checked={shareToGroup} onChange={e => setShareToGroup(e.target.checked)} className="w-4 h-4 accent-orange-500" />
-          <span className="text-sm font-medium text-gray-700">📢 שתף עם כל הדיירים בקבוצה</span>
+        <label className="flex items-center gap-3 bg-sc-warning/10 rounded-xl px-4 py-3 cursor-pointer">
+          <input type="checkbox" checked={shareToGroup} onChange={e => setShareToGroup(e.target.checked)} className="w-4 h-4 accent-sc-warning" />
+          <span className="text-sm font-medium text-sc-dark">📢 שתף עם כל הדיירים בקבוצה</span>
         </label>
       )}
-      {errors.submit && <p className="text-red-500 text-sm text-center">{errors.submit}</p>}
+      {errors.submit && <p className="text-sc-error text-sm text-center">{errors.submit}</p>}
       <button onClick={handleSubmit} disabled={uploading}
-        className="w-full bg-orange-500 text-white py-3 rounded-xl font-semibold active:scale-95 disabled:opacity-60 transition-transform">
+        className="sc-btn-primary w-full active:scale-95 disabled:opacity-60 transition-transform">
         {uploading ? 'מעלה...' : '📄 העלה מסמך'}
       </button>
     </div>
@@ -321,51 +311,51 @@ function BroadcastForm({ buildingId, groupId, onSuccess }: { buildingId: string;
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">כותרת *</label>
+        <label className="block text-sm font-medium text-sc-dark mb-1">כותרת *</label>
         <input value={title} onChange={e => setTitle(e.target.value)}
-          className={`w-full border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none ${errors.title ? 'border-red-400' : 'border-gray-200'}`}
+          className={`sc-input ${errors.title ? 'border-sc-error' : ''}`}
           placeholder="נושא ההודעה" />
-        {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
+        {errors.title && <p className="text-sc-error text-xs mt-1">{errors.title}</p>}
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">תוכן *</label>
+        <label className="block text-sm font-medium text-sc-dark mb-1">תוכן *</label>
         <textarea value={content} onChange={e => setContent(e.target.value)}
-          className={`w-full border rounded-xl px-3 py-2 text-sm resize-none h-28 focus:ring-2 focus:ring-purple-500 focus:outline-none ${errors.content ? 'border-red-400' : 'border-gray-200'}`}
+          className={`sc-input resize-none h-28 ${errors.content ? 'border-sc-error' : ''}`}
           placeholder="תוכן ההודעה לדיירים..." />
-        {errors.content && <p className="text-red-500 text-xs mt-1">{errors.content}</p>}
+        {errors.content && <p className="text-sc-error text-xs mt-1">{errors.content}</p>}
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">עדיפות</label>
+        <label className="block text-sm font-medium text-sc-dark mb-2">עדיפות</label>
         <div className="flex gap-2">
           <button onClick={() => setPriority('normal')}
-            className={`flex-1 py-2 rounded-xl border text-sm font-medium active:scale-95 transition-colors ${priority === 'normal' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 text-gray-600'}`}>
+            className={`flex-1 py-2 rounded-xl border text-sm font-medium active:scale-95 transition-colors ${priority === 'normal' ? 'border-sc-blue bg-sc-blue-pale text-sc-blue' : 'border-sc-gray-light text-sc-gray'}`}>
             🔔 רגילה
           </button>
           <button onClick={() => setPriority('urgent')}
-            className={`flex-1 py-2 rounded-xl border text-sm font-medium active:scale-95 transition-colors ${priority === 'urgent' ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-200 text-gray-600'}`}>
+            className={`flex-1 py-2 rounded-xl border text-sm font-medium active:scale-95 transition-colors ${priority === 'urgent' ? 'border-sc-error bg-sc-error/10 text-sc-error' : 'border-sc-gray-light text-sc-gray'}`}>
             🔴 דחוף
           </button>
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">שלח ל</label>
+        <label className="block text-sm font-medium text-sc-dark mb-2">שלח ל</label>
         <div className="flex gap-2">
           <button onClick={() => setTarget('all')}
-            className={`flex-1 py-2 rounded-xl border text-sm font-medium active:scale-95 transition-colors ${target === 'all' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 text-gray-600'}`}>
+            className={`flex-1 py-2 rounded-xl border text-sm font-medium active:scale-95 transition-colors ${target === 'all' ? 'border-sc-blue bg-sc-blue-pale text-sc-blue' : 'border-sc-gray-light text-sc-gray'}`}>
             🏢 כל הדיירים
           </button>
           <button onClick={() => setTarget('group')}
-            className={`flex-1 py-2 rounded-xl border text-sm font-medium active:scale-95 transition-colors ${target === 'group' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 text-gray-600'}`}>
+            className={`flex-1 py-2 rounded-xl border text-sm font-medium active:scale-95 transition-colors ${target === 'group' ? 'border-sc-blue bg-sc-blue-pale text-sc-blue' : 'border-sc-gray-light text-sc-gray'}`}>
             👥 חברי הקבוצה
           </button>
         </div>
       </div>
       <button onClick={() => { if (validate()) sendBroadcast.mutate({ title, content, priority, target, buildingId, groupId }) }}
         disabled={sendBroadcast.isPending}
-        className="w-full bg-purple-600 text-white py-3 rounded-xl font-semibold active:scale-95 disabled:opacity-60 transition-transform">
+        className="sc-btn-primary w-full active:scale-95 disabled:opacity-60 transition-transform">
         {sendBroadcast.isPending ? 'שולח...' : '📢 שלח הודעה'}
       </button>
-      {sendBroadcast.error && <p className="text-red-500 text-sm text-center">{sendBroadcast.error.message}</p>}
+      {sendBroadcast.error && <p className="text-sc-error text-sm text-center">{sendBroadcast.error.message}</p>}
     </div>
   )
 }
@@ -392,40 +382,40 @@ function MeetingForm({ buildingId, groupId, onSuccess }: { buildingId: string; g
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">נושא הישיבה *</label>
+        <label className="block text-sm font-medium text-sc-dark mb-1">נושא הישיבה *</label>
         <input value={title} onChange={e => setTitle(e.target.value)}
-          className={`w-full border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none ${errors.title ? 'border-red-400' : 'border-gray-200'}`}
+          className={`sc-input ${errors.title ? 'border-sc-error' : ''}`}
           placeholder="לדוגמה: ישיבת ועד חודש מרץ" />
-        {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
+        {errors.title && <p className="text-sc-error text-xs mt-1">{errors.title}</p>}
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">תאריך ושעה *</label>
+        <label className="block text-sm font-medium text-sc-dark mb-1">תאריך ושעה *</label>
         <input type="datetime-local" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)}
-          className={`w-full border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none ${errors.scheduledAt ? 'border-red-400' : 'border-gray-200'}`} />
-        {errors.scheduledAt && <p className="text-red-500 text-xs mt-1">{errors.scheduledAt}</p>}
+          className={`sc-input ${errors.scheduledAt ? 'border-sc-error' : ''}`} />
+        {errors.scheduledAt && <p className="text-sc-error text-xs mt-1">{errors.scheduledAt}</p>}
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">מיקום</label>
+        <label className="block text-sm font-medium text-sc-dark mb-1">מיקום</label>
         <input value={location} onChange={e => setLocation(e.target.value)}
-          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none"
+          className="sc-input"
           placeholder="לדוגמה: לובי הבניין" />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">סדר יום</label>
+        <label className="block text-sm font-medium text-sc-dark mb-1">סדר יום</label>
         <textarea value={agenda} onChange={e => setAgenda(e.target.value)}
-          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm resize-none h-20 focus:ring-2 focus:ring-green-500 focus:outline-none"
+          className="sc-input resize-none h-20"
           placeholder="נושאים לדיון..." />
       </div>
-      <label className="flex items-center gap-3 bg-green-50 rounded-xl px-4 py-3 cursor-pointer">
-        <input type="checkbox" checked={notifyAll} onChange={e => setNotifyAll(e.target.checked)} className="w-4 h-4 accent-green-500" />
-        <span className="text-sm font-medium text-gray-700">📲 שתף בקבוצה + שלח התראה לכולם</span>
+      <label className="flex items-center gap-3 bg-sc-success/10 rounded-xl px-4 py-3 cursor-pointer">
+        <input type="checkbox" checked={notifyAll} onChange={e => setNotifyAll(e.target.checked)} className="w-4 h-4 accent-sc-success" />
+        <span className="text-sm font-medium text-sc-dark">📲 שתף בקבוצה + שלח התראה לכולם</span>
       </label>
       <button onClick={() => { if (validate()) scheduleMeeting.mutate({ title, scheduledAt, location: location || undefined, agenda: agenda || undefined, buildingId, groupId, notifyAll }) }}
         disabled={scheduleMeeting.isPending}
-        className="w-full bg-green-600 text-white py-3 rounded-xl font-semibold active:scale-95 disabled:opacity-60 transition-transform">
+        className="sc-btn-primary w-full bg-sc-success hover:bg-sc-success/90 active:scale-95 disabled:opacity-60 transition-transform">
         {scheduleMeeting.isPending ? 'קובע...' : '📅 קבע ישיבה'}
       </button>
-      {scheduleMeeting.error && <p className="text-red-500 text-sm text-center">{scheduleMeeting.error.message}</p>}
+      {scheduleMeeting.error && <p className="text-sc-error text-sm text-center">{scheduleMeeting.error.message}</p>}
     </div>
   )
 }
@@ -457,37 +447,37 @@ function SignatureForm({ buildingId, groupId, onSuccess }: { buildingId: string;
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">מסמך לחתימה *</label>
-        {docs.isLoading ? <p className="text-sm text-gray-400">טוען מסמכים...</p> : (
+        <label className="block text-sm font-medium text-sc-dark mb-1">מסמך לחתימה *</label>
+        {docs.isLoading ? <p className="text-sm text-sc-gray">טוען מסמכים...</p> : (
           <select value={documentId} onChange={e => setDocumentId(e.target.value)}
-            className={`w-full border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-pink-500 focus:outline-none ${errors.doc ? 'border-red-400' : 'border-gray-200'}`}>
+            className={`sc-input ${errors.doc ? 'border-sc-error' : ''}`}>
             <option value="">— בחר מסמך —</option>
             {(docs.data ?? []).map((d: any) => <option key={d.id} value={d.id}>{d.title}</option>)}
           </select>
         )}
-        {errors.doc && <p className="text-red-500 text-xs mt-1">{errors.doc}</p>}
+        {errors.doc && <p className="text-sc-error text-xs mt-1">{errors.doc}</p>}
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">הסבר (אופציונלי)</label>
+        <label className="block text-sm font-medium text-sc-dark mb-1">הסבר (אופציונלי)</label>
         <textarea value={message} onChange={e => setMessage(e.target.value)}
-          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm resize-none h-16 focus:ring-2 focus:ring-pink-500 focus:outline-none"
+          className="sc-input resize-none h-16"
           placeholder="למה צריכים לחתום?" />
       </div>
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="text-sm font-medium text-gray-700">דיירים לחתימה *</label>
+          <label className="text-sm font-medium text-sc-dark">דיירים לחתימה *</label>
           <button onClick={() => setSelectedTenants(selectedTenants.length === allTenantIds.length ? [] : allTenantIds)}
-            className="text-xs text-pink-600 font-medium">
+            className="text-xs text-sc-blue font-medium">
             {selectedTenants.length === allTenantIds.length ? 'בטל הכל' : 'בחר הכל'}
           </button>
         </div>
-        {errors.tenants && <p className="text-red-500 text-xs mb-2">{errors.tenants}</p>}
-        {tenants.isLoading ? <p className="text-sm text-gray-400">טוען דיירים...</p> : (
-          <div className="space-y-1 max-h-40 overflow-y-auto border border-gray-100 rounded-xl p-2">
+        {errors.tenants && <p className="text-sc-error text-xs mb-2">{errors.tenants}</p>}
+        {tenants.isLoading ? <p className="text-sm text-sc-gray">טוען דיירים...</p> : (
+          <div className="space-y-1 max-h-40 overflow-y-auto border border-sc-gray-light rounded-xl p-2">
             {(tenants.data ?? []).map((t: any) => (
-              <label key={t.userId} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 cursor-pointer">
-                <input type="checkbox" checked={selectedTenants.includes(t.userId)} onChange={() => toggleTenant(t.userId)} className="w-4 h-4 accent-pink-500" />
-                <span className="text-sm text-gray-700">{t.name}</span>
+              <label key={t.userId} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-sc-bg cursor-pointer">
+                <input type="checkbox" checked={selectedTenants.includes(t.userId)} onChange={() => toggleTenant(t.userId)} className="w-4 h-4 accent-sc-blue" />
+                <span className="text-sm text-sc-dark">{t.name}</span>
               </label>
             ))}
           </div>
@@ -495,10 +485,10 @@ function SignatureForm({ buildingId, groupId, onSuccess }: { buildingId: string;
       </div>
       <button onClick={() => { if (validate()) requestSig.mutate({ documentId, message: message || undefined, tenantIds: selectedTenants }) }}
         disabled={requestSig.isPending}
-        className="w-full bg-pink-600 text-white py-3 rounded-xl font-semibold active:scale-95 disabled:opacity-60 transition-transform">
+        className="sc-btn-primary w-full active:scale-95 disabled:opacity-60 transition-transform">
         {requestSig.isPending ? 'שולח...' : '✍️ שלח בקשת חתימה'}
       </button>
-      {requestSig.error && <p className="text-red-500 text-sm text-center">{requestSig.error.message}</p>}
+      {requestSig.error && <p className="text-sc-error text-sm text-center">{requestSig.error.message}</p>}
     </div>
   )
 }
@@ -512,46 +502,46 @@ function BuildingStatus({ status }: { status: any }) {
   const progress = totalUnits > 0 ? Math.round((onboarded / totalUnits) * 100) : 0
 
   return (
-    <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl p-4 border border-indigo-100 mb-4">
-      <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">📈 סטטוס הבניין</h3>
+    <div className="sc-card p-4 border-t-4 border-t-sc-blue mb-4">
+      <h3 className="font-bold text-sc-dark mb-3 flex items-center gap-2">📈 סטטוס הבניין</h3>
 
       {/* Progress */}
       <div className="mb-4">
         <div className="flex justify-between text-sm mb-1">
-          <span className="text-gray-600">Onboarding דיירים</span>
-          <span className="font-bold text-indigo-700">{onboarded}/{totalUnits}</span>
+          <span className="text-sc-gray">Onboarding דיירים</span>
+          <span className="font-bold text-sc-blue">{onboarded}/{totalUnits}</span>
         </div>
-        <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full transition-all duration-700" style={{ width: `${progress}%` }} />
+        <div className="h-2.5 bg-sc-gray-light rounded-full overflow-hidden">
+          <div className="h-full bg-sc-blue rounded-full transition-all duration-700" style={{ width: `${progress}%` }} />
         </div>
-        <p className="text-xs text-gray-500 mt-1">{progress}% השלימו תהליך</p>
+        <p className="text-xs text-sc-gray mt-1">{progress}% השלימו תהליך</p>
       </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-2 mb-4">
-        <div className="bg-white rounded-xl p-2 text-center shadow-sm">
-          <p className="text-lg font-bold text-indigo-600">{tenants?.length ?? 0}</p>
-          <p className="text-xs text-gray-500">דיירים</p>
+        <div className="bg-sc-bg rounded-xl p-2 text-center shadow-sm">
+          <p className="text-lg font-bold text-sc-blue">{tenants?.length ?? 0}</p>
+          <p className="text-xs text-sc-gray">דיירים</p>
         </div>
-        <div className="bg-white rounded-xl p-2 text-center shadow-sm">
-          <p className="text-lg font-bold text-orange-500">{documents?.length ?? 0}</p>
-          <p className="text-xs text-gray-500">מסמכים</p>
+        <div className="bg-sc-bg rounded-xl p-2 text-center shadow-sm">
+          <p className="text-lg font-bold text-sc-warning">{documents?.length ?? 0}</p>
+          <p className="text-xs text-sc-gray">מסמכים</p>
         </div>
-        <div className="bg-white rounded-xl p-2 text-center shadow-sm">
-          <p className="text-lg font-bold text-green-600">{upcomingMeetings?.length ?? 0}</p>
-          <p className="text-xs text-gray-500">ישיבות קרובות</p>
+        <div className="bg-sc-bg rounded-xl p-2 text-center shadow-sm">
+          <p className="text-lg font-bold text-sc-success">{upcomingMeetings?.length ?? 0}</p>
+          <p className="text-xs text-sc-gray">ישיבות קרובות</p>
         </div>
       </div>
 
       {/* Upcoming meetings */}
       {upcomingMeetings?.length > 0 && (
         <div className="mb-3">
-          <p className="text-xs font-semibold text-gray-600 mb-1">📅 ישיבות קרובות</p>
+          <p className="text-xs font-semibold text-sc-gray mb-1">📅 ישיבות קרובות</p>
           {upcomingMeetings.map((m: any) => (
-            <div key={m.id} className="flex items-center gap-2 text-xs text-gray-600 py-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
+            <div key={m.id} className="flex items-center gap-2 text-xs text-sc-gray py-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-sc-success flex-shrink-0" />
               <span className="font-medium">{m.title || 'ישיבה'}</span>
-              <span className="text-gray-400 mr-auto">{m.date}</span>
+              <span className="text-sc-gray mr-auto">{m.date}</span>
             </div>
           ))}
         </div>
@@ -560,13 +550,13 @@ function BuildingStatus({ status }: { status: any }) {
       {/* Recent docs */}
       {documents?.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-gray-600 mb-1">📄 מסמכים אחרונים</p>
+          <p className="text-xs font-semibold text-sc-gray mb-1">📄 מסמכים אחרונים</p>
           {documents.map((d: any) => (
-            <div key={d.id} className="flex items-center gap-2 text-xs text-gray-600 py-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-orange-400 flex-shrink-0" />
+            <div key={d.id} className="flex items-center gap-2 text-xs text-sc-gray py-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-sc-warning flex-shrink-0" />
               <span>{d.title}</span>
               {d.file_url && (
-                <a href={d.file_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 mr-auto">צפה</a>
+                <a href={d.file_url} target="_blank" rel="noopener noreferrer" className="text-sc-blue mr-auto">צפה</a>
               )}
             </div>
           ))}
@@ -595,20 +585,20 @@ function InviteForm({ buildingId, senderName }: { buildingId: string; senderName
 
   return (
     <div className="space-y-5">
-      <div className="flex rounded-xl overflow-hidden border border-gray-200 text-sm font-medium">
+      <div className="flex rounded-xl overflow-hidden border border-sc-gray-light text-sm font-medium">
         <button onClick={() => setType('phone')}
-          className={'flex-1 py-2.5 transition-colors ' + (type === 'phone' ? 'bg-teal-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50')}>
+          className={`flex-1 py-2.5 transition-colors ${type === 'phone' ? 'bg-sc-blue text-white' : 'bg-white text-sc-gray hover:bg-sc-bg'}`}>
           📱 טלפון
         </button>
         <button onClick={() => setType('email')}
-          className={'flex-1 py-2.5 transition-colors ' + (type === 'email' ? 'bg-teal-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50')}>
+          className={`flex-1 py-2.5 transition-colors ${type === 'email' ? 'bg-sc-blue text-white' : 'bg-white text-sc-gray hover:bg-sc-bg'}`}>
           ✉️ מייל
         </button>
       </div>
 
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-sc-dark">
             {type === 'phone' ? 'מספר טלפון' : 'כתובת מייל'}
           </label>
           {type === 'phone' && 'contacts' in navigator && (
@@ -621,7 +611,7 @@ function InviteForm({ buildingId, senderName }: { buildingId: string; senderName
                   }
                 } catch {}
               }}
-              className="flex items-center gap-1.5 text-xs font-semibold text-teal-600 bg-teal-50 hover:bg-teal-100 px-3 py-1.5 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 text-xs font-semibold text-sc-blue bg-sc-blue-pale hover:bg-sc-blue-pale/70 px-3 py-1.5 rounded-lg transition-colors"
             >
               📇 בחר מאנשי קשר
             </button>
@@ -632,43 +622,43 @@ function InviteForm({ buildingId, senderName }: { buildingId: string; senderName
           placeholder={type === 'phone' ? '050-000-0000' : 'name@example.com'}
           value={contact}
           onChange={e => setContact(e.target.value)}
-          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-right"
+          className="sc-input text-right"
           dir="ltr"
         />
       </div>
 
-      <div className="bg-gradient-to-br from-teal-50 to-blue-50 rounded-2xl p-4 border border-teal-100">
-        <p className="text-xs text-teal-700 font-semibold mb-2">תצוגה מקדימה:</p>
-        <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{msgText}</p>
+      <div className="bg-sc-blue-pale rounded-2xl p-4 border border-sc-blue-light">
+        <p className="text-xs text-sc-blue font-semibold mb-2">תצוגה מקדימה:</p>
+        <p className="text-sm text-sc-dark leading-relaxed whitespace-pre-line">{msgText}</p>
       </div>
 
       <div className="space-y-3">
         {type === 'phone' ? (
           <>
             <button onClick={sendWhatsApp} disabled={phone.length < 10}
-              className="w-full flex items-center justify-center gap-3 bg-green-500 hover:bg-green-600 disabled:opacity-40 text-white font-semibold py-3 rounded-xl text-sm transition-colors">
+              className="sc-btn-primary w-full flex items-center justify-center gap-3 bg-sc-success hover:bg-sc-success/90 disabled:opacity-40 text-sm">
               <span className="text-lg">📱</span> שלח דרך WhatsApp
             </button>
             <button onClick={sendSMS} disabled={phone.length < 10}
-              className="w-full flex items-center justify-center gap-3 bg-blue-500 hover:bg-blue-600 disabled:opacity-40 text-white font-semibold py-3 rounded-xl text-sm transition-colors">
+              className="sc-btn-primary w-full flex items-center justify-center gap-3 disabled:opacity-40 text-sm">
               <span className="text-lg">💬</span> שלח דרך SMS
             </button>
           </>
         ) : (
           <button onClick={sendEmail} disabled={!contact.includes('@')}
-            className="w-full flex items-center justify-center gap-3 bg-teal-600 hover:bg-teal-700 disabled:opacity-40 text-white font-semibold py-3 rounded-xl text-sm transition-colors">
+            className="sc-btn-primary w-full flex items-center justify-center gap-3 disabled:opacity-40 text-sm">
             <span className="text-lg">✉️</span> שלח דרך מייל
           </button>
         )}
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="flex-1 h-px bg-gray-200" />
-        <span className="text-xs text-gray-400">או</span>
-        <div className="flex-1 h-px bg-gray-200" />
+        <div className="flex-1 h-px bg-sc-gray-light" />
+        <span className="text-xs text-sc-gray">או</span>
+        <div className="flex-1 h-px bg-sc-gray-light" />
       </div>
       <button onClick={copyLink}
-        className="w-full flex items-center justify-center gap-2 border border-gray-200 text-gray-600 font-medium py-3 rounded-xl text-sm hover:bg-gray-50 transition-colors">
+        className="sc-btn-secondary w-full flex items-center justify-center gap-2 text-sm">
         🔗 העתק קישור לאפליקציה
       </button>
     </div>
@@ -700,38 +690,38 @@ export default function CommitteeActions() {
 
 
   if (!isRep) return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4 px-4 text-center">
+    <div className="min-h-screen bg-sc-bg flex flex-col items-center justify-center gap-4 px-4 text-center">
       <span className="text-5xl">🔒</span>
-      <h1 className="text-xl font-bold text-gray-800">גישה מוגבלת</h1>
-      <p className="text-gray-500">דף זה מיועד לנציגי ועד בניין בלבד</p>
-      <button onClick={() => navigate('/dashboard')} className="mt-2 bg-blue-600 text-white px-6 py-2 rounded-xl font-medium">חזרה לדף הבית</button>
+      <h1 className="text-xl font-bold text-sc-dark">גישה מוגבלת</h1>
+      <p className="text-sc-gray">דף זה מיועד לנציגי ועד בניין בלבד</p>
+      <button onClick={() => navigate('/dashboard')} className="sc-btn-primary mt-2">חזרה לדף הבית</button>
     </div>
   )
 
   const actions = [
     {
       id: 'poll' as ModalType, icon: '📊', title: 'פתיחת סקר',
-      desc: 'שאל את הדיירים שאלה והצבע על החלטות', color: 'from-blue-500 to-blue-600', bg: 'from-blue-50 to-blue-100',
+      desc: 'שאל את הדיירים שאלה והצבע על החלטות',
     },
     {
       id: 'document' as ModalType, icon: '📄', title: 'העלאת מסמך',
-      desc: 'שתף חוזים, פרוטוקולים ומכתבים', color: 'from-orange-500 to-orange-600', bg: 'from-orange-50 to-orange-100',
+      desc: 'שתף חוזים, פרוטוקולים ומכתבים',
     },
     {
       id: 'broadcast' as ModalType, icon: '📢', title: 'הודעה לדיירים',
-      desc: 'שלח הודעה לכל הדיירים בבניין', color: 'from-purple-500 to-purple-600', bg: 'from-purple-50 to-purple-100',
+      desc: 'שלח הודעה לכל הדיירים בבניין',
     },
     {
       id: 'meeting' as ModalType, icon: '📅', title: 'קביעת ישיבה',
-      desc: 'תאם ישיבת ועד ושלח הזמנות', color: 'from-green-500 to-green-600', bg: 'from-green-50 to-green-100',
+      desc: 'תאם ישיבת ועד ושלח הזמנות',
     },
     {
       id: 'signature' as ModalType, icon: '✍️', title: 'בקשת חתימה',
-      desc: 'בקש חתימות על מסמכים חשובים', color: 'from-pink-500 to-pink-600', bg: 'from-pink-50 to-pink-100',
+      desc: 'בקש חתימות על מסמכים חשובים',
     },
     {
       id: 'invite' as ModalType, icon: '🔗', title: 'הזמן דייר',
-      desc: 'שלח קישור הצטרפות לדייר דרך WhatsApp, SMS או מייל', color: 'from-teal-500 to-teal-600', bg: 'from-teal-50 to-teal-100',
+      desc: 'שלח קישור הצטרפות לדייר דרך WhatsApp, SMS או מייל',
     },
   ]
 
@@ -741,21 +731,21 @@ export default function CommitteeActions() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-sc-bg" dir="rtl">
       <Navbar />
 
       <div className="max-w-lg mx-auto px-4 py-5 pb-20">
         {/* Header */}
         <div className="mb-5">
-          <h1 className="text-2xl font-bold text-gray-900">🏛️ לוח הפעולות שלי</h1>
+          <h1 className="sc-section-title text-2xl">🏛️ לוח הפעולות שלי</h1>
           {building && (
-            <p className="text-gray-500 text-sm mt-0.5">נציג ועד בניין — {building.address || `${building.street} ${building.number}`}</p>
+            <p className="text-sc-gray text-sm mt-0.5">נציג ועד בניין — {building.address || `${building.street} ${building.number}`}</p>
           )}
         </div>
 
         {/* Success toast */}
         {success && (
-          <div className="mb-4 bg-green-500 text-white rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2">
+          <div className="mb-4 bg-sc-success text-white rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2">
             ✅ {success}
           </div>
         )}
@@ -764,45 +754,45 @@ export default function CommitteeActions() {
         <BuildingStatus status={statusQuery.data} />
 
         {/* Action cards */}
-        <h2 className="text-base font-bold text-gray-700 mb-3">פעולות מהירות</h2>
+        <h2 className="text-base font-bold text-sc-dark mb-3">פעולות מהירות</h2>
         <div className="grid grid-cols-2 gap-3 mb-6">
           {actions.map((action, i) => (
             <button
               key={action.id}
               onClick={() => setModal(action.id)}
-              className={`bg-gradient-to-br ${action.bg} rounded-2xl p-4 text-right border border-white shadow-sm active:scale-95 transition-transform ${i === 4 ? 'col-span-2' : ''}`}
+              className={`sc-card p-4 text-right active:scale-95 transition-transform hover:bg-sc-blue-pale ${i === 4 ? 'col-span-2' : ''}`}
             >
-              <div className={`inline-flex w-10 h-10 bg-gradient-to-br ${action.color} rounded-xl items-center justify-center text-xl shadow-sm mb-2`}>
+              <div className="inline-flex w-10 h-10 bg-sc-blue rounded-xl items-center justify-center text-xl shadow-sm mb-2 text-white">
                 {action.icon}
               </div>
-              <h3 className="font-bold text-gray-800 text-sm">{action.title}</h3>
-              <p className="text-gray-500 text-xs mt-0.5 leading-snug">{action.desc}</p>
+              <h3 className="font-bold text-sc-dark text-sm">{action.title}</h3>
+              <p className="text-sc-gray text-xs mt-0.5 leading-snug">{action.desc}</p>
             </button>
           ))}
         </div>
 
         {/* Recent tenants list */}
         {statusQuery.data?.tenants && statusQuery.data.tenants.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100">
-              <h2 className="font-bold text-gray-800 text-sm">👥 דיירי הבניין</h2>
+          <div className="sc-card overflow-hidden">
+            <div className="px-4 py-3 border-b border-sc-gray-light">
+              <h2 className="font-bold text-sc-dark text-sm">👥 דיירי הבניין</h2>
             </div>
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-sc-bg">
               {statusQuery.data.tenants.slice(0, 8).map((t: any) => (
                 <div key={t.id} className="flex items-center gap-3 px-4 py-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 text-sm font-bold flex-shrink-0">
+                  <div className="w-8 h-8 bg-sc-blue-pale rounded-full flex items-center justify-center text-sc-blue text-sm font-bold flex-shrink-0">
                     {t.profile?.full_name?.[0] ?? '?'}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate">{t.profile?.full_name ?? t.profile?.email ?? 'דייר'}</p>
-                    <p className="text-xs text-gray-400">{t.is_onboarded ? '✅ הצטרף' : '⏳ בתהליך'}</p>
+                    <p className="text-sm font-medium text-sc-dark truncate">{t.profile?.full_name ?? t.profile?.email ?? 'דייר'}</p>
+                    <p className="text-xs text-sc-gray">{t.is_onboarded ? '✅ הצטרף' : '⏳ בתהליך'}</p>
                   </div>
                   <div className="flex gap-1">
                     {t.profile?.is_building_representative && (
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">ועד</span>
+                      <span className="sc-badge bg-sc-blue-pale text-sc-blue">ועד</span>
                     )}
                     {t.signatures?.length > 0 && (
-                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">חתם</span>
+                      <span className="sc-badge bg-sc-success/15 text-sc-success">חתם</span>
                     )}
                   </div>
                 </div>
@@ -818,7 +808,7 @@ export default function CommitteeActions() {
           <PollWizard groupId={groupId} onSuccess={() => handleSuccess('הסקר פורסם בהצלחה!')} />
         )}
         {modal === 'poll' && !groupId && (
-          <p className="text-gray-500 text-center py-4">לא נמצאה קבוצת בניין. יש ליצור קבוצה תחילה.</p>
+          <p className="text-sc-gray text-center py-4">לא נמצאה קבוצת בניין. יש ליצור קבוצה תחילה.</p>
         )}
         {modal === 'document' && buildingId && (
           <DocumentUpload buildingId={buildingId} groupId={groupId} onSuccess={() => handleSuccess('המסמך הועלה בהצלחה!')} />
@@ -836,7 +826,7 @@ export default function CommitteeActions() {
           <InviteForm buildingId={buildingId} senderName={myRole?.fullName ?? undefined} />
         )}
         {!buildingId && modal && (
-          <p className="text-gray-500 text-center py-4">לא נמצא בניין משויך. צור קשר עם המנהל.</p>
+          <p className="text-sc-gray text-center py-4">לא נמצא בניין משויך. צור קשר עם המנהל.</p>
         )}
       </BottomSheet>
     </div>

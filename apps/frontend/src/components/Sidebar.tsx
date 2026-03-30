@@ -32,70 +32,48 @@ function NotificationBell() {
   }
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
+    <div ref={ref} className="relative">
       <button
         onClick={handleOpen}
-        style={{
-          position: 'relative', width: 44, height: 44, borderRadius: 12,
-          border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center',
-          justifyContent: 'center', fontSize: 20,
-          background: open ? '#eff6ff' : 'transparent',
-          transition: 'background 0.15s',
-          WebkitTapHighlightColor: 'transparent',
-        }}
+        className={`relative w-11 h-11 rounded-[12px] border-none cursor-pointer flex items-center justify-center text-xl transition-colors ${open ? 'bg-sc-blue-pale' : 'bg-transparent hover:bg-gray-50'}`}
         title="התראות"
+        style={{ WebkitTapHighlightColor: 'transparent' }}
       >
         🔔
         {unread > 0 && (
-          <span style={{
-            position: 'absolute', top: 6, right: 6,
-            background: '#ef4444', color: '#fff',
-            fontSize: 10, fontWeight: 800, lineHeight: 1,
-            width: 16, height: 16, borderRadius: '50%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: '1.5px solid #fff',
-          }}>
+          <span className="absolute top-1.5 right-1.5 bg-sc-error text-white text-[10px] font-extrabold leading-none w-4 h-4 rounded-full flex items-center justify-center border-[1.5px] border-white">
             {unread > 9 ? '9+' : unread}
           </span>
         )}
       </button>
 
       {open && (
-        <div style={{
-          position: 'absolute', top: 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)',
-          width: 320, background: '#fff', borderRadius: 16,
-          boxShadow: '0 16px 48px rgba(0,0,0,0.15)', border: '1px solid #e5e7eb',
-          zIndex: 9999, overflow: 'hidden',
-        }}>
-          <div style={{ padding: '14px 16px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontWeight: 700, fontSize: 15, color: '#111827' }}>🔔 התראות</span>
-            {unread > 0 && <span style={{ fontSize: 12, color: '#6b7280' }}>{unread} חדשות</span>}
+        <div className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 w-80 bg-white rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.15)] border border-gray-200 z-[9999] overflow-hidden">
+          <div className="px-4 py-3.5 border-b border-gray-100 flex items-center justify-between">
+            <span className="font-bold text-[15px] text-sc-dark">🔔 התראות</span>
+            {unread > 0 && <span className="text-xs text-sc-gray">{unread} חדשות</span>}
           </div>
-          <div style={{ maxHeight: 340, overflowY: 'auto' }}>
+          <div className="max-h-[340px] overflow-y-auto">
             {(notifications as any[]).length === 0 ? (
-              <div style={{ padding: '24px 16px', textAlign: 'center', color: '#9ca3af' }}>
-                <div style={{ fontSize: 28, marginBottom: 8 }}>🎉</div>
-                <p style={{ fontSize: 13, margin: 0 }}>אין התראות חדשות</p>
+              <div className="py-6 px-4 text-center text-sc-gray">
+                <div className="text-[28px] mb-2">🎉</div>
+                <p className="text-[13px] m-0">אין התראות חדשות</p>
               </div>
             ) : (
               (notifications as any[]).map((n: any) => (
-                <div key={n.id} style={{
-                  padding: '12px 16px', borderBottom: '1px solid #f9fafb',
-                  background: n.is_read ? '#fff' : '#eff6ff',
-                  transition: 'background 0.15s',
-                }}>
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                    <span style={{ fontSize: 18, flexShrink: 0 }}>
+                <div key={n.id} className={`px-4 py-3 border-b border-gray-50 transition-colors ${n.is_read ? 'bg-white' : 'bg-sc-blue-pale'}`}>
+                  <div className="flex gap-2.5 items-start">
+                    <span className="text-lg flex-shrink-0">
                       {n.type === 'message' ? '💬' : n.type === 'poll' ? '🗳️' : n.type === 'meeting' ? '📅' : n.type === 'document' ? '📄' : '🔔'}
                     </span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: 0, fontSize: 13, fontWeight: n.is_read ? 400 : 600, color: '#111827' }}>{n.title}</p>
-                      {n.message && <p style={{ margin: '2px 0 0', fontSize: 12, color: '#6b7280' }}>{n.message}</p>}
-                      <p style={{ margin: '4px 0 0', fontSize: 11, color: '#9ca3af' }}>
+                    <div className="flex-1 min-w-0">
+                      <p className={`m-0 text-[13px] text-sc-dark ${n.is_read ? 'font-normal' : 'font-semibold'}`}>{n.title}</p>
+                      {n.message && <p className="m-0 mt-0.5 text-xs text-sc-gray">{n.message}</p>}
+                      <p className="m-0 mt-1 text-[11px] text-sc-gray">
                         {new Date(n.created_at).toLocaleString('he-IL', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
                       </p>
                     </div>
-                    {!n.is_read && <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#2563EB', flexShrink: 0, marginTop: 4 }} />}
+                    {!n.is_read && <div className="w-2 h-2 rounded-full bg-sc-blue flex-shrink-0 mt-1" />}
                   </div>
                 </div>
               ))
@@ -133,14 +111,14 @@ export default function Sidebar() {
   type NavItem = { to: string; icon: string; label: string }
 
   const navItems: NavItem[] = [
-    { to: dashLink, icon: '🏠', label: 'דף הבית' },
+    { to: dashLink, icon: '🏠', label: 'ראשי' },
   ]
 
   if (profile.role === 'tenant') {
-    navItems.push({ to: '/onboarding', icon: '📝', label: 'הפרופיל שלי' })
+    navItems.push({ to: '/onboarding', icon: '📄', label: 'מסמכים' })
     if (isRepresentative) {
       navItems.push({ to: '/committee-actions', icon: '🏛️', label: 'פעולות ועד' })
-      navItems.push({ to: '/directory', icon: '🏢', label: 'שירותים' })
+      navItems.push({ to: '/directory', icon: '📋', label: 'ספרייה' })
     }
   }
   if (profile.role === 'organizer') {
@@ -149,7 +127,8 @@ export default function Sidebar() {
   if (profile.role === 'provider') {
     navItems.push({ to: '/quotes', icon: '📋', label: 'הצעות מחיר' })
   }
-  navItems.push({ to: '/chat', icon: '💬', label: 'הודעות' })
+  navItems.push({ to: '/chat', icon: '💬', label: 'צ\'אט' })
+  navItems.push({ to: '/profile', icon: '👤', label: 'פרופיל' })
 
   const NavLink = ({ item }: { item: NavItem }) => {
     const active = isActive(item.to)
@@ -157,85 +136,65 @@ export default function Sidebar() {
       <Link
         to={item.to}
         onClick={() => setMobileOpen(false)}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 12,
-          padding: '11px 14px', borderRadius: 12, textDecoration: 'none',
-          background: active ? '#eff6ff' : 'transparent',
-          color: active ? '#2563EB' : '#374151',
-          fontWeight: active ? 700 : 500,
-          fontSize: 15, transition: 'all 0.15s',
-          borderRight: active ? '3px solid #2563EB' : '3px solid transparent',
-        }}
+        className={`flex items-center gap-3 px-3.5 py-[11px] rounded-[10px] no-underline text-[15px] transition-all ${
+          active
+            ? 'bg-sc-blue-pale text-sc-blue font-bold'
+            : 'bg-transparent text-sc-gray font-medium hover:bg-gray-50'
+        }`}
       >
-        <span style={{ fontSize: 20, width: 26, textAlign: 'center' }}>{item.icon}</span>
+        <span className="text-xl w-[26px] text-center">{item.icon}</span>
         <span>{item.label}</span>
-        {active && <span style={{ marginRight: 'auto', color: '#2563EB', fontSize: 12 }}>●</span>}
       </Link>
     )
   }
 
   const SidebarContent = () => (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: '16px 12px' }}>
+    <div className="h-full flex flex-col py-4 px-3">
 
       {/* Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, padding: '0 4px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="/logo.svg" alt="Silver Castle" style={{ width: 36, height: 36, borderRadius: 10 }} />
+      <div className="flex items-center justify-between mb-6 px-1">
+        <div className="flex items-center gap-2.5">
+          <img src="/logo.svg" alt="Silver Castle" className="w-9 h-9 rounded-[10px]" />
           <div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: '#111827' }}>Silver Castle</div>
-            <div style={{ fontSize: 11, color: '#9ca3af' }}>טירת כסף</div>
+            <div className="text-[15px] font-extrabold text-sc-dark">Silver Castle</div>
+            <div className="text-[11px] text-sc-gray">טירת כסף</div>
           </div>
         </div>
         <NotificationBell />
       </div>
 
       {/* User card */}
-      <div style={{
-        background: 'linear-gradient(135deg, #eff6ff, #f0fdf4)',
-        borderRadius: 14, padding: '12px 14px', marginBottom: 20,
-        border: '1px solid #dbeafe',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 40, height: 40, borderRadius: '50%', background: '#2563EB',
-            color: '#fff', fontWeight: 800, fontSize: 16,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-          }}>
+      <div className="bg-sc-blue-pale rounded-[14px] px-3.5 py-3 mb-5 border border-sc-blue-pale">
+        <div className="flex items-center gap-2.5">
+          <div className="w-10 h-10 rounded-full bg-sc-blue text-white font-extrabold text-base flex items-center justify-center flex-shrink-0">
             {(profile.fullName || profile.email || '?')[0].toUpperCase()}
           </div>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 700, fontSize: 14, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div className="min-w-0">
+            <div className="font-bold text-sm text-sc-dark overflow-hidden text-ellipsis whitespace-nowrap">
               {profile.fullName || profile.email}
             </div>
-            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
+            <div className="text-xs text-sc-gray mt-0.5">
               {roleInfo.icon} {roleInfo.label}
-              {isRepresentative && <span style={{ marginRight: 6, color: '#d97706', fontWeight: 600 }}>• ועד 🏛️</span>}
+              {isRepresentative && <span className="mr-1.5 text-sc-warning font-semibold">• ועד 🏛️</span>}
             </div>
           </div>
         </div>
       </div>
 
       {/* Nav links */}
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', padding: '0 14px', marginBottom: 4, letterSpacing: 1 }}>ניווט</div>
+      <nav className="flex flex-col gap-1 flex-1">
+        <div className="text-[11px] font-semibold text-sc-gray px-3.5 mb-1 tracking-wider">ניווט</div>
         {navItems.map(item => <NavLink key={item.to} item={item} />)}
       </nav>
 
       {/* Sign out */}
-      <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 12, marginTop: 8 }}>
+      <div className="border-t border-sc-gray-light pt-3 mt-2">
         <button
           onClick={() => { signOut(); setMobileOpen(false) }}
-          style={{
-            width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-            padding: '11px 14px', borderRadius: 12, border: 'none',
-            background: 'transparent', cursor: 'pointer', color: '#ef4444',
-            fontSize: 14, fontWeight: 500, transition: 'background 0.15s',
-            WebkitTapHighlightColor: 'transparent',
-          }}
-          onPointerEnter={e => (e.currentTarget.style.background = '#fef2f2')}
-          onPointerLeave={e => (e.currentTarget.style.background = 'transparent')}
+          className="w-full flex items-center gap-3 px-3.5 py-[11px] rounded-[12px] border-none bg-transparent cursor-pointer text-sc-error text-sm font-medium transition-colors hover:bg-red-50"
+          style={{ WebkitTapHighlightColor: 'transparent' }}
         >
-          <span style={{ fontSize: 20, width: 26, textAlign: 'center' }}>🚪</span>
+          <span className="text-xl w-[26px] text-center">🚪</span>
           <span>התנתק</span>
         </button>
       </div>
@@ -245,40 +204,29 @@ export default function Sidebar() {
   return (
     <>
       {/* ── Desktop sidebar (fixed right) ─────────────────────────────────── */}
-      <div style={{
-        position: 'fixed', top: 0, right: 0, bottom: 0, width: 240,
-        background: '#fff', borderLeft: '1px solid #e5e7eb',
-        boxShadow: '-4px 0 24px rgba(0,0,0,0.06)',
-        zIndex: 100, display: 'flex', flexDirection: 'column',
-      }} className="sidebar-desktop">
+      <div className="sidebar-desktop fixed top-0 right-0 bottom-0 w-[220px] bg-white border-l border-sc-gray-light z-[100] flex flex-col">
         <SidebarContent />
       </div>
 
       {/* ── Mobile bottom bar ─────────────────────────────────────────────── */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0,
-        background: '#fff', borderTop: '1px solid #e5e7eb',
-        padding: '8px 4px 12px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-around',
-        zIndex: 100,
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.08)',
-      }} className="sidebar-mobile">
+      <div className="sidebar-mobile fixed bottom-0 left-0 right-0 bg-white border-t border-sc-gray-light py-2 px-1 pb-3 flex items-center justify-around z-[100] shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
         {navItems.slice(0, 4).map(item => {
           const active = isActive(item.to)
           return (
-            <Link key={item.to} to={item.to} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flex: 1 }}>
-              <span style={{ fontSize: 22 }}>{item.icon}</span>
-              <span style={{ fontSize: 10, color: active ? '#2563EB' : '#9ca3af', fontWeight: active ? 700 : 400 }}>
+            <Link key={item.to} to={item.to} className="no-underline flex flex-col items-center gap-[3px] flex-1">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${active ? 'bg-sc-blue-pale' : ''}`}>
+                <span className="text-[22px]">{item.icon}</span>
+              </div>
+              <span className={`text-[10px] ${active ? 'text-sc-blue font-bold' : 'text-sc-gray font-normal'}`}>
                 {item.label.split(' ')[0]}
               </span>
-              {active && <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#2563EB' }} />}
             </Link>
           )
         })}
         {/* Bell in mobile bar */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+        <div className="flex-1 flex flex-col items-center gap-[3px]">
           <NotificationBell />
-          <span style={{ fontSize: 10, color: '#9ca3af' }}>התראות</span>
+          <span className="text-[10px] text-sc-gray">התראות</span>
         </div>
       </div>
 

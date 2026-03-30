@@ -9,7 +9,7 @@ type InspectionType =
 
 const TYPE_META: Record<InspectionType, { title: string; icon: string; isArchitect: boolean }> = {
   architectural_feasibility: { title: 'בדיקת היתכנות אדריכלית', icon: '🏗️', isArchitect: true },
-  planning_check: { title: 'בדיקת תב"ע', icon: '📋', isArchitect: true },
+  planning_check: { title: `בדיקת תב"ע`, icon: '📋', isArchitect: true },
   cluster_feasibility: { title: 'בדיקת מתחם', icon: '🏘️', isArchitect: true },
   constraints_check: { title: 'בדיקת מגבלות', icon: '⚠️', isArchitect: true },
   economic_feasibility: { title: 'בדיקת כדאיות כלכלית', icon: '💰', isArchitect: false },
@@ -80,36 +80,47 @@ export default function NewInspectionPage() {
 
   if (slotData?.isFull) {
     return (
-      <div className="min-h-screen bg-gray-50" dir="rtl">
+      <div className="min-h-screen bg-sc-bg" dir="rtl">
         <Navbar />
         <div className="max-w-lg mx-auto p-8 text-center">
           <div className="text-5xl mb-4">🔒</div>
-          <h2 className="text-xl font-bold mb-2">הבדיקה מלאה</h2>
-          <p className="text-gray-500 mb-6">כבר הוגשו 3 בדיקות מסוג זה לפרויקט זה</p>
-          <button onClick={() => navigate(-1)} className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-medium">חזרה</button>
+          <h2 className="text-xl font-bold text-sc-dark mb-2">הבדיקה מלאה</h2>
+          <p className="text-sc-gray mb-6">כבר הוגשו 3 בדיקות מסוג זה לפרויקט זה</p>
+          <button onClick={() => navigate(-1)} className="sc-btn-primary">חזרה</button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-sc-bg" dir="rtl">
       <Navbar />
       <div className="max-w-lg mx-auto p-4 pb-12">
 
         {/* Header */}
         <div className="mb-6">
-          <button onClick={() => navigate(-1)} className="text-gray-500 text-sm mb-3 flex items-center gap-1">
+          <button onClick={() => navigate(-1)} className="text-sc-gray text-sm mb-3 flex items-center gap-1">
             ← חזרה
           </button>
           <div className="flex items-center gap-3">
             <span className="text-3xl">{meta?.icon}</span>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">{meta?.title}</h1>
-              <p className="text-sm text-gray-500">
+              <h1 className="sc-section-title text-xl">{meta?.title}</h1>
+              <p className="text-sm text-sc-gray">
                 מיקום {(slotData?.count ?? 0) + 1} מתוך 3
                 {(slotData?.count ?? 0) === 0 && ' — ראשון מקבל ניקוד בונוס! 🏆'}
               </p>
+            </div>
+          </div>
+
+          {/* Step indicator */}
+          <div className="flex items-center gap-2 mt-4">
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${step === 'form' ? 'bg-sc-blue text-white' : 'bg-sc-gray-light text-sc-gray'}`}>
+              <span>1</span> פרטים
+            </div>
+            <div className="w-8 h-px bg-sc-gray-light" />
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${step === 'files' ? 'bg-sc-blue text-white' : 'bg-sc-gray-light text-sc-gray'}`}>
+              <span>2</span> קבצים
             </div>
           </div>
         </div>
@@ -129,7 +140,7 @@ export default function NewInspectionPage() {
             {inspectionType === 'architectural_feasibility' && (
               <>
                 <Section title="תכנון">
-                  <Field label="תב"ע רלוונטית" value={form.relevantPlan} onChange={v => set('relevantPlan', v)} />
+                  <Field label={`תב"ע רלוונטית`} value={form.relevantPlan} onChange={v => set('relevantPlan', v)} />
                   <Field label="זכויות בנייה" value={form.buildingRights} onChange={v => set('buildingRights', v)} />
                   <Field label="מגבלות גובה" value={form.heightRestriction} onChange={v => set('heightRestriction', v)} />
                 </Section>
@@ -143,8 +154,8 @@ export default function NewInspectionPage() {
             )}
 
             {inspectionType === 'planning_check' && (
-              <Section title="נתוני תב"ע">
-                <Field label="מספר תב"ע" value={form.planNumber} onChange={v => set('planNumber', v)} />
+              <Section title={`נתוני תב"ע`}>
+                <Field label={`מספר תב"ע`} value={form.planNumber} onChange={v => set('planNumber', v)} />
                 <Field label="ייעוד קרקע" value={form.landUse} onChange={v => set('landUse', v)} />
                 <Field label="אחוזי בנייה (%)" value={form.buildingCoveragePct} onChange={v => set('buildingCoveragePct', +v)} type="number" />
                 <Field label="מגבלות תכנון" value={form.planningLimitations} onChange={v => set('planningLimitations', v)} textarea />
@@ -172,14 +183,14 @@ export default function NewInspectionPage() {
             {inspectionType === 'economic_feasibility' && (
               <Section title="נתונים כלכליים">
                 <Row>
-                  <Field label="יח"ד קיימות" value={form.existingUnits} onChange={v => set('existingUnits', +v)} type="number" />
-                  <Field label="שטח ממוצע (מ"ר)" value={form.avgSqm} onChange={v => set('avgSqm', +v)} type="number" />
+                  <Field label={`יח"ד קיימות`} value={form.existingUnits} onChange={v => set('existingUnits', +v)} type="number" />
+                  <Field label={`שטח ממוצע (מ"ר)`} value={form.avgSqm} onChange={v => set('avgSqm', +v)} type="number" />
                 </Row>
                 <Row>
                   <Field label="שווי דירה קיימת (₪)" value={form.currentUnitValue} onChange={v => set('currentUnitValue', +v)} type="number" />
                   <Field label="שווי דירה חדשה (₪)" value={form.newUnitValue} onChange={v => set('newUnitValue', +v)} type="number" />
                 </Row>
-                <Field label="עלות בנייה למ"ר (₪)" value={form.constructionCostPerSqm} onChange={v => set('constructionCostPerSqm', +v)} type="number" />
+                <Field label={`עלות בנייה למ"ר (₪)`} value={form.constructionCostPerSqm} onChange={v => set('constructionCostPerSqm', +v)} type="number" />
               </Section>
             )}
 
@@ -217,7 +228,7 @@ export default function NewInspectionPage() {
                     key={c.value}
                     onClick={() => set('conclusion', c.value)}
                     className={`p-3 rounded-xl border-2 text-sm font-medium transition-all text-right
-                      ${form.conclusion === c.value ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600'}`}
+                      ${form.conclusion === c.value ? 'border-sc-blue bg-sc-blue-pale text-sc-blue' : 'border-sc-gray-light text-sc-gray'}`}
                   >
                     {c.label}
                   </button>
@@ -225,12 +236,12 @@ export default function NewInspectionPage() {
               </div>
             </Section>
 
-            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+            {error && <p className="text-sc-error text-sm text-center">{error}</p>}
 
             <button
               onClick={handleSave}
               disabled={saveDraft.isPending}
-              className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="sc-btn-primary w-full py-4 text-lg disabled:opacity-50"
             >
               {saveDraft.isPending ? 'שומר...' : 'המשך → העלאת קבצים'}
             </button>
@@ -260,7 +271,7 @@ const FILE_TYPES_BY_INSPECTION: Record<InspectionType, { key: string; label: str
     { key: 'blueprint', label: 'תשריט בסיסי' },
   ],
   planning_check: [
-    { key: 'tama_doc', label: 'מסמך תב"ע', required: true },
+    { key: 'tama_doc', label: `מסמך תב"ע`, required: true },
     { key: 'blueprint', label: 'תשריט' },
   ],
   cluster_feasibility: [
@@ -317,47 +328,47 @@ function FilesStep({ inspectionId, inspectionType, isArchitect, onSubmit, isSubm
 
   return (
     <div className="space-y-4">
-      <div className="bg-blue-50 rounded-2xl p-4">
-        <h3 className="font-bold text-blue-900 mb-1">העלאת קבצים</h3>
-        <p className="text-xs text-blue-700">
+      <div className="bg-sc-blue-pale rounded-2xl p-4">
+        <h3 className="font-bold text-sc-blue-deep mb-1">העלאת קבצים</h3>
+        <p className="text-xs text-sc-blue">
           {uploadedRequired}/{requiredCount} קבצים חובה הועלו
         </p>
       </div>
 
       {fileTypes.map(ft => (
-        <div key={ft.key} className={`bg-white rounded-2xl border p-4 ${ft.required && !uploaded.has(ft.key) ? 'border-orange-200' : 'border-gray-100'}`}>
+        <div key={ft.key} className={`sc-card p-4 ${ft.required && !uploaded.has(ft.key) ? 'border-sc-warning' : ''}`}>
           <div className="flex items-center justify-between mb-2">
-            <span className="font-medium text-sm text-gray-900">
-              {ft.label} {ft.required && <span className="text-orange-500">*</span>}
+            <span className="font-medium text-sm text-sc-dark">
+              {ft.label} {ft.required && <span className="text-sc-warning">*</span>}
             </span>
-            {uploaded.has(ft.key) && <span className="text-green-600 text-sm">✅ הועלה</span>}
+            {uploaded.has(ft.key) && <span className="text-sc-success text-sm">✅ הועלה</span>}
           </div>
           <label className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed cursor-pointer transition-all
-            ${uploaded.has(ft.key) ? 'border-green-200 bg-green-50' : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'}`}>
+            ${uploaded.has(ft.key) ? 'border-sc-success/30 bg-sc-success/5' : 'border-sc-gray-light hover:border-sc-blue hover:bg-sc-blue-pale'}`}>
             <input
               type="file"
               className="hidden"
               accept=".pdf,.jpg,.jpeg,.png,.dwg,.xlsx,.csv"
               onChange={e => { if (e.target.files?.[0]) handleUpload(ft.key, e.target.files[0]) }}
             />
-            <span className="text-sm text-gray-500">{uploaded.has(ft.key) ? 'החלף קובץ' : '📎 לחץ להעלאה'}</span>
+            <span className="text-sm text-sc-gray">{uploaded.has(ft.key) ? 'החלף קובץ' : '📎 לחץ להעלאה'}</span>
           </label>
         </div>
       ))}
 
-      {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+      {error && <p className="text-sc-error text-sm text-center">{error}</p>}
 
       <button
         onClick={onSubmit}
         disabled={!canSubmit || isSubmitting}
         className={`w-full py-4 rounded-2xl font-bold text-lg transition-colors
-          ${canSubmit ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+          ${canSubmit ? 'bg-sc-success text-white hover:bg-sc-success/90' : 'bg-sc-gray-light text-sc-gray cursor-not-allowed'}`}
       >
         {isSubmitting ? 'מגיש...' : '✅ הגש בדיקה'}
       </button>
 
       {!canSubmit && (
-        <p className="text-center text-xs text-gray-400">יש להעלות את כל הקבצים החובה לפני הגשה</p>
+        <p className="text-center text-xs text-sc-gray">יש להעלות את כל הקבצים החובה לפני הגשה</p>
       )}
     </div>
   )
@@ -366,8 +377,8 @@ function FilesStep({ inspectionId, inspectionType, isArchitect, onSubmit, isSubm
 // ── UI Components ─────────────────────────────────────────
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-      <h3 className="font-semibold text-gray-700 text-sm mb-3">{title}</h3>
+    <div className="sc-card p-4">
+      <h3 className="font-semibold text-sc-dark text-sm mb-3">{title}</h3>
       <div className="space-y-3">{children}</div>
     </div>
   )
@@ -381,14 +392,13 @@ function Field({ label, value, onChange, type = 'text', textarea = false, placeh
   label: string; value: any; onChange: (v: string) => void;
   type?: string; textarea?: boolean; placeholder?: string
 }) {
-  const cls = "w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
   return (
     <div>
-      <label className="block text-xs text-gray-500 mb-1">{label}</label>
+      <label className="block text-xs text-sc-gray mb-1">{label}</label>
       {textarea ? (
-        <textarea value={value ?? ''} onChange={e => onChange(e.target.value)} rows={3} placeholder={placeholder} className={cls} />
+        <textarea value={value ?? ''} onChange={e => onChange(e.target.value)} rows={3} placeholder={placeholder} className="sc-input resize-none" />
       ) : (
-        <input type={type} value={value ?? ''} onChange={e => onChange(e.target.value)} placeholder={placeholder} className={cls} />
+        <input type={type} value={value ?? ''} onChange={e => onChange(e.target.value)} placeholder={placeholder} className="sc-input" />
       )}
     </div>
   )
@@ -397,10 +407,10 @@ function Field({ label, value, onChange, type = 'text', textarea = false, placeh
 function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-sm text-gray-700">{label}</span>
+      <span className="text-sm text-sc-dark">{label}</span>
       <button
         onClick={() => onChange(!value)}
-        className={`w-12 h-6 rounded-full transition-colors ${value ? 'bg-blue-500' : 'bg-gray-200'}`}
+        className={`w-12 h-6 rounded-full transition-colors ${value ? 'bg-sc-blue' : 'bg-sc-gray-light'}`}
       >
         <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform mx-0.5 ${value ? 'translate-x-6' : ''}`} />
       </button>

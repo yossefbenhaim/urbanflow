@@ -11,11 +11,11 @@ const YEARS = Array.from({ length: 60 }, (_, i) => String(CURRENT_YEAR - i))
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #f1f5f9', boxShadow: '0 1px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-      <div style={{ padding: '14px 20px', borderBottom: '1px solid #f1f5f9', background: '#fafafa' }}>
-        <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#374151' }}>{title}</h3>
+    <div className="sc-card overflow-hidden">
+      <div className="px-5 py-3.5 border-b border-sc-gray-light bg-sc-bg">
+        <h3 className="m-0 text-sm font-bold text-sc-dark">{title}</h3>
       </div>
-      <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div className="p-5 flex flex-col gap-4">
         {children}
       </div>
     </div>
@@ -25,16 +25,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#6b7280', marginBottom: '5px' }}>{label}</label>
+      <label className="block text-xs font-semibold text-sc-gray mb-1">{label}</label>
       {children}
     </div>
   )
-}
-
-const inputStyle = {
-  width: '100%', padding: '10px 14px', borderRadius: '10px',
-  border: '1.5px solid #e2e8f0', fontSize: '14px', outline: 'none',
-  boxSizing: 'border-box' as const, color: '#1e293b', background: '#fff',
 }
 
 export default function Profile() {
@@ -120,38 +114,38 @@ export default function Profile() {
   const isTenant = profile?.role === 'tenant'
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc' }} dir="rtl">
+    <div className="min-h-screen bg-sc-bg" dir="rtl">
       <Navbar />
-      <div style={{ maxWidth: '600px', margin: '0 auto', padding: '32px 16px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1e293b', margin: '0 0 24px' }}>הפרופיל שלי</h1>
+      <div className="max-w-[600px] mx-auto px-4 py-8">
+        <h1 className="sc-section-title mb-6">הפרופיל שלי</h1>
 
-        {loading ? <div style={{ textAlign: "center", padding: "48px" }}><BuildingLoader size="lg" /></div> : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {loading ? <div className="text-center py-12"><BuildingLoader size="lg" /></div> : (
+          <div className="flex flex-col gap-4">
 
             {/* Role badge */}
             {roleInfo && (
-              <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #f1f5f9', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '28px' }}>{roleInfo.icon}</span>
+              <div className="sc-card px-5 py-4 flex items-center gap-3">
+                <span className="text-[28px]">{roleInfo.icon}</span>
                 <div>
-                  <p style={{ margin: 0, fontSize: '11px', color: '#9ca3af' }}>תפקיד במערכת</p>
-                  <p style={{ margin: 0, fontWeight: 700, color: '#1e293b' }}>{roleInfo.label}</p>
+                  <p className="m-0 text-[11px] text-sc-gray">תפקיד במערכת</p>
+                  <p className="m-0 font-bold text-sc-dark">{roleInfo.label}</p>
                 </div>
-                <div style={{ marginRight: 'auto', fontSize: '12px', color: '#9ca3af' }}>{profile?.email}</div>
+                <div className="mr-auto text-xs text-sc-gray">{profile?.email}</div>
               </div>
             )}
 
             {/* Personal info */}
             <Section title="👤 פרטים אישיים">
               <Field label="שם מלא">
-                <input style={inputStyle} value={form.fullName} onChange={e => update('fullName', e.target.value)} />
+                <input className="sc-input" value={form.fullName} onChange={e => update('fullName', e.target.value)} />
               </Field>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div className="grid grid-cols-2 gap-3">
                 <Field label="טלפון נייד">
-                  <input style={inputStyle} value={form.phone} onChange={e => update('phone', e.target.value)} dir="ltr" />
+                  <input className="sc-input" value={form.phone} onChange={e => update('phone', e.target.value)} dir="ltr" />
                 </Field>
                 {isTenant && (
                   <Field label="תעודת זהות">
-                    <input style={inputStyle} value={form.idNumber} onChange={e => update('idNumber', e.target.value.replace(/\D/g,''))} maxLength={9} />
+                    <input className="sc-input" value={form.idNumber} onChange={e => update('idNumber', e.target.value.replace(/\D/g,''))} maxLength={9} />
                   </Field>
                 )}
               </div>
@@ -165,32 +159,31 @@ export default function Profile() {
                 </Section>
 
                 <Section title="📋 פרטי הדירה">
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="grid grid-cols-2 gap-3">
                     <Field label="קומה">
-                      <input style={inputStyle} type="number" min="0" value={form.floor} onChange={e => update('floor', e.target.value)} />
+                      <input className="sc-input" type="number" min="0" value={form.floor} onChange={e => update('floor', e.target.value)} />
                     </Field>
                     <Field label="מספר דירה">
-                      <input style={inputStyle} value={form.apartmentNumber} onChange={e => update('apartmentNumber', e.target.value)} />
+                      <input className="sc-input" value={form.apartmentNumber} onChange={e => update('apartmentNumber', e.target.value)} />
                     </Field>
                   </div>
                   <Field label={`גודל דירה (מ"ר)`}>
-                    <input style={inputStyle} type="number" min="10" value={form.apartmentSqm} onChange={e => update('apartmentSqm', e.target.value)} />
+                    <input className="sc-input" type="number" min="10" value={form.apartmentSqm} onChange={e => update('apartmentSqm', e.target.value)} />
                   </Field>
                   <Field label="שנת כניסה לדירה">
-                    <select style={inputStyle} value={form.moveInYear} onChange={e => update('moveInYear', e.target.value)}>
+                    <select className="sc-input" value={form.moveInYear} onChange={e => update('moveInYear', e.target.value)}>
                       <option value="">בחר שנה</option>
                       {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                     </select>
                   </Field>
-                  <div style={{ display: 'flex', gap: '10px' }}>
+                  <div className="flex gap-2.5">
                     {[true, false].map(v => (
-                      <button key={String(v)} onClick={() => update('isOwner', v)} style={{
-                        flex: 1, padding: '10px', borderRadius: '10px', border: '2px solid',
-                        borderColor: form.isOwner === v ? '#2563EB' : '#e2e8f0',
-                        background: form.isOwner === v ? '#eff6ff' : '#fff',
-                        color: form.isOwner === v ? '#2563EB' : '#64748b',
-                        fontWeight: 600, fontSize: '14px', cursor: 'pointer',
-                      }}>
+                      <button key={String(v)} onClick={() => update('isOwner', v)}
+                        className={`flex-1 py-2.5 rounded-[10px] border-2 font-semibold text-sm cursor-pointer transition-colors ${
+                          form.isOwner === v
+                            ? 'border-sc-blue bg-sc-blue-pale text-sc-blue'
+                            : 'border-sc-gray-light bg-white text-sc-gray'
+                        }`}>
                         {v ? '🏠 בעל דירה' : '🔑 שוכר'}
                       </button>
                     ))}
@@ -200,13 +193,13 @@ export default function Profile() {
             )}
 
             {saved && (
-              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '12px 16px', borderRadius: '12px', fontSize: '14px', textAlign: 'center', fontWeight: 600 }}>
+              <div className="bg-sc-success/10 border border-sc-success/30 text-sc-success p-3 rounded-xl text-sm text-center font-semibold">
                 ✅ הפרופיל עודכן בהצלחה
               </div>
             )}
 
             <button onClick={handleSave} disabled={saveProfile.isPending || updateBasic.isPending}
-              style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: '#2563EB', color: '#fff', fontWeight: 700, fontSize: '15px', cursor: 'pointer', opacity: saveProfile.isPending ? 0.7 : 1 }}>
+              className="sc-btn-primary w-full text-[15px] disabled:opacity-70">
               {saveProfile.isPending || updateBasic.isPending ? 'שומר...' : 'שמור שינויים'}
             </button>
           </div>

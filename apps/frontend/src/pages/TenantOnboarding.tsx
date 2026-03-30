@@ -67,26 +67,27 @@ const STEPS = [
 
 function StepBar({ current }: { current: number }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0, marginBottom: '32px', overflowX: 'auto' }}>
+    <div className="flex items-center justify-center gap-0 mb-8 overflow-x-auto">
       {STEPS.map((s, i) => (
-        <div key={s.id} style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-            <div style={{
-              width: '36px', height: '36px', borderRadius: '50%', display: 'flex',
-              alignItems: 'center', justifyContent: 'center', fontSize: '16px',
-              background: current > s.id ? '#22c55e' : current === s.id ? '#2563EB' : '#e2e8f0',
-              color: current >= s.id ? '#fff' : '#94a3b8',
-              fontWeight: 700, transition: 'all 0.3s',
-              boxShadow: current === s.id ? '0 0 0 4px #bfdbfe' : 'none',
-            }}>
+        <div key={s.id} className="flex items-center flex-shrink-0">
+          <div className="flex flex-col items-center gap-1">
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center text-base font-bold transition-all ${
+              current > s.id ? 'bg-sc-success text-white' :
+              current === s.id ? 'bg-sc-blue text-white shadow-[0_0_0_4px_rgba(59,107,156,0.2)]' :
+              'bg-sc-gray-light text-sc-gray'
+            }`}>
               {current > s.id ? '✓' : s.id}
             </div>
-            <span style={{ fontSize: '10px', color: current === s.id ? '#2563EB' : '#64748b', fontWeight: current === s.id ? 600 : 400, whiteSpace: 'nowrap' }}>
+            <span className={`text-[10px] whitespace-nowrap ${
+              current === s.id ? 'text-sc-blue font-semibold' : 'text-sc-gray'
+            }`}>
               {s.title}
             </span>
           </div>
           {i < STEPS.length - 1 && (
-            <div style={{ width: '40px', height: '2px', background: current > s.id + 1 ? '#22c55e' : current > s.id ? '#2563EB' : '#e2e8f0', margin: '0 2px 20px', transition: 'all 0.3s', flexShrink: 0 }} />
+            <div className={`w-10 h-0.5 mx-0.5 mb-5 flex-shrink-0 transition-all ${
+              current > s.id + 1 ? 'bg-sc-success' : current > s.id ? 'bg-sc-blue' : 'bg-sc-gray-light'
+            }`} />
           )}
         </div>
       ))}
@@ -105,29 +106,23 @@ function CheckboxGroup({ options, selected, onChange }: {
     else onChange([...selected, key])
   }
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+    <div className="grid grid-cols-2 gap-2">
       {options.map(opt => (
         <button
           key={opt.key}
           type="button"
           onClick={() => toggle(opt.key)}
-          style={{
-            padding: '10px 12px', borderRadius: '12px', border: '2px solid',
-            borderColor: selected.includes(opt.key) ? '#2563EB' : '#e2e8f0',
-            background: selected.includes(opt.key) ? '#eff6ff' : '#fff',
-            color: selected.includes(opt.key) ? '#2563EB' : '#4b5563',
-            fontWeight: selected.includes(opt.key) ? 600 : 400,
-            fontSize: '13px', cursor: 'pointer', textAlign: 'right',
-            transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '6px',
-          }}
+          className={`p-2.5 rounded-xl border-2 text-[13px] cursor-pointer text-right transition-all flex items-center gap-1.5 ${
+            selected.includes(opt.key)
+              ? 'border-sc-blue bg-sc-blue-pale text-sc-blue font-semibold'
+              : 'border-sc-gray-light bg-white text-sc-gray'
+          }`}
         >
-          <span style={{
-            width: '18px', height: '18px', borderRadius: '5px', border: '2px solid',
-            borderColor: selected.includes(opt.key) ? '#2563EB' : '#d1d5db',
-            background: selected.includes(opt.key) ? '#2563EB' : '#fff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0, fontSize: '11px', color: '#fff',
-          }}>
+          <span className={`w-[18px] h-[18px] rounded-[5px] border-2 flex-shrink-0 flex items-center justify-center text-[11px] ${
+            selected.includes(opt.key)
+              ? 'border-sc-blue bg-sc-blue text-white'
+              : 'border-sc-gray-light bg-white'
+          }`}>
             {selected.includes(opt.key) ? '✓' : ''}
           </span>
           {opt.label}
@@ -208,37 +203,30 @@ export default function TenantOnboarding() {
     })
   }
 
-  const inputStyle = {
-    width: '100%', padding: '11px 14px', borderRadius: '10px',
-    border: '1.5px solid #e2e8f0', fontSize: '14px', outline: 'none',
-    boxSizing: 'border-box' as const, color: '#1e293b',
-  }
-  const labelStyle = { fontSize: '13px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '5px' } as const
-
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc' }} dir="rtl">
+    <div className="min-h-screen bg-sc-bg" dir="rtl">
       <Navbar />
-      <div style={{ maxWidth: '560px', margin: '0 auto', padding: '32px 16px' }}>
-        <div style={{ marginBottom: '24px' }}>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1e293b', margin: '0 0 4px' }}>השלמת פרופיל דייר</h1>
-          <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>מלא את הפרטים הנדרשים כדי להשתמש בכל הפיצ׳רים</p>
+      <div className="max-w-[560px] mx-auto px-4 py-8">
+        <div className="mb-6">
+          <h1 className="text-[22px] font-bold text-sc-dark mb-1">השלמת פרופיל דייר</h1>
+          <p className="text-sc-gray text-sm">מלא את הפרטים הנדרשים כדי להשתמש בכל הפיצ׳רים</p>
         </div>
 
-        <div style={{ background: '#fff', borderRadius: '20px', padding: '32px', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #f1f5f9' }}>
+        <div className="sc-card p-8">
           <StepBar current={step} />
 
           {/* ─── Step 1 - Personal ─── */}
           {step === 1 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#1e293b', margin: '0 0 4px' }}>👤 פרטים אישיים</h2>
+            <div className="flex flex-col gap-4">
+              <h2 className="text-[17px] font-bold text-sc-dark mb-1">👤 פרטים אישיים</h2>
               <div>
-                <label style={labelStyle}>תעודת זהות *</label>
-                <input style={inputStyle} placeholder="9 ספרות" maxLength={9} value={form.idNumber}
+                <label className="block text-[13px] font-semibold text-sc-dark mb-1">תעודת זהות *</label>
+                <input className="sc-input" placeholder="9 ספרות" maxLength={9} value={form.idNumber}
                   onChange={e => update('idNumber', e.target.value.replace(/\D/g,''))} />
               </div>
               <div>
-                <label style={labelStyle}>טלפון נייד *</label>
-                <input style={inputStyle} placeholder="05XXXXXXXX" value={form.phone} dir="ltr"
+                <label className="block text-[13px] font-semibold text-sc-dark mb-1">טלפון נייד *</label>
+                <input className="sc-input" placeholder="05XXXXXXXX" value={form.phone} dir="ltr"
                   onChange={e => update('phone', e.target.value)} />
               </div>
             </div>
@@ -246,56 +234,54 @@ export default function TenantOnboarding() {
 
           {/* ─── Step 2 - Address ─── */}
           {step === 2 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#1e293b', margin: '0 0 4px' }}>🏠 כתובת הדירה</h2>
+            <div className="flex flex-col gap-4">
+              <h2 className="text-[17px] font-bold text-sc-dark mb-1">🏠 כתובת הדירה</h2>
               <AddressPicker value={address} onChange={setAddress} />
               <div>
-                <label style={labelStyle}>כמה דירות יש בבניין? *</label>
-                <input style={inputStyle} placeholder="לדוג׳ 24" type="number" min="2" value={form.apartmentsInBuilding}
+                <label className="block text-[13px] font-semibold text-sc-dark mb-1">כמה דירות יש בבניין? *</label>
+                <input className="sc-input" placeholder="לדוג׳ 24" type="number" min="2" value={form.apartmentsInBuilding}
                   onChange={e => update('apartmentsInBuilding', e.target.value)} />
-                <p style={{ fontSize: '11px', color: '#94a3b8', margin: '4px 0 0' }}>מידע זה יסייע בארגון הדיירים</p>
+                <p className="text-[11px] text-sc-gray mt-1">מידע זה יסייע בארגון הדיירים</p>
               </div>
             </div>
           )}
 
           {/* ─── Step 3 - Apartment details ─── */}
           {step === 3 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#1e293b', margin: '0 0 4px' }}>📋 פרטי הדירה</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div className="flex flex-col gap-4">
+              <h2 className="text-[17px] font-bold text-sc-dark mb-1">📋 פרטי הדירה</h2>
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label style={labelStyle}>קומה *</label>
-                  <input style={inputStyle} placeholder="0 = קרקע" type="number" min="0" value={form.floor}
+                  <label className="block text-[13px] font-semibold text-sc-dark mb-1">קומה *</label>
+                  <input className="sc-input" placeholder="0 = קרקע" type="number" min="0" value={form.floor}
                     onChange={e => update('floor', e.target.value)} />
                 </div>
                 <div>
-                  <label style={labelStyle}>מספר דירה *</label>
-                  <input style={inputStyle} placeholder="דירה" value={form.apartmentNumber}
+                  <label className="block text-[13px] font-semibold text-sc-dark mb-1">מספר דירה *</label>
+                  <input className="sc-input" placeholder="דירה" value={form.apartmentNumber}
                     onChange={e => update('apartmentNumber', e.target.value)} />
                 </div>
               </div>
               <div>
-                <label style={labelStyle}>גודל הדירה (מ"ר) *</label>
-                <input style={inputStyle} placeholder="לדוג׳ 85" type="number" min="10" value={form.apartmentSqm}
+                <label className="block text-[13px] font-semibold text-sc-dark mb-1">גודל הדירה (מ"ר) *</label>
+                <input className="sc-input" placeholder="לדוג׳ 85" type="number" min="10" value={form.apartmentSqm}
                   onChange={e => update('apartmentSqm', e.target.value)} />
               </div>
               <div>
-                <label style={labelStyle}>שנת כניסה לדירה</label>
-                <select style={inputStyle} value={form.moveInYear} onChange={e => update('moveInYear', e.target.value)}>
+                <label className="block text-[13px] font-semibold text-sc-dark mb-1">שנת כניסה לדירה</label>
+                <select className="sc-input" value={form.moveInYear} onChange={e => update('moveInYear', e.target.value)}>
                   <option value="">בחר שנה</option>
                   {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                 </select>
               </div>
-              <div style={{ display: 'flex', gap: '10px' }}>
+              <div className="flex gap-2.5">
                 {['owner','renter'].map(type => (
                   <button key={type} onClick={() => update('isOwner', type === 'owner')}
-                    style={{
-                      flex: 1, padding: '10px', borderRadius: '10px', border: '2px solid',
-                      borderColor: (form.isOwner ? 'owner' : 'renter') === type ? '#2563EB' : '#e2e8f0',
-                      background: (form.isOwner ? 'owner' : 'renter') === type ? '#eff6ff' : '#fff',
-                      color: (form.isOwner ? 'owner' : 'renter') === type ? '#2563EB' : '#64748b',
-                      fontWeight: 600, fontSize: '14px', cursor: 'pointer',
-                    }}>
+                    className={`flex-1 py-2.5 rounded-[10px] border-2 font-semibold text-sm cursor-pointer transition-colors ${
+                      (form.isOwner ? 'owner' : 'renter') === type
+                        ? 'border-sc-blue bg-sc-blue-pale text-sc-blue'
+                        : 'border-sc-gray-light bg-white text-sc-gray'
+                    }`}>
                     {type === 'owner' ? '🏠 בעל דירה' : '🔑 שוכר'}
                   </button>
                 ))}
@@ -305,10 +291,10 @@ export default function TenantOnboarding() {
 
           {/* ─── Step 4 - Special Requests ─── */}
           {step === 4 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="flex flex-col gap-5">
               <div>
-                <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#1e293b', margin: '0 0 4px' }}>✨ דרישות לדירה החדשה</h2>
-                <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 16px' }}>
+                <h2 className="text-[17px] font-bold text-sc-dark mb-1">✨ דרישות לדירה החדשה</h2>
+                <p className="text-[13px] text-sc-gray mb-4">
                   סמן מה חשוב לך במיוחד בדירה החדשה — המידע יועבר לשמאי ולאדריכל
                 </p>
               </div>
@@ -320,26 +306,26 @@ export default function TenantOnboarding() {
               />
 
               <div>
-                <label style={labelStyle}>פירוט דרישות נוספות</label>
+                <label className="block text-[13px] font-semibold text-sc-dark mb-1">פירוט דרישות נוספות</label>
                 <textarea
                   value={form.specialRequestsNotes}
                   onChange={e => update('specialRequestsNotes', e.target.value)}
                   placeholder="לדוג׳ אני זקוק לקומה גבוהה בגלל בעיות ניידות, רוצה מרפסת לכיוון דרום..."
                   rows={3}
-                  style={{ ...inputStyle, resize: 'vertical' }}
+                  className="sc-input resize-y"
                 />
               </div>
 
               {form.specialRequests.length > 0 && (
-                <div style={{ background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: '12px', padding: '12px 14px' }}>
-                  <p style={{ fontSize: '12px', color: '#15803d', margin: 0, fontWeight: 600 }}>
+                <div className="bg-sc-success/10 border-2 border-sc-success/30 rounded-xl p-3">
+                  <p className="text-xs text-sc-success font-semibold m-0">
                     ✅ נבחרו {form.specialRequests.length} דרישות — יישמרו בפרופיל שלך
                   </p>
                 </div>
               )}
 
-              <div style={{ background: '#fefce8', border: '1px solid #fde047', borderRadius: '12px', padding: '12px 14px' }}>
-                <p style={{ fontSize: '12px', color: '#854d0e', margin: 0 }}>
+              <div className="bg-sc-warning/10 border border-sc-warning/30 rounded-xl p-3">
+                <p className="text-xs text-sc-warning m-0">
                   💡 <strong>טיפ:</strong> ניתן לדלג על שלב זה ולעדכן מאוחר יותר מהפרופיל שלך
                 </p>
               </div>
@@ -348,27 +334,25 @@ export default function TenantOnboarding() {
 
           {/* ─── Step 5 - Apartment Extras ─── */}
           {step === 5 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="flex flex-col gap-5">
               <div>
-                <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#1e293b', margin: '0 0 4px' }}>📎 חריגות והצמדות בדירה הנוכחית</h2>
-                <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 16px' }}>
+                <h2 className="text-[17px] font-bold text-sc-dark mb-1">📎 חריגות והצמדות בדירה הנוכחית</h2>
+                <p className="text-[13px] text-sc-gray mb-4">
                   האם יש בדירה שלך משהו מיוחד מעבר לדירה הרגילה בבניין? תיעוד זה חשוב להסכם הפינוי
                 </p>
               </div>
 
               {/* שאלת פתיחה */}
               <div>
-                <label style={{ ...labelStyle, marginBottom: '10px' }}>האם יש בדירה שלך יתרון מיוחד לעומת שאר הדירות?</label>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <label className="block text-[13px] font-semibold text-sc-dark mb-2.5">האם יש בדירה שלך יתרון מיוחד לעומת שאר הדירות?</label>
+                <div className="flex gap-2.5">
                   {[true, false].map(v => (
                     <button key={String(v)} onClick={() => update('hasSpecialAdvantage', v)}
-                      style={{
-                        flex: 1, padding: '12px', borderRadius: '12px', border: '2px solid',
-                        borderColor: form.hasSpecialAdvantage === v ? (v ? '#2563EB' : '#e2e8f0') : '#e2e8f0',
-                        background: form.hasSpecialAdvantage === v ? (v ? '#eff6ff' : '#f8fafc') : '#fff',
-                        color: form.hasSpecialAdvantage === v && v ? '#2563EB' : '#374151',
-                        fontWeight: 600, fontSize: '15px', cursor: 'pointer',
-                      }}>
+                      className={`flex-1 py-3 rounded-xl border-2 font-semibold text-[15px] cursor-pointer transition-colors ${
+                        form.hasSpecialAdvantage === v
+                          ? (v ? 'border-sc-blue bg-sc-blue-pale text-sc-blue' : 'border-sc-gray-light bg-sc-bg text-sc-dark')
+                          : 'border-sc-gray-light bg-white text-sc-dark'
+                      }`}>
                       {v ? '✅ כן' : '❌ לא'}
                     </button>
                   ))}
@@ -378,7 +362,7 @@ export default function TenantOnboarding() {
               {form.hasSpecialAdvantage === true && (
                 <>
                   <div>
-                    <label style={{ ...labelStyle, marginBottom: '10px' }}>סמן מה קיים בדירה שלך:</label>
+                    <label className="block text-[13px] font-semibold text-sc-dark mb-2.5">סמן מה קיים בדירה שלך:</label>
                     <CheckboxGroup
                       options={APARTMENT_EXTRAS_OPTIONS}
                       selected={form.apartmentExtras}
@@ -387,19 +371,19 @@ export default function TenantOnboarding() {
                   </div>
 
                   <div>
-                    <label style={labelStyle}>תיאור התוספת או היתרון הקיים</label>
+                    <label className="block text-[13px] font-semibold text-sc-dark mb-1">תיאור התוספת או היתרון הקיים</label>
                     <textarea
                       value={form.apartmentExtrasNotes}
                       onChange={e => update('apartmentExtrasNotes', e.target.value)}
                       placeholder="לדוג׳ יש לי מרפסת סוכה של 15 מ״ר שנסגרה ב-2008, יש לי שימוש בחלק מהגג..."
                       rows={3}
-                      style={{ ...inputStyle, resize: 'vertical' }}
+                      className="sc-input resize-y"
                     />
                   </div>
 
                   {form.apartmentExtras.length > 0 && (
-                    <div style={{ background: '#fef3c7', border: '1.5px solid #fbbf24', borderRadius: '12px', padding: '12px 14px' }}>
-                      <p style={{ fontSize: '12px', color: '#92400e', margin: 0, fontWeight: 600 }}>
+                    <div className="bg-sc-warning/10 border-2 border-sc-warning/30 rounded-xl p-3">
+                      <p className="text-xs text-sc-warning font-semibold m-0">
                         ⚠️ {form.apartmentExtras.length} חריגות יועברו לשמאי ולאדריכל לבדיקה ותיעוד רשמי
                       </p>
                     </div>
@@ -407,8 +391,8 @@ export default function TenantOnboarding() {
                 </>
               )}
 
-              <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '12px', padding: '12px 14px' }}>
-                <p style={{ fontSize: '12px', color: '#0369a1', margin: 0 }}>
+              <div className="bg-sc-blue-pale border border-sc-blue-light rounded-xl p-3">
+                <p className="text-xs text-sc-blue m-0">
                   📋 <strong>למה זה חשוב?</strong> בפינוי-בינוי, חריגות לא מתועדות עלולות לגרום לאובדן זכויות. תיעוד מראש מגן עליך.
                 </p>
               </div>
@@ -416,20 +400,20 @@ export default function TenantOnboarding() {
           )}
 
           {error && (
-            <div style={{ marginTop: '16px', padding: '10px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', color: '#dc2626', fontSize: '13px' }}>
+            <div className="mt-4 p-2.5 bg-sc-error/10 border border-sc-error/30 rounded-[10px] text-sc-error text-[13px]">
               {error}
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
+          <div className="flex gap-2.5 mt-6">
             {step > 1 && (
               <button onClick={() => { setStep(s => s - 1); setError('') }}
-                style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1.5px solid #e2e8f0', background: '#fff', color: '#374151', fontWeight: 600, cursor: 'pointer', fontSize: '15px' }}>
+                className="sc-btn-secondary flex-1 text-[15px]">
                 ← חזרה
               </button>
             )}
             <button onClick={handleNext} disabled={saveProfile.isPending}
-              style={{ flex: 2, padding: '12px', borderRadius: '12px', border: 'none', background: '#2563EB', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '15px', opacity: saveProfile.isPending ? 0.7 : 1 }}>
+              className="sc-btn-primary flex-[2] text-[15px] disabled:opacity-70">
               {saveProfile.isPending ? 'שומר...' : step === 5 ? '✓ סיום' : step >= 4 ? 'המשך ←' : 'המשך ←'}
             </button>
           </div>
@@ -437,14 +421,14 @@ export default function TenantOnboarding() {
           {step >= 4 && (
             <button
               onClick={() => step === 5 ? handleNext() : setStep(s => s + 1)}
-              style={{ width: '100%', marginTop: '10px', padding: '10px', background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '13px', cursor: 'pointer', textDecoration: 'underline' }}
+              className="w-full mt-2.5 py-2.5 bg-transparent border-none text-sc-gray text-[13px] cursor-pointer underline"
             >
               דלג על שלב זה
             </button>
           )}
         </div>
 
-        <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '12px', color: '#94a3b8' }}>
+        <p className="text-center mt-4 text-xs text-sc-gray">
           ניתן לעדכן פרטים אלו בכל עת מהפרופיל שלך
         </p>
       </div>

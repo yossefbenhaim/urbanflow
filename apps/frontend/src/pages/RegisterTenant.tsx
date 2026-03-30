@@ -96,17 +96,17 @@ export default function RegisterTenant() {
   const stepTitles = ['פרטים אישיים', 'פרטי הדירה', 'אישור']
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 flex items-center justify-center p-4" dir="rtl">
+    <div className="min-h-screen bg-sc-bg flex items-center justify-center p-4" dir="rtl">
       <div className="w-full max-w-lg">
         {/* Header */}
         <div className="text-center mb-6">
-          <Link to="/register" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
+          <Link to="/register" className="inline-flex items-center gap-1 text-sm text-sc-gray hover:text-sc-dark mb-4">
             ← חזרה לבחירת תפקיד
           </Link>
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-600 rounded-2xl mb-3 shadow-lg">
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-sc-blue rounded-2xl mb-3 shadow-lg">
             <span className="text-2xl">🏠</span>
           </div>
-          <h1 className="text-xl font-bold text-gray-900">הרשמה כדייר</h1>
+          <h1 className="text-xl font-bold text-sc-dark">הרשמה כדייר</h1>
         </div>
 
         {/* Step indicator */}
@@ -115,56 +115,56 @@ export default function RegisterTenant() {
             <div key={i} className="flex items-center gap-2">
               <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                 step === i + 1
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-sc-blue text-white'
                   : step > i + 1
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-gray-100 text-gray-400'
+                  ? 'bg-sc-success/15 text-sc-success'
+                  : 'bg-sc-gray-light text-sc-gray'
               }`}>
                 <span>{step > i + 1 ? '✓' : i + 1}</span>
                 <span>{title}</span>
               </div>
               {i < stepTitles.length - 1 && (
-                <div className={`w-6 h-px ${step > i + 1 ? 'bg-green-300' : 'bg-gray-200'}`} />
+                <div className={`w-6 h-px ${step > i + 1 ? 'bg-sc-success' : 'bg-sc-gray-light'}`} />
               )}
             </div>
           ))}
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+        <div className="sc-card p-8">
 
           {/* Step 1: Personal Info */}
           {step === 1 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">פרטים אישיים</h2>
+              <h2 className="text-lg font-semibold text-sc-dark mb-4">פרטים אישיים</h2>
 
               <Field label="שם מלא *">
                 <input type="text" placeholder="ישראל ישראלי" value={form.fullName}
-                  onChange={e => update('fullName', e.target.value)} className={inputCls} />
+                  onChange={e => update('fullName', e.target.value)} className="sc-input" />
               </Field>
 
               <Field label="תעודת זהות *">
                 <input type="text" placeholder="000000000" maxLength={9} value={form.idNumber}
-                  onChange={e => update('idNumber', e.target.value.replace(/\D/g, ''))} className={inputCls} />
+                  onChange={e => update('idNumber', e.target.value.replace(/\D/g, ''))} className="sc-input" />
               </Field>
 
               <Field label="טלפון נייד *">
                 <input type="tel" placeholder="050-0000000" value={form.phone}
-                  onChange={e => update('phone', e.target.value)} className={inputCls} />
+                  onChange={e => update('phone', e.target.value)} className="sc-input" />
               </Field>
 
               <Field label="אימייל *">
                 <input type="email" placeholder="your@email.com" value={form.email}
-                  onChange={e => update('email', e.target.value)} className={inputCls} />
+                  onChange={e => update('email', e.target.value)} className="sc-input" />
               </Field>
 
               <Field label="סיסמה * (לפחות 8 תווים)">
                 <input type="password" placeholder="••••••••" value={form.password}
-                  onChange={e => update('password', e.target.value)} className={inputCls} />
+                  onChange={e => update('password', e.target.value)} className="sc-input" />
               </Field>
 
               <Field label="אישור סיסמה *">
                 <input type="password" placeholder="••••••••" value={form.confirmPassword}
-                  onChange={e => update('confirmPassword', e.target.value)} className={inputCls} />
+                  onChange={e => update('confirmPassword', e.target.value)} className="sc-input" />
               </Field>
             </div>
           )}
@@ -172,10 +172,10 @@ export default function RegisterTenant() {
           {/* Step 2: Apartment Info */}
           {step === 2 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">פרטי הדירה</h2>
+              <h2 className="text-lg font-semibold text-sc-dark mb-4">פרטי הדירה</h2>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">כתובת הדירה *</label>
+                <label className="block text-sm font-semibold text-sc-dark mb-2">כתובת הדירה *</label>
                 <AddressPicker
                   value={address}
                   onChange={(v) => {
@@ -189,17 +189,17 @@ export default function RegisterTenant() {
 
               <Field label="מס' דירה *">
                 <input type="text" placeholder="5" value={form.apartmentNumber}
-                  onChange={e => update('apartmentNumber', e.target.value)} className={inputCls} />
+                  onChange={e => update('apartmentNumber', e.target.value)} className="sc-input" />
               </Field>
 
               <div className="grid grid-cols-2 gap-3">
                 <Field label="קומה">
                   <input type="number" placeholder="3" min="0" max="50" value={form.floor}
-                    onChange={e => update('floor', e.target.value)} className={inputCls} />
+                    onChange={e => update('floor', e.target.value)} className="sc-input" />
                 </Field>
                 <Field label="גודל דירה (מ״ר)">
                   <input type="number" placeholder="75" min="20" max="500" value={form.apartmentSqm}
-                    onChange={e => update('apartmentSqm', e.target.value)} className={inputCls} />
+                    onChange={e => update('apartmentSqm', e.target.value)} className="sc-input" />
                 </Field>
               </div>
 
@@ -209,15 +209,15 @@ export default function RegisterTenant() {
                     <label key={String(opt.value)} className="flex items-center gap-2 cursor-pointer">
                       <input type="radio" checked={form.isOwner === opt.value}
                         onChange={() => update('isOwner', opt.value)}
-                        className="text-blue-600" />
-                      <span className="text-sm text-gray-700">{opt.label}</span>
+                        className="text-sc-blue" />
+                      <span className="text-sm text-sc-dark">{opt.label}</span>
                     </label>
                   ))}
                 </div>
               </Field>
 
               <Field label="שנת כניסה לדירה">
-                <select value={form.moveInYear} onChange={e => update('moveInYear', e.target.value)} className={inputCls}>
+                <select value={form.moveInYear} onChange={e => update('moveInYear', e.target.value)} className="sc-input">
                   <option value="">בחר שנה</option>
                   {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                 </select>
@@ -225,8 +225,8 @@ export default function RegisterTenant() {
 
               <Field label="קוד הזמנה מפרויקט (אם קיבלת)">
                 <input type="text" placeholder="ABC-1234" value={form.inviteCode}
-                  onChange={e => update('inviteCode', e.target.value.toUpperCase())} className={inputCls} />
-                <p className="text-xs text-gray-400 mt-1">לא חובה — ניתן לחבר לפרויקט מאוחר יותר</p>
+                  onChange={e => update('inviteCode', e.target.value.toUpperCase())} className="sc-input" />
+                <p className="text-xs text-sc-gray mt-1">לא חובה — ניתן לחבר לפרויקט מאוחר יותר</p>
               </Field>
             </div>
           )}
@@ -234,8 +234,8 @@ export default function RegisterTenant() {
           {/* Step 3: Summary */}
           {step === 3 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">סיכום ואישור</h2>
-              <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
+              <h2 className="text-lg font-semibold text-sc-dark mb-4">סיכום ואישור</h2>
+              <div className="bg-sc-bg rounded-xl p-4 space-y-2 text-sm">
                 <SummaryRow label="שם" value={form.fullName} />
                 <SummaryRow label="ת.ז" value={form.idNumber} />
                 <SummaryRow label="טלפון" value={form.phone} />
@@ -246,7 +246,7 @@ export default function RegisterTenant() {
                 <SummaryRow label="סוג מחזיק" value={form.isOwner ? 'בעלים' : 'שוכר'} />
                 {form.inviteCode && <SummaryRow label="קוד הזמנה" value={form.inviteCode} />}
               </div>
-              <p className="text-xs text-gray-500 text-center">
+              <p className="text-xs text-sc-gray text-center">
                 בלחיצה על "הרשמה" אתה מאשר את תנאי השימוש ומדיניות הפרטיות
               </p>
             </div>
@@ -254,7 +254,7 @@ export default function RegisterTenant() {
 
           {/* Error */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mt-4">
+            <div className="bg-sc-error/10 border border-sc-error/30 text-sc-error text-sm px-4 py-3 rounded-xl mt-4">
               {error}
             </div>
           )}
@@ -263,18 +263,18 @@ export default function RegisterTenant() {
           <div className="flex gap-3 mt-6">
             {step > 1 && (
               <button onClick={() => setStep(s => s - 1)}
-                className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl font-medium hover:bg-gray-50 transition-colors">
+                className="sc-btn-secondary flex-1">
                 ← הקודם
               </button>
             )}
             {step < 3 ? (
               <button onClick={handleNext}
-                className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors">
+                className="sc-btn-primary flex-1">
                 הבא ←
               </button>
             ) : (
               <button onClick={handleSubmit} disabled={loading}
-                className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50">
+                className="sc-btn-primary flex-1 disabled:opacity-50">
                 {loading ? 'נרשם...' : '✅ הרשמה'}
               </button>
             )}
@@ -286,12 +286,10 @@ export default function RegisterTenant() {
 }
 
 // Helper components
-const inputCls = 'w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 text-sm'
-
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-sc-dark mb-1">{label}</label>
       {children}
     </div>
   )
@@ -300,8 +298,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between">
-      <span className="text-gray-500">{label}:</span>
-      <span className="font-medium text-gray-800">{value}</span>
+      <span className="text-sc-gray">{label}:</span>
+      <span className="font-medium text-sc-dark">{value}</span>
     </div>
   )
 }

@@ -96,17 +96,17 @@ export default function RegisterManager() {
   const stepTitles = ['פרטים אישיים', 'פרטים מקצועיים', 'אישור']
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-slate-100 flex items-center justify-center p-4" dir="rtl">
+    <div className="min-h-screen bg-sc-bg flex items-center justify-center p-4" dir="rtl">
       <div className="w-full max-w-lg">
         {/* Header */}
         <div className="text-center mb-6">
-          <Link to="/register" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
+          <Link to="/register" className="inline-flex items-center gap-1 text-sm text-sc-gray hover:text-sc-dark mb-4">
             ← חזרה לבחירת תפקיד
           </Link>
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-purple-600 rounded-2xl mb-3 shadow-lg">
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-sc-blue-deep rounded-2xl mb-3 shadow-lg">
             <span className="text-2xl">🏢</span>
           </div>
-          <h1 className="text-xl font-bold text-gray-900">הרשמה כמארגן דיירים</h1>
+          <h1 className="text-xl font-bold text-sc-dark">הרשמה כמארגן דיירים</h1>
         </div>
 
         {/* Step indicator */}
@@ -115,48 +115,48 @@ export default function RegisterManager() {
             <div key={i} className="flex items-center gap-2">
               <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                 step === i + 1
-                  ? 'bg-purple-600 text-white'
+                  ? 'bg-sc-blue text-white'
                   : step > i + 1
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-gray-100 text-gray-400'
+                  ? 'bg-sc-success/15 text-sc-success'
+                  : 'bg-sc-gray-light text-sc-gray'
               }`}>
                 <span>{step > i + 1 ? '✓' : i + 1}</span>
                 <span>{title}</span>
               </div>
-              {i < stepTitles.length - 1 && <div className="w-6 h-px bg-gray-200" />}
+              {i < stepTitles.length - 1 && <div className={`w-6 h-px ${step > i + 1 ? 'bg-sc-success' : 'bg-sc-gray-light'}`} />}
             </div>
           ))}
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+        <div className="sc-card p-8">
 
           {/* Step 1 */}
           {step === 1 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">פרטים אישיים</h2>
+              <h2 className="text-lg font-semibold text-sc-dark mb-4">פרטים אישיים</h2>
               <Field label="שם מלא *">
                 <input type="text" placeholder="ישראל ישראלי" value={form.fullName}
-                  onChange={e => update('fullName', e.target.value)} className={inputCls} />
+                  onChange={e => update('fullName', e.target.value)} className="sc-input" />
               </Field>
               <Field label="תעודת זהות *">
                 <input type="text" placeholder="000000000" maxLength={9} value={form.idNumber}
-                  onChange={e => update('idNumber', e.target.value.replace(/\D/g, ''))} className={inputCls} />
+                  onChange={e => update('idNumber', e.target.value.replace(/\D/g, ''))} className="sc-input" />
               </Field>
               <Field label="טלפון נייד *">
                 <input type="tel" placeholder="050-0000000" value={form.phone}
-                  onChange={e => update('phone', e.target.value)} className={inputCls} />
+                  onChange={e => update('phone', e.target.value)} className="sc-input" />
               </Field>
               <Field label="אימייל *">
                 <input type="email" placeholder="your@company.com" value={form.email}
-                  onChange={e => update('email', e.target.value)} className={inputCls} />
+                  onChange={e => update('email', e.target.value)} className="sc-input" />
               </Field>
               <Field label="סיסמה *">
                 <input type="password" placeholder="••••••••" value={form.password}
-                  onChange={e => update('password', e.target.value)} className={inputCls} />
+                  onChange={e => update('password', e.target.value)} className="sc-input" />
               </Field>
               <Field label="אישור סיסמה *">
                 <input type="password" placeholder="••••••••" value={form.confirmPassword}
-                  onChange={e => update('confirmPassword', e.target.value)} className={inputCls} />
+                  onChange={e => update('confirmPassword', e.target.value)} className="sc-input" />
               </Field>
             </div>
           )}
@@ -164,7 +164,7 @@ export default function RegisterManager() {
           {/* Step 2 */}
           {step === 2 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">פרטים מקצועיים</h2>
+              <h2 className="text-lg font-semibold text-sc-dark mb-4">פרטים מקצועיים</h2>
 
               <Field label="תפקיד *">
                 <div className="grid grid-cols-2 gap-2">
@@ -175,8 +175,8 @@ export default function RegisterManager() {
                       onClick={() => update('roleType', rt.value)}
                       className={`p-3 rounded-xl border-2 text-right text-sm font-medium transition-colors ${
                         form.roleType === rt.value
-                          ? 'border-purple-500 bg-purple-50 text-purple-800'
-                          : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                          ? 'border-sc-blue bg-sc-blue-pale text-sc-blue-deep'
+                          : 'border-sc-gray-light text-sc-gray hover:border-sc-blue-light'
                       }`}
                     >
                       {rt.label}
@@ -187,21 +187,21 @@ export default function RegisterManager() {
 
               <Field label="שם חברה / משרד">
                 <input type="text" placeholder="חברת ABC בניה בע״מ" value={form.companyName}
-                  onChange={e => update('companyName', e.target.value)} className={inputCls} />
+                  onChange={e => update('companyName', e.target.value)} className="sc-input" />
               </Field>
 
               <Field label="מספר ח.פ / ע.מ">
                 <input type="text" placeholder="000000000" maxLength={9} value={form.companyRegistration}
-                  onChange={e => update('companyRegistration', e.target.value.replace(/\D/g, ''))} className={inputCls} />
+                  onChange={e => update('companyRegistration', e.target.value.replace(/\D/g, ''))} className="sc-input" />
               </Field>
 
               <Field label="מספר רישיון מקצועי">
                 <input type="text" placeholder="123456" value={form.licenseNumber}
-                  onChange={e => update('licenseNumber', e.target.value)} className={inputCls} />
+                  onChange={e => update('licenseNumber', e.target.value)} className="sc-input" />
               </Field>
 
               <Field label="עיר פעילות ראשית *">
-                <select value={form.city} onChange={e => update('city', e.target.value)} className={inputCls}>
+                <select value={form.city} onChange={e => update('city', e.target.value)} className="sc-input">
                   <option value="">בחר עיר...</option>
                   {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
@@ -210,10 +210,10 @@ export default function RegisterManager() {
               <div className="grid grid-cols-2 gap-3">
                 <Field label="שנות ניסיון">
                   <input type="number" placeholder="5" min="0" max="50" value={form.experienceYears}
-                    onChange={e => update('experienceYears', e.target.value)} className={inputCls} />
+                    onChange={e => update('experienceYears', e.target.value)} className="sc-input" />
                 </Field>
                 <Field label="פרויקטים שניהלת">
-                  <select value={form.projectsCount} onChange={e => update('projectsCount', e.target.value)} className={inputCls}>
+                  <select value={form.projectsCount} onChange={e => update('projectsCount', e.target.value)} className="sc-input">
                     <option value="">בחר...</option>
                     <option value="0">עדיין לא</option>
                     <option value="1-5">1–5</option>
@@ -228,8 +228,8 @@ export default function RegisterManager() {
           {/* Step 3: Summary */}
           {step === 3 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">סיכום ואישור</h2>
-              <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
+              <h2 className="text-lg font-semibold text-sc-dark mb-4">סיכום ואישור</h2>
+              <div className="bg-sc-bg rounded-xl p-4 space-y-2 text-sm">
                 <SummaryRow label="שם" value={form.fullName} />
                 <SummaryRow label="אימייל" value={form.email} />
                 <SummaryRow label="טלפון" value={form.phone} />
@@ -238,7 +238,7 @@ export default function RegisterManager() {
                 <SummaryRow label="עיר" value={form.city} />
                 {form.experienceYears && <SummaryRow label="ניסיון" value={`${form.experienceYears} שנים`} />}
               </div>
-              <p className="text-xs text-gray-500 text-center">
+              <p className="text-xs text-sc-gray text-center">
                 בלחיצה על "הרשמה" אתה מאשר את תנאי השימוש
               </p>
             </div>
@@ -246,7 +246,7 @@ export default function RegisterManager() {
 
           {/* Error */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mt-4">
+            <div className="bg-sc-error/10 border border-sc-error/30 text-sc-error text-sm px-4 py-3 rounded-xl mt-4">
               {error}
             </div>
           )}
@@ -255,18 +255,18 @@ export default function RegisterManager() {
           <div className="flex gap-3 mt-6">
             {step > 1 && (
               <button onClick={() => setStep(s => s - 1)}
-                className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl font-medium hover:bg-gray-50">
+                className="sc-btn-secondary flex-1">
                 ← הקודם
               </button>
             )}
             {step < 3 ? (
               <button onClick={handleNext}
-                className="flex-1 bg-purple-600 text-white py-3 rounded-xl font-medium hover:bg-purple-700 transition-colors">
+                className="sc-btn-primary flex-1">
                 הבא ←
               </button>
             ) : (
               <button onClick={handleSubmit} disabled={loading}
-                className="flex-1 bg-purple-600 text-white py-3 rounded-xl font-medium hover:bg-purple-700 transition-colors disabled:opacity-50">
+                className="sc-btn-primary flex-1 disabled:opacity-50">
                 {loading ? 'נרשם...' : '✅ הרשמה'}
               </button>
             )}
@@ -277,12 +277,10 @@ export default function RegisterManager() {
   )
 }
 
-const inputCls = 'w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 text-sm'
-
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-sc-dark mb-1">{label}</label>
       {children}
     </div>
   )
@@ -291,8 +289,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between">
-      <span className="text-gray-500">{label}:</span>
-      <span className="font-medium text-gray-800">{value}</span>
+      <span className="text-sc-gray">{label}:</span>
+      <span className="font-medium text-sc-dark">{value}</span>
     </div>
   )
 }

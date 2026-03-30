@@ -26,19 +26,19 @@ export default function ManagerDashboard() {
   if (isLoading) return (<div className="flex justify-center items-center h-64"><BuildingLoader size="lg" /></div>)
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-sc-bg" dir="rtl">
       <Navbar />
       <div className="max-w-5xl mx-auto px-4 py-8">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">לוח הבקרה — מארגן דיירים</h1>
-            <p className="text-gray-500 text-sm mt-1">{projects?.length ?? 0} פרויקטים פעילים</p>
+            <h1 className="sc-section-title text-2xl">לוח הבקרה — מארגן דיירים</h1>
+            <p className="text-sc-gray text-sm mt-1">{projects?.length ?? 0} פרויקטים פעילים</p>
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors"
+            className="sc-btn-primary"
           >
             + פרויקט חדש
           </button>
@@ -48,7 +48,7 @@ export default function ManagerDashboard() {
           {/* Projects list */}
           <div className="flex-1">
             {!projects || projects.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center text-gray-400">
+              <div className="sc-card p-12 text-center text-sc-gray">
                 <div className="text-5xl mb-4">🏗️</div>
                 <p className="text-lg font-medium">אין פרויקטים עדיין</p>
                 <p className="text-sm mt-1">לחץ על "פרויקט חדש" כדי להתחיל</p>
@@ -59,25 +59,25 @@ export default function ManagerDashboard() {
                   <div
                     key={project.id}
                     onClick={() => setSelectedProjectId(project.id === selectedProjectId ? null : project.id)}
-                    className={`bg-white rounded-2xl border shadow-sm p-6 cursor-pointer transition-all ${
-                      selectedProjectId === project.id ? 'border-blue-500 ring-2 ring-blue-100' : 'border-gray-100 hover:shadow-md'
+                    className={`sc-card p-6 cursor-pointer transition-all ${
+                      selectedProjectId === project.id ? 'border-sc-blue ring-2 ring-sc-blue-pale' : 'hover:shadow-md'
                     }`}
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <h3 className="font-semibold text-gray-900 text-lg">{project.name}</h3>
-                        {project.address && <p className="text-gray-500 text-sm mt-0.5">{project.address}</p>}
+                        <h3 className="font-semibold text-sc-dark text-lg">{project.name}</h3>
+                        {project.address && <p className="text-sc-gray text-sm mt-0.5">{project.address}</p>}
                       </div>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-sc-gray">
                         {(project.project_tenants as any)?.[0]?.count ?? 0} דיירים
                       </span>
                     </div>
                     <div className="flex items-center gap-2 mt-3">
-                      <span className="text-xs text-gray-500">קוד הצטרפות:</span>
-                      <span className="font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">{project.invite_code}</span>
+                      <span className="text-xs text-sc-gray">קוד הצטרפות:</span>
+                      <span className="sc-badge bg-sc-blue-pale text-sc-blue font-mono font-bold">{project.invite_code}</span>
                       <button
                         onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(project.invite_code) }}
-                        className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                        className="text-xs text-sc-gray hover:text-sc-dark transition-colors"
                         title="העתק קוד"
                       >
                         📋 העתק
@@ -91,47 +91,47 @@ export default function ManagerDashboard() {
 
           {/* Project detail panel */}
           {selectedProject && (
-            <div className="w-80 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 self-start">
-              <h2 className="font-bold text-gray-900 text-lg mb-4">{selectedProject.name}</h2>
+            <div className="w-80 sc-card p-6 self-start">
+              <h2 className="font-bold text-sc-dark text-lg mb-4">{selectedProject.name}</h2>
 
               {/* Invite by email */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">הזמן דייר במייל</label>
+                <label className="block text-sm font-medium text-sc-dark mb-2">הזמן דייר במייל</label>
                 <div className="flex gap-2">
                   <input
                     type="email"
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
                     placeholder="email@example.com"
-                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="sc-input flex-1"
                     dir="ltr"
                   />
                   <button
                     onClick={() => inviteByEmail.mutate({ projectId: selectedProject.id, email: inviteEmail })}
                     disabled={!inviteEmail || inviteByEmail.isPending}
-                    className="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                    className="sc-btn-primary px-3 py-2 text-sm disabled:opacity-50"
                   >
                     שלח
                   </button>
                 </div>
-                {inviteByEmail.isSuccess && <p className="text-green-600 text-xs mt-1">ההזמנה נשלחה ✓</p>}
+                {inviteByEmail.isSuccess && <p className="text-sc-success text-xs mt-1">ההזמנה נשלחה ✓</p>}
               </div>
 
               {/* Tenants list */}
               <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-3">דיירים ({tenants?.length ?? 0})</h3>
+                <h3 className="text-sm font-medium text-sc-dark mb-3">דיירים ({tenants?.length ?? 0})</h3>
                 {!tenants || tenants.length === 0 ? (
-                  <p className="text-gray-400 text-sm">אין דיירים עדיין</p>
+                  <p className="text-sc-gray text-sm">אין דיירים עדיין</p>
                 ) : (
                   <div className="space-y-2">
                     {tenants.map((t: any) => (
-                      <div key={t.tenant_id} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-medium text-sm">
+                      <div key={t.tenant_id} className="flex items-center gap-3 p-2 bg-sc-bg rounded-lg">
+                        <div className="w-8 h-8 bg-sc-blue-pale rounded-full flex items-center justify-center text-sc-blue font-medium text-sm">
                           {t.profiles?.full_name?.[0] ?? '?'}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{t.profiles?.full_name ?? 'ללא שם'}</p>
-                          <p className="text-xs text-gray-400 truncate">{t.profiles?.email}</p>
+                          <p className="text-sm font-medium text-sc-dark truncate">{t.profiles?.full_name ?? 'ללא שם'}</p>
+                          <p className="text-xs text-sc-gray truncate">{t.profiles?.email}</p>
                         </div>
                       </div>
                     ))}
@@ -146,25 +146,25 @@ export default function ManagerDashboard() {
       {/* New Project Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => { setShowModal(false); setAddress({ city: '', street: '', buildingNumber: '' }) }}>
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm mx-4" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-lg font-bold text-gray-900 mb-4">פרויקט חדש</h2>
+          <div className="sc-card p-6 w-full max-w-sm mx-4" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-sc-dark mb-4">פרויקט חדש</h2>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">שם הפרויקט *</label>
+                <label className="block text-sm font-medium text-sc-dark mb-1">שם הפרויקט *</label>
                 <input
                   type="text"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="לדוגמה: בניין רחוב הרצל 5"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="sc-input"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">סוג התחדשות</label>
+                <label className="block text-sm font-medium text-sc-dark mb-1">סוג התחדשות</label>
                 <select
                   value={renewalType}
                   onChange={(e) => setRenewalType(e.target.value as any)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="sc-input"
                 >
                   <option value="pinuy_binuy">פינוי בינוי</option>
                   <option value="tama_38_b">תמ״א 38/ב</option>
@@ -173,7 +173,7 @@ export default function ManagerDashboard() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">כתובת</label>
+                <label className="block text-sm font-medium text-sc-dark mb-1">כתובת</label>
                 <AddressPicker value={address} onChange={setAddress} />
               </div>
             </div>
@@ -181,13 +181,13 @@ export default function ManagerDashboard() {
               <button
                 onClick={() => createProject.mutate({ name: newName, renewalType, address: address.city && address.street ? `${address.street} ${address.buildingNumber}, ${address.city}` : undefined })}
                 disabled={!newName.trim() || createProject.isPending}
-                className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                className="sc-btn-primary flex-1 disabled:opacity-50"
               >
                 {createProject.isPending ? 'יוצר...' : 'צור פרויקט'}
               </button>
               <button
                 onClick={() => { setShowModal(false); setAddress({ city: '', street: '', buildingNumber: '' }) }}
-                className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+                className="sc-btn-secondary flex-1"
               >
                 ביטול
               </button>

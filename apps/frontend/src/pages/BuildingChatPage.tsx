@@ -45,32 +45,28 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
   }
 
   return (
-    <div style={{
-      background: isOpen ? '#f0f9ff' : '#f8fafc', border: `1px solid ${isOpen ? '#bae6fd' : '#e2e8f0'}`,
-      borderRadius: '12px', padding: '16px', margin: '4px 0',
-    }}>
-      <div style={{ fontWeight: 700, fontSize: '14px', color: '#1e293b', marginBottom: '12px' }}>
+    <div className={`sc-card p-4 my-1 border-t-4 ${isOpen ? 'border-t-sc-blue bg-sc-blue-pale/30' : 'border-t-sc-gray-light'}`}>
+      <div className="font-bold text-sm text-sc-dark mb-3">
         {isOpen ? '📊' : '✅'} {p.question}
       </div>
 
       {/* Progress bar */}
-      <div style={{ marginBottom: '12px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>
+      <div className="mb-3">
+        <div className="flex justify-between text-xs text-sc-gray mb-1">
           <span>{p.voteCount} הצביעו מתוך {p.memberCount}</span>
           <span>{p.votePercent}%</span>
         </div>
-        <div style={{ height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${p.votePercent}%`, background: '#2563EB', borderRadius: '3px', transition: 'width 0.5s' }} />
+        <div className="h-1.5 bg-sc-gray-light rounded-full overflow-hidden">
+          <div className="h-full bg-sc-blue rounded-full transition-all duration-500" style={{ width: `${p.votePercent}%` }} />
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: '#94a3b8', marginTop: '6px', gap: 8 }}>
+        <div className="flex justify-between items-center text-[11px] text-sc-gray mt-1.5 gap-2">
             <span>נדרש {p.threshold_pct}% להכרעה</span>
             {p.close_at && (() => {
               const ms = new Date(p.close_at).getTime() - now
-              if (ms <= 0) return <span style={{ color: '#ef4444', fontWeight: 700 }}>⏰ פג תוקף</span>
+              if (ms <= 0) return <span className="text-sc-error font-bold">⏰ פג תוקף</span>
               const days = Math.floor(ms / 86400000)
               const hours = Math.floor((ms % 86400000) / 3600000)
-              const color = days < 1 ? '#ef4444' : days < 2 ? '#f59e0b' : '#6b7280'
-              return <span style={{ color, fontWeight: 700 }}>
+              return <span className={`font-bold ${days < 1 ? 'text-sc-error' : days < 2 ? 'text-sc-warning' : 'text-sc-gray'}`}>
                 ⏱ {days > 0 ? `${days} ימים נותרו` : `${hours} שעות נותרו`}
               </span>
             })()}
@@ -79,7 +75,7 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
 
       {/* Closed poll result */}
       {!isOpen && (
-        <div style={{ padding: '10px', background: '#dcfce7', borderRadius: '8px', fontSize: '13px', color: '#166534', fontWeight: 600 }}>
+        <div className="p-2.5 bg-sc-success/15 rounded-lg text-[13px] text-sc-success font-semibold">
           {isApartmentCount && `תוצאה: ${p.result_value} דירות בבניין`}
           {isElection && p.candidates?.length > 0 && `נבחר: ${p.candidates.find((c: any) => c.id === p.result_user_id)?.full_name ?? p.result_value}`}
           {isCustom && `תוצאה: ${p.result_value}`}
@@ -90,23 +86,21 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
       {isOpen && !hasVoted && (
         <div>
           {isApartmentCount && (
-            <div style={{ marginBottom: '8px' }}>
+            <div className="mb-2">
               <input
                 type="number" min="2" placeholder="הזן מספר דירות"
                 value={customNumber} onChange={e => setCustomNumber(e.target.value)}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+                className="sc-input"
               />
             </div>
           )}
           {isElection && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px' }}>
+            <div className="flex flex-col gap-1.5 mb-2">
               {(p.candidates ?? []).map((c: any) => (
                 <button key={c.id} onClick={() => setSelectedValue(c.id)}
-                  style={{
-                    padding: '8px 12px', borderRadius: '8px', border: `2px solid ${selectedValue === c.id ? '#2563EB' : '#e2e8f0'}`,
-                    background: selectedValue === c.id ? '#eff6ff' : '#fff', cursor: 'pointer',
-                    textAlign: 'right', fontSize: '13px', color: '#1e293b',
-                  }}>
+                  className={`p-2 rounded-lg border-2 text-right text-[13px] text-sc-dark cursor-pointer transition-colors ${
+                    selectedValue === c.id ? 'border-sc-blue bg-sc-blue-pale' : 'border-sc-gray-light bg-white'
+                  }`}>
                   👤 {c.full_name}
                   {c.id === currentUserId && ' (אני)'}
                 </button>
@@ -114,42 +108,31 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
             </div>
           )}
           {isCustom && options.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+            <div className="flex flex-col gap-2 mb-2.5">
               {options.map((opt: string) => (
                 <button key={opt} onClick={() => setSelectedValue(opt)}
-                  style={{
-                    padding: '10px 14px', borderRadius: '10px',
-                    border: `2px solid ${selectedValue === opt ? '#2563EB' : '#e2e8f0'}`,
-                    background: selectedValue === opt ? '#eff6ff' : '#fff',
-                    cursor: 'pointer', textAlign: 'right', fontSize: '14px', color: '#1e293b',
-                    fontWeight: selectedValue === opt ? 700 : 400,
-                    display: 'flex', alignItems: 'center', gap: 8,
-                  }}>
-                  <span style={{
-                    width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
-                    border: `2px solid ${selectedValue === opt ? '#2563EB' : '#d1d5db'}`,
-                    background: selectedValue === opt ? '#2563EB' : 'transparent',
-                    display: 'inline-block',
-                  }} />
+                  className={`p-2.5 rounded-[10px] border-2 text-right text-sm text-sc-dark cursor-pointer flex items-center gap-2 transition-colors ${
+                    selectedValue === opt ? 'border-sc-blue bg-sc-blue-pale font-bold' : 'border-sc-gray-light bg-white'
+                  }`}>
+                  <span className={`w-[18px] h-[18px] rounded-full flex-shrink-0 border-2 inline-block ${
+                    selectedValue === opt ? 'border-sc-blue bg-sc-blue' : 'border-sc-gray-light bg-transparent'
+                  }`} />
                   {opt}
                 </button>
               ))}
             </div>
           )}
           {isCustom && options.length === 0 && (
-            <div style={{ marginBottom: '8px' }}>
+            <div className="mb-2">
               <input
                 type="text" placeholder="הכנס תשובה..."
                 value={selectedValue} onChange={e => setSelectedValue(e.target.value)}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+                className="sc-input"
               />
             </div>
           )}
           <button onClick={handleVote} disabled={castVote.isPending || (!customNumber && !selectedValue)}
-            style={{
-              padding: '8px 16px', background: '#2563EB', color: '#fff', border: 'none', borderRadius: '8px',
-              fontSize: '13px', fontWeight: 600, cursor: 'pointer', opacity: (!customNumber && !selectedValue) ? 0.5 : 1,
-            }}>
+            className="sc-btn-primary px-4 py-2 text-[13px] disabled:opacity-50">
             {castVote.isPending ? 'שולח...' : 'הצבע'}
           </button>
         </div>
@@ -157,22 +140,22 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
 
       {/* Expired — didn't vote */}
       {isExpired && !hasVoted && (
-        <div style={{ padding: '10px 12px', background: '#fef2f2', borderRadius: 8, fontSize: 13, color: '#ef4444', fontWeight: 600 }}>
+        <div className="p-2.5 bg-sc-error/10 rounded-lg text-[13px] text-sc-error font-semibold">
           ⏰ מועד ההצבעה עבר
         </div>
       )}
 
       {/* Already voted */}
       {(isOpen || isExpired) && hasVoted && !changing && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: '#eff6ff', borderRadius: 8 }}>
-          <span style={{ fontSize: '13px', color: '#2563EB', fontWeight: 600 }}>
+        <div className="flex items-center justify-between p-2.5 bg-sc-blue-pale rounded-lg">
+          <span className="text-[13px] text-sc-blue font-semibold">
             ✓ הצבעת על: {isElection
               ? (p.candidates ?? []).find((c: any) => c.id === p.myVote)?.full_name ?? p.myVote
               : isApartmentCount ? `${p.myVote} דירות`
               : p.myVote}
           </span>
           <button onClick={() => { setSelectedValue(p.myVote ?? ''); setCustomNumber(p.myVote ?? ''); setChanging(true) }}
-            style={{ fontSize: '12px', color: '#6b7280', background: 'none', border: '1px solid #d1d5db', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>
+            className="sc-btn-secondary text-xs px-2.5 py-1">
             שנה ✏️
           </button>
         </div>
@@ -181,39 +164,45 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
       {canVote && hasVoted && changing && (
         <div>
           {isApartmentCount && (
-            <div style={{ marginBottom: '8px' }}>
+            <div className="mb-2">
               <input type="number" min="2" placeholder="הזן מספר דירות" value={customNumber} onChange={e => setCustomNumber(e.target.value)}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid #bfdbfe', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
+                className="sc-input border-sc-blue-light" />
             </div>
           )}
           {isElection && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px' }}>
+            <div className="flex flex-col gap-1.5 mb-2">
               {(p.candidates ?? []).map((c: any) => (
                 <button key={c.id} onClick={() => setSelectedValue(c.id)}
-                  style={{ padding: '8px 12px', borderRadius: '8px', border: `2px solid ${selectedValue === c.id ? '#2563EB' : '#e2e8f0'}`, background: selectedValue === c.id ? '#eff6ff' : '#fff', cursor: 'pointer', textAlign: 'right', fontSize: '13px', color: '#1e293b' }}>
+                  className={`p-2 rounded-lg border-2 text-right text-[13px] text-sc-dark cursor-pointer ${
+                    selectedValue === c.id ? 'border-sc-blue bg-sc-blue-pale' : 'border-sc-gray-light bg-white'
+                  }`}>
                   👤 {c.full_name}{c.id === currentUserId && ' (אני)'}
                 </button>
               ))}
             </div>
           )}
           {isCustom && options.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+            <div className="flex flex-col gap-2 mb-2.5">
               {options.map((opt: string) => (
                 <button key={opt} onClick={() => setSelectedValue(opt)}
-                  style={{ padding: '10px 14px', borderRadius: '10px', border: `2px solid ${selectedValue === opt ? '#2563EB' : '#e2e8f0'}`, background: selectedValue === opt ? '#eff6ff' : '#fff', cursor: 'pointer', textAlign: 'right', fontSize: '14px', color: '#1e293b', fontWeight: selectedValue === opt ? 700 : 400, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ width: 18, height: 18, borderRadius: '50%', flexShrink: 0, border: `2px solid ${selectedValue === opt ? '#2563EB' : '#d1d5db'}`, background: selectedValue === opt ? '#2563EB' : 'transparent', display: 'inline-block' }} />
+                  className={`p-2.5 rounded-[10px] border-2 text-right text-sm text-sc-dark cursor-pointer flex items-center gap-2 ${
+                    selectedValue === opt ? 'border-sc-blue bg-sc-blue-pale font-bold' : 'border-sc-gray-light bg-white'
+                  }`}>
+                  <span className={`w-[18px] h-[18px] rounded-full flex-shrink-0 border-2 inline-block ${
+                    selectedValue === opt ? 'border-sc-blue bg-sc-blue' : 'border-sc-gray-light bg-transparent'
+                  }`} />
                   {opt}
                 </button>
               ))}
             </div>
           )}
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="flex gap-2">
             <button onClick={handleVote} disabled={castVote.isPending || (!customNumber && !selectedValue)}
-              style={{ flex: 1, padding: '8px 16px', background: '#2563EB', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', opacity: (!customNumber && !selectedValue) ? 0.5 : 1 }}>
+              className="sc-btn-primary flex-1 py-2 text-[13px] disabled:opacity-50">
               {castVote.isPending ? 'שומר...' : 'עדכן הצבעה ✓'}
             </button>
             <button onClick={() => setChanging(false)}
-              style={{ padding: '8px 14px', background: '#f1f5f9', color: '#374151', border: 'none', borderRadius: '8px', fontSize: '13px', cursor: 'pointer' }}>
+              className="sc-btn-secondary py-2 px-3.5 text-[13px]">
               ביטול
             </button>
           </div>
@@ -301,44 +290,49 @@ export default function BuildingChatPage() {
   }
 
   return (
-    <div style={{ height: '100dvh', background: '#f8fafc', display: 'flex', flexDirection: 'column' }} dir="rtl">
+    <div className="h-[100dvh] bg-sc-bg flex flex-col" dir="rtl">
       <Navbar />
-      <div style={{ maxWidth: '720px', margin: '0 auto', width: '100%', flex: 1, display: 'flex', flexDirection: 'column', padding: '0 16px', minHeight: 0 }}>
+      <div className="max-w-[720px] mx-auto w-full flex-1 flex flex-col px-4 min-h-0">
 
         {/* Header */}
-        <div style={{ padding: '14px 0', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+        <div className="py-3.5 border-b border-sc-gray-light flex items-center gap-3 flex-shrink-0">
           <button onClick={() => navigate('/dashboard')}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f1f5f9', border: 'none', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontSize: 14, color: '#2563EB', fontWeight: 600, flexShrink: 0, WebkitTapHighlightColor: 'transparent' }}>
+            className="flex items-center gap-1.5 bg-sc-bg border-none rounded-[10px] px-3.5 py-2 cursor-pointer text-sm text-sc-blue font-semibold flex-shrink-0">
             ‹ דף הבית
           </button>
-          <h1 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: '#1e293b', flex: 1 }}>🏢 קבוצת הבניין</h1>
+          <h1 className="m-0 text-[17px] font-bold text-sc-dark flex-1">🏢 קבוצת הבניין</h1>
         </div>
 
         {/* Messages scroll area */}
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          style={{ flex: 1, overflowY: 'auto', padding: '16px 0', display: 'flex', flexDirection: 'column', gap: '12px', minHeight: 0, WebkitOverflowScrolling: 'touch', position: 'relative' }}
+          className="flex-1 overflow-y-auto py-4 flex flex-col gap-3 min-h-0 relative"
+          style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {(messages ?? []).map((msg: any) => {
             const isMe = msg.sender_id === currentUserId
             const isPoll = msg.message_type === 'poll' && msg.poll_id
             return (
               <div key={msg.id} ref={msg.message_type === 'poll' ? (el) => { pollRefs.current[msg.poll_id] = el } : undefined}
-                style={{ display: 'flex', flexDirection: isPoll ? 'column' : isMe ? 'row-reverse' : 'row', gap: '8px', alignItems: isPoll ? 'stretch' : 'flex-start' }}>
+                className={`flex gap-2 ${isPoll ? 'flex-col items-stretch' : isMe ? 'flex-row-reverse' : 'flex-row'} ${!isPoll ? 'items-start' : ''}`}>
                 {!isPoll && (
-                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: isMe ? '#2563EB' : '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', flexShrink: 0 }}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 ${
+                    isMe ? 'bg-sc-blue text-white' : 'bg-sc-gray-light text-sc-dark'
+                  }`}>
                     {msg.sender?.full_name?.[0] ?? '?'}
                   </div>
                 )}
-                <div style={{ maxWidth: isPoll ? '100%' : '70%', width: isPoll ? '100%' : undefined }}>
-                  <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px', textAlign: isPoll ? 'right' : isMe ? 'left' : 'right' }}>
+                <div className={isPoll ? 'w-full' : 'max-w-[70%]'}>
+                  <div className={`text-[11px] text-sc-gray mb-1 ${isPoll ? 'text-right' : isMe ? 'text-left' : 'text-right'}`}>
                     {isMe ? 'אני' : msg.sender?.full_name ?? 'דייר'} · {new Date(msg.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
                   </div>
                   {isPoll ? (
                     <PollCard pollId={msg.poll_id} currentUserId={currentUserId} onUnvoted={setUnvotedPollId} />
                   ) : (
-                    <div style={{ padding: '10px 14px', borderRadius: '12px', fontSize: '14px', lineHeight: 1.5, background: isMe ? '#2563EB' : '#fff', color: isMe ? '#fff' : '#1e293b', border: isMe ? 'none' : '1px solid #e2e8f0', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+                    <div className={`p-2.5 rounded-xl text-sm leading-relaxed shadow-sm ${
+                      isMe ? 'bg-sc-blue text-white' : 'bg-white text-sc-dark border border-sc-gray-light'
+                    }`}>
                       {msg.content}
                     </div>
                   )}
@@ -351,17 +345,10 @@ export default function BuildingChatPage() {
 
         {/* Unvoted poll banner — shown from PollCard callback */}
         {unvotedPollId && (
-          <div style={{ position: 'relative', height: 0, overflow: 'visible' }}>
+          <div className="relative h-0 overflow-visible">
             <button
               onClick={() => { scrollToPoll(unvotedPollId); setUnvotedPollId(null) }}
-              style={{
-                position: 'absolute', bottom: 8, left: '50%', transform: 'translateX(-50%)',
-                background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: '#fff',
-                border: 'none', borderRadius: 20, padding: '8px 18px',
-                fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                boxShadow: '0 4px 16px rgba(124,58,237,0.4)', zIndex: 10, whiteSpace: 'nowrap',
-                display: 'flex', alignItems: 'center', gap: 6,
-              }}>
+              className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-sc-blue-deep text-white border-none rounded-full px-4.5 py-2 text-[13px] font-bold cursor-pointer shadow-lg z-10 whitespace-nowrap flex items-center gap-1.5">
               📊 יש סקר שממתין להצבעתך ↑
             </button>
           </div>
@@ -369,31 +356,25 @@ export default function BuildingChatPage() {
 
         {/* New messages floating badge */}
         {newMsgCount > 0 && (
-          <div style={{ position: 'relative', height: 0, overflow: 'visible' }}>
+          <div className="relative h-0 overflow-visible">
             <button
               onClick={() => scrollToBottom(true)}
-              style={{
-                position: 'absolute', bottom: 8, left: '50%', transform: 'translateX(-50%)',
-                background: '#2563EB', color: '#fff', border: 'none', borderRadius: 20,
-                padding: '8px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                boxShadow: '0 4px 16px rgba(37,99,235,0.4)', zIndex: 10, whiteSpace: 'nowrap',
-                display: 'flex', alignItems: 'center', gap: 6,
-              }}>
+              className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-sc-blue text-white border-none rounded-full px-4.5 py-2 text-[13px] font-bold cursor-pointer shadow-lg z-10 whitespace-nowrap flex items-center gap-1.5">
               ↓ {newMsgCount} הודעות חדשות
             </button>
           </div>
         )}
 
         {/* Input — always at bottom */}
-        <div style={{ padding: '10px 0 env(safe-area-inset-bottom, 16px)', display: 'flex', gap: '8px', flexShrink: 0, background: '#f8fafc' }}>
+        <div className="py-2.5 pb-[env(safe-area-inset-bottom,16px)] flex gap-2 flex-shrink-0 bg-sc-bg">
           <input
             value={message} onChange={e => setMessage(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
             placeholder="כתוב הודעה..."
-            style={{ flex: 1, padding: '12px 16px', borderRadius: '12px', border: '1.5px solid #e2e8f0', fontSize: '14px', outline: 'none', background: '#fff' }}
+            className="sc-input flex-1"
           />
           <button onClick={handleSend} disabled={!message.trim() || sendMessage.isPending}
-            style={{ padding: '12px 20px', background: '#2563EB', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 600, cursor: 'pointer', fontSize: '14px', opacity: !message.trim() ? 0.5 : 1 }}>
+            className="sc-btn-primary px-5 py-3 text-sm disabled:opacity-50">
             שלח
           </button>
         </div>

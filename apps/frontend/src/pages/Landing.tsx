@@ -1,51 +1,148 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
-import HeroBg from '../components/HeroBg'
 import { useScrollAnim } from '../hooks/useScrollAnim'
 
+/* ─── DATA ─── */
 const STATS = [
-  { num: '500+', label: 'בניינים רשומים', icon: '🏢' },
-  { num: '12,000+', label: 'דיירים פעילים', icon: '👥' },
-  { num: '98%', label: 'שביעות רצון', icon: '⭐' },
-  { num: '6 שבועות', label: 'עד MVP', icon: '🚀' },
+  { num: '500+', label: 'בניינים רשומים', icon: 'M3 21h18M3 7v1a3 3 0 006 0V7m0 1a3 3 0 006 0V7m0 1a3 3 0 006 0V7H3l2-4h14l2 4M5 21V10.7M19 21V10.7' },
+  { num: '12,000+', label: 'דיירים פעילים', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
+  { num: '98%', label: 'שביעות רצון', icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z' },
+  { num: '24/7', label: 'תמיכה זמינה', icon: 'M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z' },
 ]
-const STEPS = [
-  { num: '01', icon: '🏠', title: 'הצטרף לבניין שלך', desc: 'תהליך פשוט ומהיר — הזן כתובת, אמת פרטים ואתה בפנים.' },
-  { num: '02', icon: '🗳️', title: 'הצביע ועקוב', desc: 'השתתף בסקרים, קבל עדכונים בזמן אמת ותקשר עם הוועד.' },
-  { num: '03', icon: '🏆', title: 'קבל את הדירה החדשה', desc: 'מblueprint ועד טופס 4 — Silver Castle לצידך בכל שלב.' },
-]
-const ROLES = [
-  { icon: '👤', title: 'דייר', color: '#3B82F6', desc: 'עקוב, הצביע ותקשר עם כל הגורמים.' },
-  { icon: '🧭', title: 'גורם מלווה', color: '#8B5CF6', desc: 'נהל פרויקט, תאם גורמים ופתח מכרזים.' },
-  { icon: '🏗️', title: 'נותן שירות', color: '#10B981', desc: 'הגש הצעות, עדכן סטטוס ובנה מוניטין.' },
-  { icon: '🧑‍💼', title: 'יזם', color: '#F59E0B', desc: 'נהל פרויקטים, חוזים וספקי שירות.' },
-]
-const HERO_LINES = ['פשוט. שקוף. יחד.', 'ועדיין לא ברור מה קורה?', 'מהמפתח הישן למפתח החדש.']
 
-// Animated section wrapper
-function Reveal({ children, delay = 0, from = 'bottom' }: { children: React.ReactNode; delay?: number; from?: 'bottom' | 'left' | 'right' | 'scale' }) {
+const STEPS = [
+  { num: '01', title: 'הצטרף לבניין שלך', desc: 'הזן כתובת, אמת את הפרטים שלך ותקבל גישה מיידית לתיק הבניין.', gradient: 'from-blue-500 to-cyan-400' },
+  { num: '02', title: 'הצביע ועקוב', desc: 'השתתף בהצבעות, עקוב אחר התקדמות הפרויקט ותקשר עם כל הגורמים.', gradient: 'from-violet-500 to-purple-400' },
+  { num: '03', title: 'קבל את הדירה החדשה', desc: 'מהתכנון ועד טופס 4 — Silver Castle מלווה אותך בכל שלב.', gradient: 'from-amber-500 to-orange-400' },
+]
+
+const ROLES = [
+  { title: 'דייר', desc: 'עקוב אחרי תהליך ההתחדשות, הצביע בהחלטות חשובות ותקשר עם כל הגורמים במקום אחד.', gradient: 'from-blue-500 to-blue-600', iconPath: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
+  { title: 'גורם מלווה', desc: 'נהל פרויקטים, תאם בין גורמים מקצועיים ופתח מכרזים בצורה שקופה ומסודרת.', gradient: 'from-violet-500 to-purple-600', iconPath: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
+  { title: 'נותן שירות', desc: 'הגש הצעות מחיר, עדכן סטטוס ובנה מוניטין מקצועי מול אלפי דיירים ופרויקטים.', gradient: 'from-emerald-500 to-green-600', iconPath: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
+  { title: 'יזם', desc: 'נהל פרויקטי התחדשות, חוזים, ספקי שירות ולוחות זמנים — הכל בפלטפורמה אחת.', gradient: 'from-amber-500 to-yellow-500', iconPath: 'M13 10V3L4 14h7v7l9-11h-7z' },
+]
+
+const FEATURES = [
+  { title: 'הצבעות דיגיטליות', desc: 'מערכת הצבעה מאובטחת ושקופה לכל ההחלטות.', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
+  { title: 'ניהול מכרזים', desc: 'פתח מכרזים, השווה הצעות ובחר נותני שירות בשקיפות.', icon: 'M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z' },
+  { title: 'מסמכים ודוחות', desc: 'כל המסמכים במקום אחד — חוזים, דוחות, פרוטוקולים.', icon: 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z' },
+  { title: 'עדכונים בזמן אמת', desc: 'קבל עדכוני סטטוס שבועיים מכל נותני השירות.', icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' },
+  { title: 'תקשורת חכמה', desc: 'צ\'אט ישיר בין דיירים, נציגות ונותני שירות.', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z' },
+  { title: 'אבטחה מקסימלית', desc: 'הצפנה מלאה, אימות זהות ומעקב פעולות ללא מחיקה.', icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' },
+]
+
+const HERO_LINES = ['פשוט. שקוף. יחד.', 'ועדיין לא ברור מה קורה?', 'מהמפתח הישן — למפתח החדש.']
+
+const TESTIMONIALS = [
+  { name: 'דני כהן', role: 'דייר, תל אביב', text: 'סוף סוף מישהו שם סדר בבלגן. יודע בדיוק מה קורה עם הפרויקט בלי להתקשר לעשרה אנשים.' },
+  { name: 'עו"ד מיכל לוי', role: 'עורכת דין, חיפה', text: 'הפלטפורמה חוסכת לי שעות עבודה. כל המסמכים במקום אחד, כל ההצבעות מתועדות.' },
+  { name: 'אבי ישראלי', role: 'יזם, ירושלים', text: 'ניהול הפרויקטים נהיה פשוט ושקוף. הדיירים מרוצים וזה מזרז את כל התהליך.' },
+]
+
+/* ─── COMPONENTS ─── */
+
+function Reveal({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
   const { ref, visible } = useScrollAnim()
-  const transforms: Record<string, string> = {
-    bottom: 'translateY(40px)',
-    left: 'translateX(-40px)',
-    right: 'translateX(40px)',
-    scale: 'scale(0.9)',
-  }
   return (
-    <div ref={ref as any} style={{
-      opacity: visible ? 1 : 0,
-      transform: visible ? 'none' : transforms[from],
-      transition: `opacity 0.7s ${delay}s cubic-bezier(.22,1,.36,1), transform 0.7s ${delay}s cubic-bezier(.22,1,.36,1)`,
-    }}>
+    <div
+      ref={ref as any}
+      className={className}
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(32px)',
+        transition: `opacity 0.7s ${delay}s cubic-bezier(.22,1,.36,1), transform 0.7s ${delay}s cubic-bezier(.22,1,.36,1)`,
+      }}
+    >
       {children}
     </div>
   )
 }
 
+function SvgIcon({ path, className = 'w-6 h-6' }: { path: string; className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d={path} />
+    </svg>
+  )
+}
+
+/* ─── HERO BACKGROUND ─── */
+function HeroBackground() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  useEffect(() => {
+    const canvas = canvasRef.current!
+    const ctx = canvas.getContext('2d')!
+    let raf: number, t = 0
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight }
+    resize()
+    window.addEventListener('resize', resize)
+
+    const particles = Array.from({ length: 60 }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      r: Math.random() * 1.2 + 0.3,
+      vx: (Math.random() - 0.5) * 0.2,
+      vy: (Math.random() - 0.5) * 0.2,
+      opacity: Math.random() * 0.4 + 0.1,
+    }))
+
+    const draw = () => {
+      t += 1
+      const W = canvas.width, H = canvas.height
+      ctx.clearRect(0, 0, W, H)
+
+      // Gradient orbs
+      const orbs = [
+        { x: 0.15 + Math.sin(t * 0.0003) * 0.08, y: 0.2 + Math.cos(t * 0.0004) * 0.06, r: 0.5, c: [30, 58, 95] },
+        { x: 0.85 + Math.sin(t * 0.0002 + 2) * 0.1, y: 0.7 + Math.cos(t * 0.0003 + 1) * 0.08, r: 0.45, c: [59, 107, 156] },
+        { x: 0.5 + Math.sin(t * 0.0004 + 4) * 0.06, y: 0.9, r: 0.4, c: [90, 141, 184] },
+      ]
+      orbs.forEach(orb => {
+        const g = ctx.createRadialGradient(orb.x * W, orb.y * H, 0, orb.x * W, orb.y * H, orb.r * Math.min(W, H))
+        g.addColorStop(0, `rgba(${orb.c.join(',')},0.12)`)
+        g.addColorStop(0.5, `rgba(${orb.c.join(',')},0.04)`)
+        g.addColorStop(1, 'transparent')
+        ctx.fillStyle = g
+        ctx.fillRect(0, 0, W, H)
+      })
+
+      // Particles
+      particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy
+        if (p.x < 0) p.x = W; if (p.x > W) p.x = 0
+        if (p.y < 0) p.y = H; if (p.y > H) p.y = 0
+        ctx.fillStyle = `rgba(255,255,255,${p.opacity * (0.7 + 0.3 * Math.sin(t * 0.015 + p.x))})`
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill()
+      })
+
+      // Particle connections
+      ctx.lineWidth = 0.4
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          if (dist < 120) {
+            ctx.strokeStyle = `rgba(59,107,156,${0.06 * (1 - dist / 120)})`
+            ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke()
+          }
+        }
+      }
+
+      raf = requestAnimationFrame(draw)
+    }
+    draw()
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize) }
+  }, [])
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
+}
+
+/* ─── MAIN LANDING ─── */
 export default function Landing() {
   const [textIdx, setTextIdx] = useState(0)
   const [fade, setFade] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -55,135 +152,149 @@ export default function Landing() {
     return () => clearInterval(t)
   }, [])
 
-  const S: React.CSSProperties = { fontFamily: 'system-ui, Arial, sans-serif' }
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   return (
-    <div dir="rtl" style={{ ...S, minHeight: '100vh', background: '#020817', color: '#F8FAFC', overflowX: 'hidden' }}>
+    <div dir="rtl" className="min-h-screen bg-sc-blue-deep text-white overflow-x-hidden font-heebo">
 
-      {/* ── SCROLL PROGRESS BAR ── */}
+      {/* ── SCROLL PROGRESS ── */}
       <ScrollProgress />
 
       {/* ── NAVBAR ── */}
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, background: 'rgba(2,8,23,0.9)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', height: 60 }}>
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'white', fontWeight: 800, fontSize: 18 }}>
-            <img src="/logo.svg" alt="SC" style={{ height: 28, filter: "brightness(0) invert(1)" }} />
-            
+      <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${scrolled ? 'bg-sc-blue-deep/80 backdrop-blur-2xl border-b border-white/[0.06] shadow-2xl shadow-black/20' : 'bg-transparent'}`}>
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-5 md:px-8 h-16">
+          <Link to="/" className="flex items-center gap-2.5 text-white font-extrabold text-lg tracking-tight no-underline">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sc-blue to-sc-blue-deep flex items-center justify-center text-xs font-black shadow-lg shadow-sc-blue/25">SC</div>
+            <span className="hidden sm:inline">Silver Castle</span>
           </Link>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <Link to="/login" className="desktop-only" style={{ padding: '8px 18px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.15)', color: '#CBD5E1', textDecoration: 'none', fontSize: 13, fontWeight: 600 }}>כניסה</Link>
-            <Link to="/register" style={{ padding: '8px 18px', borderRadius: 9, background: 'linear-gradient(135deg, #2563EB, #1D4ED8)', color: 'white', textDecoration: 'none', fontSize: 13, fontWeight: 700 }}>הרשמה</Link>
-            <button onClick={() => setMenuOpen(o => !o)} className="hamburger" style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', padding: 6, display: 'flex', flexDirection: 'column', gap: 5 }}>
-              <span style={{ width: 22, height: 2, background: 'currentColor', borderRadius: 2, transition: 'all .3s', transform: menuOpen ? 'rotate(45deg) translate(5px,5px)' : 'none' }} />
-              <span style={{ width: 22, height: 2, background: 'currentColor', borderRadius: 2, opacity: menuOpen ? 0 : 1, transition: 'all .3s' }} />
-              <span style={{ width: 22, height: 2, background: 'currentColor', borderRadius: 2, transition: 'all .3s', transform: menuOpen ? 'rotate(-45deg) translate(5px,-5px)' : 'none' }} />
+          <div className="hidden md:flex items-center gap-1">
+            {[['#how', 'איך זה עובד'], ['#features', 'יכולות'], ['#roles', 'למי מתאים'], ['#testimonials', 'ממליצים']].map(([href, label]) => (
+              <a key={href} href={href} className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-white/[0.04]">{label}</a>
+            ))}
+          </div>
+          <div className="flex items-center gap-3">
+            <Link to="/login" className="hidden md:block px-5 py-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors no-underline">כניסה</Link>
+            <Link to="/register" className="px-5 py-2.5 text-sm font-bold rounded-xl bg-gradient-to-r from-sc-blue to-sc-blue-deep hover:from-sc-blue-light hover:to-sc-blue text-white no-underline shadow-lg shadow-sc-blue/25 transition-all hover:shadow-sc-blue/40 hover:-translate-y-0.5">הרשמה חינם</Link>
+            <button onClick={() => setMenuOpen(o => !o)} className="md:hidden p-2 text-white">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                {menuOpen
+                  ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                }
+              </svg>
             </button>
           </div>
         </div>
-        {menuOpen && (
-          <div style={{ background: 'rgba(2,8,23,0.98)', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {[['#how', 'כיצד זה עובד'], ['#roles', 'למי זה מתאים'], ['#cta', 'צור קשר']].map(([href, label]) => (
-              <a key={href} href={href} onClick={() => setMenuOpen(false)} style={{ color: '#CBD5E1', textDecoration: 'none', fontSize: 16, fontWeight: 600, padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{label}</a>
+        {/* Mobile menu */}
+        <div className={`md:hidden overflow-hidden transition-all duration-300 ${menuOpen ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div className="px-5 py-4 bg-sc-blue-deep/95 backdrop-blur-2xl border-t border-white/[0.06] space-y-1">
+            {[['#how', 'איך זה עובד'], ['#features', 'יכולות'], ['#roles', 'למי מתאים'], ['#testimonials', 'ממליצים']].map(([href, label]) => (
+              <a key={href} href={href} onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-base font-semibold text-slate-300 hover:text-white rounded-lg hover:bg-white/[0.04] transition-colors">{label}</a>
             ))}
-            <Link to="/login" onClick={() => setMenuOpen(false)} style={{ color: '#94A3B8', textDecoration: 'none', fontSize: 16, fontWeight: 600, padding: '12px 0' }}>כניסה</Link>
+            <Link to="/login" onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-base font-semibold text-slate-400 no-underline">כניסה</Link>
           </div>
-        )}
+        </div>
       </nav>
 
       {/* ── HERO ── */}
-      <section style={{ position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', paddingTop: 60 }}>
-        <HeroBg />
-        <div style={{ position: 'relative', textAlign: 'center', width: '100%', maxWidth: 860, padding: '0 20px', zIndex: 2 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(37,99,235,0.15)', border: '1px solid rgba(37,99,235,0.4)', borderRadius: 100, padding: '6px 16px', marginBottom: 28, fontSize: 12, color: '#93C5FD', fontWeight: 600, animation: 'fadeDown 0.8s ease both' }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#3B82F6', display: 'inline-block', boxShadow: '0 0 8px #3B82F6', animation: 'pulse 2s infinite' }} />
-            פלטפורמת התחדשות עירונית #1 בישראל
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
+        <HeroBackground />
+        {/* Radial top gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-sc-blue-deep" />
+
+        <div className="relative z-10 text-center w-full max-w-4xl px-5 md:px-8">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-sc-blue/10 border border-sc-blue/20 rounded-full px-5 py-2 mb-8 animate-[fadeDown_0.8s_ease_both]">
+            <span className="w-2 h-2 rounded-full bg-sc-blue shadow-[0_0_8px_theme(colors.sc-blue)] animate-pulse" />
+            <span className="text-xs font-semibold text-sc-blue-light tracking-wide">פלטפורמת ההתחדשות העירונית #1 בישראל</span>
           </div>
-          <h1 style={{ fontSize: 'clamp(32px, 8vw, 82px)', fontWeight: 900, lineHeight: 1.1, margin: '0 0 12px', letterSpacing: -1.5, animation: 'fadeUp 0.9s 0.1s ease both' }}>
-            עשרות מסמכים.<br />עשרות ישיבות.
+
+          {/* Headline */}
+          <h1 className="text-[clamp(2.2rem,7vw,5rem)] font-black leading-[1.05] mb-4 tracking-tight animate-[fadeUp_0.9s_0.1s_ease_both]">
+            עשרות מסמכים.
+            <br />
+            עשרות ישיבות.
           </h1>
-          <div style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-            <span style={{ fontSize: 'clamp(22px, 5vw, 46px)', fontWeight: 900, background: 'linear-gradient(135deg, #F59E0B, #EF4444, #8B5CF6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', opacity: fade ? 1 : 0, transform: fade ? 'translateY(0)' : 'translateY(10px)', transition: 'opacity 0.35s, transform 0.35s', display: 'block' }}>
+
+          {/* Rotating text */}
+          <div className="h-16 md:h-20 flex items-center justify-center mb-6">
+            <span
+              className="text-[clamp(1.4rem,4.5vw,3rem)] font-black bg-gradient-to-r from-amber-400 via-rose-400 to-violet-400 bg-clip-text text-transparent transition-all duration-350"
+              style={{ opacity: fade ? 1 : 0, transform: fade ? 'translateY(0)' : 'translateY(12px)' }}
+            >
               {HERO_LINES[textIdx]}
             </span>
           </div>
-          <p style={{ fontSize: 'clamp(15px, 2.5vw, 19px)', color: '#94A3B8', lineHeight: 1.7, margin: '0 auto 36px', maxWidth: 520, animation: 'fadeUp 1s 0.2s ease both' }}>
+
+          {/* Subtitle */}
+          <p className="text-base md:text-lg text-slate-400 leading-relaxed max-w-xl mx-auto mb-10 animate-[fadeUp_1s_0.2s_ease_both]">
             Silver Castle שמה אותך במרכז — כל עדכון, כל מסמך, כל החלטה — בלחיצה אחת.
           </p>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', animation: 'fadeUp 1s 0.3s ease both' }}>
-            <Link to="/register" style={{ padding: '14px 32px', borderRadius: 12, background: 'linear-gradient(135deg, #2563EB, #7C3AED)', color: 'white', textDecoration: 'none', fontWeight: 800, fontSize: 'clamp(14px,2vw,17px)', boxShadow: '0 8px 28px rgba(37,99,235,0.4)' }}>התחל עכשיו בחינם ←</Link>
-            <a href="#how" style={{ padding: '14px 32px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', color: '#CBD5E1', textDecoration: 'none', fontWeight: 600, fontSize: 'clamp(14px,2vw,17px)', background: 'rgba(255,255,255,0.04)' }}>איך זה עובד ↓</a>
+
+          {/* CTAs */}
+          <div className="flex gap-4 justify-center flex-wrap animate-[fadeUp_1s_0.3s_ease_both]">
+            <Link
+              to="/register"
+              className="group px-8 py-4 rounded-2xl bg-gradient-to-r from-sc-blue to-sc-blue-deep text-white font-extrabold text-base md:text-lg no-underline shadow-[0_8px_32px_rgba(59,107,156,0.35)] hover:shadow-[0_12px_40px_rgba(59,107,156,0.5)] transition-all duration-300 hover:-translate-y-1"
+            >
+              <span className="flex items-center gap-2">
+                התחל עכשיו בחינם
+                <svg className="w-5 h-5 rotate-180 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+              </span>
+            </Link>
+            <a
+              href="#how"
+              className="px-8 py-4 rounded-2xl border border-white/10 text-slate-300 font-semibold text-base md:text-lg no-underline bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/20 transition-all duration-300"
+            >
+              איך זה עובד
+            </a>
           </div>
-          <div style={{ marginTop: 40, display: 'flex', gap: 20, justifyContent: 'center', flexWrap: 'wrap', animation: 'fadeUp 1s 0.4s ease both' }}>
-            {['🔒 מאובטח', '✅ ללא כרטיס אשראי', '⚡ 2 דקות הגדרה'].map(t => (
-              <span key={t} style={{ color: '#475569', fontSize: 12, fontWeight: 500 }}>{t}</span>
+
+          {/* Trust badges */}
+          <div className="flex gap-6 md:gap-8 justify-center flex-wrap mt-10 animate-[fadeUp_1s_0.4s_ease_both]">
+            {[
+              ['M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z', 'מאובטח'],
+              ['M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', 'ללא כרטיס אשראי'],
+              ['M13 10V3L4 14h7v7l9-11h-7z', 'הגדרה תוך 2 דקות'],
+            ].map(([path, label]) => (
+              <span key={label} className="flex items-center gap-1.5 text-slate-500 text-xs font-medium">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d={path} /></svg>
+                {label}
+              </span>
             ))}
           </div>
+
           {/* Scroll indicator */}
-          <div style={{ marginTop: 60, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, animation: 'fadeUp 1s 0.6s ease both' }}>
-            <span style={{ color: '#334155', fontSize: 12 }}>גלול למטה</span>
-            <div style={{ width: 24, height: 40, border: '2px solid rgba(255,255,255,0.15)', borderRadius: 12, display: 'flex', justifyContent: 'center', paddingTop: 6 }}>
-              <div style={{ width: 4, height: 8, background: '#3B82F6', borderRadius: 2, animation: 'scrollDot 1.8s infinite' }} />
+          <div className="mt-16 flex flex-col items-center gap-2 animate-[fadeUp_1s_0.6s_ease_both]">
+            <span className="text-slate-600 text-xs">גלול למטה</span>
+            <div className="w-6 h-10 border-2 border-white/10 rounded-full flex justify-center pt-2">
+              <div className="w-1 h-2 bg-sc-blue rounded-full animate-[scrollDot_1.8s_infinite]" />
             </div>
           </div>
         </div>
       </section>
 
       {/* ── STATS ── */}
-      <div style={{ padding: '0 20px 64px', maxWidth: 1100, margin: '0 auto' }}>
-        <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 12 }}>
-          {STATS.map((s, i) => (
-            <Reveal key={s.label} delay={i * 0.08} from="bottom">
-              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '24px 20px', textAlign: 'center' }}>
-                <div style={{ fontSize: 26, marginBottom: 6 }}>{s.icon}</div>
-                <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1 }}>{s.num}</div>
-                <div style={{ fontSize: 12, color: '#64748B', marginTop: 4, fontWeight: 500 }}>{s.label}</div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-
-      {/* ── HOW IT WORKS ── */}
-      <section id="how" style={{ padding: '64px 20px', maxWidth: 1100, margin: '0 auto' }}>
-        <Reveal>
-          <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <span style={{ display: 'inline-block', background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.35)', borderRadius: 100, padding: '4px 16px', fontSize: 11, color: '#A78BFA', fontWeight: 700, letterSpacing: 2, marginBottom: 14 }}>תהליך</span>
-            <h2 style={{ fontSize: 'clamp(28px, 5vw, 44px)', fontWeight: 900, margin: 0, letterSpacing: -0.5 }}>שלושה שלבים פשוטים</h2>
-          </div>
-        </Reveal>
-        <div className="steps-grid" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {STEPS.map((s, i) => (
-            <Reveal key={s.num} delay={i * 0.12} from={i % 2 === 0 ? 'left' : 'right'}>
-              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '28px 24px', display: 'flex', gap: 20, alignItems: 'flex-start' }}>
-                <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#0F172A', border: '2px solid #2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, boxShadow: '0 0 16px rgba(37,99,235,0.3)' }}>{s.icon}</div>
-                <div>
-                  <div style={{ fontSize: 11, color: '#2563EB', fontWeight: 800, letterSpacing: 2, marginBottom: 6 }}>{s.num}</div>
-                  <h3 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 8px' }}>{s.title}</h3>
-                  <p style={{ color: '#64748B', fontSize: 14, lineHeight: 1.6, margin: 0 }}>{s.desc}</p>
-                </div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* ── ROLES ── */}
-      <section id="roles" style={{ padding: '64px 20px', background: 'rgba(255,255,255,0.01)' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <Reveal>
-            <div style={{ textAlign: 'center', marginBottom: 48 }}>
-              <span style={{ display: 'inline-block', background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 100, padding: '4px 16px', fontSize: 11, color: '#34D399', fontWeight: 700, letterSpacing: 2, marginBottom: 14 }}>משתמשים</span>
-              <h2 style={{ fontSize: 'clamp(28px, 5vw, 44px)', fontWeight: 900, margin: 0, letterSpacing: -0.5 }}>למי זה מתאים?</h2>
-            </div>
-          </Reveal>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 14 }}>
-            {ROLES.map((r, i) => (
-              <Reveal key={r.title} delay={i * 0.1} from="scale">
-                <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${r.color}30`, borderRadius: 20, padding: '28px 22px', position: 'relative', overflow: 'hidden', height: '100%', boxSizing: 'border-box' }}>
-                  <div style={{ position: 'absolute', top: -30, right: -30, width: 90, height: 90, borderRadius: '50%', background: `${r.color}12`, filter: 'blur(16px)' }} />
-                  <div style={{ fontSize: 32, marginBottom: 10 }}>{r.icon}</div>
-                  <h3 style={{ fontSize: 17, fontWeight: 800, margin: '0 0 8px', color: r.color }}>{r.title}</h3>
-                  <p style={{ color: '#64748B', fontSize: 13, lineHeight: 1.6, margin: 0 }}>{r.desc}</p>
+      <section className="relative py-20 md:py-28">
+        <div className="max-w-6xl mx-auto px-5 md:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            {STATS.map((s, i) => (
+              <Reveal key={s.label} delay={i * 0.08}>
+                <div className="group relative rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 md:p-8 text-center hover:bg-white/[0.04] hover:border-white/[0.12] transition-all duration-500">
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-sc-blue/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="relative">
+                    <div className="w-12 h-12 rounded-xl bg-sc-blue/10 flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-6 h-6 text-sc-blue-light" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d={s.icon} />
+                      </svg>
+                    </div>
+                    <div className="text-3xl md:text-4xl font-black tracking-tight bg-gradient-to-b from-white to-slate-300 bg-clip-text text-transparent">{s.num}</div>
+                    <div className="text-xs md:text-sm text-slate-500 mt-2 font-medium">{s.label}</div>
+                  </div>
                 </div>
               </Reveal>
             ))}
@@ -191,53 +302,194 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── CTA ── */}
-      <section id="cta" style={{ padding: '80px 20px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 400, height: 300, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(37,99,235,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
-        <Reveal from="scale">
-          <div style={{ position: 'relative', maxWidth: 560, margin: '0 auto' }}>
-            <h2 style={{ fontSize: 'clamp(32px,6vw,52px)', fontWeight: 900, margin: '0 0 14px', letterSpacing: -1 }}>מוכן להתחיל?</h2>
-            <p style={{ color: '#64748B', fontSize: 'clamp(15px,2vw,18px)', marginBottom: 36, lineHeight: 1.7 }}>הצטרף לאלפי דיירים שכבר מנהלים את תהליך ההתחדשות שלהם בצורה חכמה.</p>
-            <Link to="/register" style={{ display: 'inline-block', padding: '16px 40px', borderRadius: 14, background: 'linear-gradient(135deg, #2563EB, #7C3AED)', color: 'white', textDecoration: 'none', fontWeight: 800, fontSize: 'clamp(15px,2vw,18px)', boxShadow: '0 10px 32px rgba(37,99,235,0.45)' }}>
-              הרשמה חינם עכשיו ←
-            </Link>
-            <p style={{ color: '#334155', fontSize: 12, marginTop: 16 }}>ללא כרטיס אשראי • ללא התחייבות • הגדרה תוך 2 דקות</p>
+      {/* ── HOW IT WORKS ── */}
+      <section id="how" className="relative py-20 md:py-28">
+        <div className="max-w-6xl mx-auto px-5 md:px-8">
+          <Reveal>
+            <div className="text-center mb-16">
+              <span className="inline-block bg-violet-500/10 border border-violet-500/20 rounded-full px-5 py-1.5 text-xs font-bold text-violet-300 tracking-widest uppercase mb-5">תהליך</span>
+              <h2 className="text-[clamp(1.8rem,5vw,3rem)] font-black tracking-tight">שלושה שלבים פשוטים</h2>
+              <p className="text-slate-500 mt-3 max-w-md mx-auto text-sm md:text-base">מההרשמה ועד קבלת המפתח — הכל שקוף, מסודר ודיגיטלי.</p>
+            </div>
+          </Reveal>
+
+          <div className="grid md:grid-cols-3 gap-5 md:gap-8">
+            {STEPS.map((s, i) => (
+              <Reveal key={s.num} delay={i * 0.12}>
+                <div className="group relative rounded-3xl border border-white/[0.06] bg-white/[0.02] p-8 hover:border-white/[0.12] transition-all duration-500 h-full">
+                  {/* Glow effect on hover */}
+                  <div className={`absolute -inset-px rounded-3xl bg-gradient-to-b ${s.gradient} opacity-0 group-hover:opacity-[0.08] transition-opacity duration-500 blur-sm`} />
+                  <div className="relative">
+                    {/* Step number */}
+                    <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${s.gradient} mb-6 shadow-lg`}>
+                      <span className="text-white font-black text-lg">{s.num}</span>
+                    </div>
+                    {/* Connector line (hidden on mobile) */}
+                    {i < STEPS.length - 1 && (
+                      <div className="hidden md:block absolute top-7 -left-8 w-8 border-t-2 border-dashed border-white/[0.08]" />
+                    )}
+                    <h3 className="text-xl font-extrabold mb-3">{s.title}</h3>
+                    <p className="text-slate-400 text-sm leading-relaxed">{s.desc}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FEATURES ── */}
+      <section id="features" className="relative py-20 md:py-28">
+        {/* Background glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-sc-blue/[0.06] rounded-full blur-[120px] pointer-events-none" />
+
+        <div className="max-w-6xl mx-auto px-5 md:px-8 relative">
+          <Reveal>
+            <div className="text-center mb-16">
+              <span className="inline-block bg-sc-blue/10 border border-sc-blue/20 rounded-full px-5 py-1.5 text-xs font-bold text-sc-blue-light tracking-widest uppercase mb-5">יכולות</span>
+              <h2 className="text-[clamp(1.8rem,5vw,3rem)] font-black tracking-tight">כל מה שצריך — במקום אחד</h2>
+              <p className="text-slate-500 mt-3 max-w-md mx-auto text-sm md:text-base">כלים מתקדמים לניהול תהליך ההתחדשות העירונית.</p>
+            </div>
+          </Reveal>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+            {FEATURES.map((f, i) => (
+              <Reveal key={f.title} delay={i * 0.06}>
+                <div className="group relative rounded-2xl border border-white/[0.06] bg-white/[0.015] p-6 hover:bg-white/[0.04] hover:border-white/[0.1] transition-all duration-400 h-full">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-sc-blue/15 to-sc-blue-deep/15 border border-white/[0.06] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-400">
+                    <SvgIcon path={f.icon} className="w-5 h-5 text-sc-blue-light" />
+                  </div>
+                  <h3 className="text-base font-bold mb-2">{f.title}</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed">{f.desc}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── ROLES ── */}
+      <section id="roles" className="relative py-20 md:py-28">
+        <div className="max-w-6xl mx-auto px-5 md:px-8">
+          <Reveal>
+            <div className="text-center mb-16">
+              <span className="inline-block bg-emerald-500/10 border border-emerald-500/20 rounded-full px-5 py-1.5 text-xs font-bold text-emerald-300 tracking-widest uppercase mb-5">משתמשים</span>
+              <h2 className="text-[clamp(1.8rem,5vw,3rem)] font-black tracking-tight">למי זה מתאים?</h2>
+              <p className="text-slate-500 mt-3 max-w-md mx-auto text-sm md:text-base">כל בעל תפקיד בתהליך ההתחדשות מקבל ממשק מותאם.</p>
+            </div>
+          </Reveal>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-6">
+            {ROLES.map((r, i) => (
+              <Reveal key={r.title} delay={i * 0.1}>
+                <div className="group relative rounded-3xl border border-white/[0.06] bg-white/[0.02] p-7 md:p-8 overflow-hidden hover:border-white/[0.12] transition-all duration-500 h-full">
+                  {/* Background gradient blob */}
+                  <div className={`absolute -top-16 -right-16 w-40 h-40 bg-gradient-to-br ${r.gradient} rounded-full opacity-[0.06] group-hover:opacity-[0.12] blur-2xl transition-opacity duration-500`} />
+                  <div className="relative">
+                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${r.gradient} flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 transition-transform duration-400`}>
+                      <SvgIcon path={r.iconPath} className="w-7 h-7 text-white" />
+                    </div>
+                    <h3 className="text-xl font-extrabold mb-3">{r.title}</h3>
+                    <p className="text-slate-400 text-sm leading-relaxed">{r.desc}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── TESTIMONIALS ── */}
+      <section id="testimonials" className="relative py-20 md:py-28">
+        <div className="max-w-6xl mx-auto px-5 md:px-8">
+          <Reveal>
+            <div className="text-center mb-16">
+              <span className="inline-block bg-amber-500/10 border border-amber-500/20 rounded-full px-5 py-1.5 text-xs font-bold text-amber-300 tracking-widest uppercase mb-5">המלצות</span>
+              <h2 className="text-[clamp(1.8rem,5vw,3rem)] font-black tracking-tight">מה אומרים עלינו</h2>
+            </div>
+          </Reveal>
+
+          <div className="grid md:grid-cols-3 gap-5 md:gap-6">
+            {TESTIMONIALS.map((t, i) => (
+              <Reveal key={t.name} delay={i * 0.1}>
+                <div className="relative rounded-2xl border border-white/[0.06] bg-white/[0.02] p-7 h-full">
+                  {/* Quote mark */}
+                  <div className="text-4xl font-serif text-sc-blue/20 leading-none mb-3">"</div>
+                  <p className="text-slate-300 text-sm leading-relaxed mb-6">{t.text}</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sc-blue to-sc-blue-deep flex items-center justify-center text-sm font-bold">
+                      {t.name.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold">{t.name}</div>
+                      <div className="text-xs text-slate-500">{t.role}</div>
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FINAL CTA ── */}
+      <section id="cta" className="relative py-24 md:py-32 overflow-hidden">
+        {/* Background effects */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-sc-blue/[0.08] rounded-full blur-[150px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-sc-blue-deep/[0.06] rounded-full blur-[120px] pointer-events-none" />
+
+        <Reveal>
+          <div className="relative max-w-2xl mx-auto text-center px-5">
+            <div className="relative rounded-3xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm p-10 md:p-16">
+              <h2 className="text-[clamp(2rem,6vw,3.5rem)] font-black tracking-tight mb-4">
+                מוכן להתחיל?
+              </h2>
+              <p className="text-slate-400 text-base md:text-lg mb-10 leading-relaxed max-w-md mx-auto">
+                הצטרף לאלפי דיירים שכבר מנהלים את תהליך ההתחדשות שלהם בצורה חכמה ושקופה.
+              </p>
+              <Link
+                to="/register"
+                className="group inline-flex items-center gap-2 px-10 py-4 rounded-2xl bg-gradient-to-r from-sc-blue to-sc-blue-deep text-white font-extrabold text-lg no-underline shadow-[0_10px_40px_rgba(59,107,156,0.4)] hover:shadow-[0_14px_48px_rgba(59,107,156,0.55)] transition-all duration-300 hover:-translate-y-1"
+              >
+                הרשמה חינם עכשיו
+                <svg className="w-5 h-5 rotate-180 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+              </Link>
+              <p className="text-slate-600 text-xs mt-6">ללא כרטיס אשראי • ללא התחייבות • הגדרה תוך 2 דקות</p>
+            </div>
           </div>
         </Reveal>
       </section>
 
       {/* ── FOOTER ── */}
-      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '32px 20px', maxWidth: 1100, margin: '0 auto' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 15 }}>
-            <img src="/logo.svg" alt="SC" style={{ height: 22 }} />Silver Castle
+      <footer className="border-t border-white/[0.06]">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 py-10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-sc-blue to-sc-blue-deep flex items-center justify-center text-[10px] font-black">SC</div>
+              <span className="font-bold text-sm">Silver Castle</span>
+              <span className="text-slate-600 text-xs mr-3">מתחדשים יחד</span>
+            </div>
+            <div className="flex gap-8">
+              {['פרטיות', 'תנאי שימוש', 'צור קשר'].map(l => (
+                <a key={l} href="#" className="text-slate-500 hover:text-slate-300 text-sm transition-colors no-underline">{l}</a>
+              ))}
+            </div>
+            <p className="text-slate-600 text-xs">© 2026 Silver Castle. כל הזכויות שמורות.</p>
           </div>
-          <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-            {['פרטיות', 'תנאי שימוש', 'צור קשר'].map(l => <a key={l} href="#" style={{ color: '#475569', textDecoration: 'none', fontSize: 13 }}>{l}</a>)}
-          </div>
-          <p style={{ color: '#334155', fontSize: 12, margin: 0 }}>© 2026 Silver Castle</p>
         </div>
       </footer>
 
-      {/* ── CSS ── */}
+      {/* ── GLOBAL CSS ── */}
       <style>{`
         @keyframes fadeUp { from { opacity:0; transform:translateY(24px) } to { opacity:1; transform:none } }
         @keyframes fadeDown { from { opacity:0; transform:translateY(-16px) } to { opacity:1; transform:none } }
-        @keyframes pulse { 0%,100%{box-shadow:0 0 8px #3B82F6} 50%{box-shadow:0 0 18px #3B82F6,0 0 30px #3B82F620} }
         @keyframes scrollDot { 0%{opacity:1;transform:translateY(0)} 80%{opacity:0;transform:translateY(12px)} 100%{opacity:0;transform:translateY(0)} }
-        @media (min-width: 768px) {
-          .hamburger { display: none !important; }
-          .desktop-nav { display: flex !important; }
-          .desktop-only { display: block !important; }
-          .stats-grid { grid-template-columns: repeat(4,1fr) !important; }
-          .steps-grid { flex-direction: row !important; }
-        }
       `}</style>
     </div>
   )
 }
 
-// Scroll progress bar
+/* ── SCROLL PROGRESS BAR ── */
 function ScrollProgress() {
   const [pct, setPct] = useState(0)
   useEffect(() => {
@@ -248,7 +500,12 @@ function ScrollProgress() {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
-  return <div style={{ position: 'fixed', top: 0, right: 0, left: 0, height: 3, zIndex: 200, background: 'rgba(255,255,255,0.05)' }}>
-    <div style={{ height: '100%', width: `${pct}%`, background: 'linear-gradient(90deg, #2563EB, #7C3AED, #F59E0B)', transition: 'width 0.1s linear', borderRadius: '0 2px 2px 0' }} />
-  </div>
+  return (
+    <div className="fixed top-0 inset-x-0 h-[3px] z-[200] bg-white/[0.05]">
+      <div
+        className="h-full bg-gradient-to-l from-sc-blue via-sc-blue-light to-sc-brown rounded-l-full"
+        style={{ width: `${pct}%`, transition: 'width 0.1s linear' }}
+      />
+    </div>
+  )
 }

@@ -7,11 +7,33 @@
 /* Sidebar layout */
 @media (min-width: 768px) {
   .page-content {
-    margin-right: 240px;
+    margin-right: 220px;
   }
 }
 @media (max-width: 767px) {
   .page-content {
     padding-bottom: 80px;
   }
+}
+
+/* Silver Castle Design System */
+body { background-color: #F8F9FA; }
+
+.sc-card {
+  @apply bg-white rounded-[14px] border border-gray-100 shadow-sm;
+}
+.sc-input {
+  @apply w-full bg-white border border-sc-gray-light rounded-[10px] px-4 py-3 text-sm text-sc-dark outline-none focus:border-sc-blue transition-colors;
+}
+.sc-btn-primary {
+  @apply bg-sc-blue text-white font-semibold rounded-lg px-6 py-3 hover:bg-sc-blue-deep transition-colors;
+}
+.sc-btn-secondary {
+  @apply bg-sc-bg text-sc-gray border border-sc-gray-light font-medium rounded-lg px-6 py-3 hover:bg-white transition-colors;
+}
+.sc-badge {
+  @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold;
+}
+.sc-section-title {
+  @apply text-xl font-extrabold text-sc-dark text-right;
 }
