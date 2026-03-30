@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { router, protectedProcedure } from '../middleware/auth'
+import { TRPCError } from '@trpc/server'
 
 export const committeeRouter = router({
   getBuildingOverview: protectedProcedure.query(async ({ ctx }) => {
@@ -423,6 +424,541 @@ export const committeeRouter = router({
         }))
       )
       return { sent: members.length }
+    }),
+
+  // ─── B1: Apartment Voting (Unit-based) ─────────────────
+
+  castApartmentVote: protectedProcedure
+    .input(z.object({
+      pollId: z.string().uuid(),
+      apartmentId: z.string().uuid(),
+      value: z.string().min(1),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user.id
+
+      // 1. Check for open ownership dispute → block voting
+      const { data: disputes } = await ctx.supabase
+        .from('ownership_disputes')
+        .select('id')
+        .eq('apartment_id', input.apartmentId)
+        .eq('status', 'open')
+      if (disputes && disputes.length > 0) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'לא ניתן להצביע — יש סכסוך בעלות פתוח על הדירה',
+        })
+      }
+
+      // 2. Check for approved power of attorney → only proxy holder can vote
+      const { data: poa } = await ctx.supabase
+        .from('power_of_attorney')
+        .select('receiver_user_id')
+        .eq('apartment_id', input.apartmentId)
+        .eq('status', 'approved')
+        .limit(1)
+        .maybeSingle()
+
+      if (poa) {
+        if (userId !== poa.receiver_user_id) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'יש ייפוי כוח מאושר — רק מיופה הכוח יכול להצביע',
+          })
+        }
+        // Proxy holder votes directly
+        await ctx.supabase.from('apartment_votes').upsert({
+          poll_id: input.pollId,
+          apartment_id: input.apartmentId,
+          vote_value: input.value,
+          decided_by: 'proxy',
+          internal_votes: { [userId]: input.value },
+          finalized: true,
+          finalized_at: new Date().toISOString(),
+        }, { onConflict: 'poll_id,apartment_id' })
+        return { status: 'finalized', decidedBy: 'proxy', voteValue: input.value }
+      }
+
+      // 3. Get all owners of this apartment
+      const { data: owners } = await ctx.supabase
+        .from('apartment_owners')
+        .select('user_id')
+        .eq('apartment_id', input.apartmentId)
+        .eq('status', 'active')
+      if (!owners || owners.length === 0) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'לא נמצאו בעלים לדירה זו' })
+      }
+
+      // Verify the voter is an owner
+      const isOwner = owners.some((o: any) => o.user_id === userId)
+      if (!isOwner) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'רק בעלי הדירה יכולים להצביע' })
+      }
+
+      const totalOwners = owners.length
+
+      // 4. Single owner → direct vote
+      if (totalOwners === 1) {
+        await ctx.supabase.from('apartment_votes').upsert({
+          poll_id: input.pollId,
+          apartment_id: input.apartmentId,
+          vote_value: input.value,
+          decided_by: 'unanimous',
+          internal_votes: { [userId]: input.value },
+          finalized: true,
+          finalized_at: new Date().toISOString(),
+        }, { onConflict: 'poll_id,apartment_id' })
+        return { status: 'finalized', decidedBy: 'unanimous', voteValue: input.value }
+      }
+
+      // 5. Multiple owners — record internal vote, check consensus/majority
+      const { data: existing } = await ctx.supabase
+        .from('apartment_votes')
+        .select('internal_votes')
+        .eq('poll_id', input.pollId)
+        .eq('apartment_id', input.apartmentId)
+        .maybeSingle()
+
+      const internalVotes: Record<string, string> = existing?.internal_votes
+        ? { ...(existing.internal_votes as Record<string, string>) }
+        : {}
+      internalVotes[userId] = input.value
+
+      const votedCount = Object.keys(internalVotes).length
+
+      // 2 owners → need both to agree (unanimous)
+      if (totalOwners === 2) {
+        if (votedCount < 2) {
+          await ctx.supabase.from('apartment_votes').upsert({
+            poll_id: input.pollId,
+            apartment_id: input.apartmentId,
+            vote_value: input.value,
+            decided_by: 'unanimous',
+            internal_votes: internalVotes,
+            finalized: false,
+          }, { onConflict: 'poll_id,apartment_id' })
+          return { status: 'pending', message: 'ממתין לבעלים נוסף' }
+        }
+        // Both voted — check if they agree
+        const values = Object.values(internalVotes)
+        if (values[0] === values[1]) {
+          await ctx.supabase.from('apartment_votes').upsert({
+            poll_id: input.pollId,
+            apartment_id: input.apartmentId,
+            vote_value: values[0],
+            decided_by: 'unanimous',
+            internal_votes: internalVotes,
+            finalized: true,
+            finalized_at: new Date().toISOString(),
+          }, { onConflict: 'poll_id,apartment_id' })
+          return { status: 'finalized', decidedBy: 'unanimous', voteValue: values[0] }
+        }
+        // Disagreement — stays pending
+        await ctx.supabase.from('apartment_votes').upsert({
+          poll_id: input.pollId,
+          apartment_id: input.apartmentId,
+          vote_value: 'disputed',
+          decided_by: 'unanimous',
+          internal_votes: internalVotes,
+          finalized: false,
+        }, { onConflict: 'poll_id,apartment_id' })
+        return { status: 'disputed', message: 'הבעלים חלוקים — הצבעה לא סופית' }
+      }
+
+      // 3+ owners → majority (50%+)
+      const valueCounts: Record<string, number> = {}
+      for (const v of Object.values(internalVotes)) {
+        valueCounts[v] = (valueCounts[v] ?? 0) + 1
+      }
+      const majorityThreshold = Math.floor(totalOwners / 2) + 1
+      const majorityValue = Object.entries(valueCounts).find(([, c]) => c >= majorityThreshold)
+
+      if (majorityValue) {
+        await ctx.supabase.from('apartment_votes').upsert({
+          poll_id: input.pollId,
+          apartment_id: input.apartmentId,
+          vote_value: majorityValue[0],
+          decided_by: 'majority',
+          internal_votes: internalVotes,
+          finalized: true,
+          finalized_at: new Date().toISOString(),
+        }, { onConflict: 'poll_id,apartment_id' })
+        return { status: 'finalized', decidedBy: 'majority', voteValue: majorityValue[0] }
+      }
+
+      // No majority yet
+      await ctx.supabase.from('apartment_votes').upsert({
+        poll_id: input.pollId,
+        apartment_id: input.apartmentId,
+        vote_value: Object.values(internalVotes)[0],
+        decided_by: 'majority',
+        internal_votes: internalVotes,
+        finalized: false,
+      }, { onConflict: 'poll_id,apartment_id' })
+      return { status: 'pending', message: `הצביעו ${votedCount} מתוך ${totalOwners} בעלים` }
+    }),
+
+  getApartmentVoteStatus: protectedProcedure
+    .input(z.object({
+      pollId: z.string().uuid(),
+      apartmentId: z.string().uuid(),
+    }))
+    .query(async ({ ctx, input }) => {
+      // Get owners
+      const { data: owners } = await ctx.supabase
+        .from('apartment_owners')
+        .select('user_id, profiles:user_id(full_name)')
+        .eq('apartment_id', input.apartmentId)
+        .eq('status', 'active')
+
+      // Get vote
+      const { data: vote } = await ctx.supabase
+        .from('apartment_votes')
+        .select('*')
+        .eq('poll_id', input.pollId)
+        .eq('apartment_id', input.apartmentId)
+        .maybeSingle()
+
+      // Check disputes
+      const { data: disputes } = await ctx.supabase
+        .from('ownership_disputes')
+        .select('id')
+        .eq('apartment_id', input.apartmentId)
+        .eq('status', 'open')
+
+      // Check power of attorney
+      const { data: poa } = await ctx.supabase
+        .from('power_of_attorney')
+        .select('receiver_user_id')
+        .eq('apartment_id', input.apartmentId)
+        .eq('status', 'approved')
+        .limit(1)
+        .maybeSingle()
+
+      const hasDispute = (disputes?.length ?? 0) > 0
+      const hasPoa = !!poa
+      const internalVotes = (vote?.internal_votes as Record<string, string>) ?? {}
+      const votedUserIds = Object.keys(internalVotes)
+      const totalOwners = owners?.length ?? 0
+
+      let status: 'voted' | 'pending' | 'blocked' | 'proxy' | 'not_started'
+      if (hasDispute) status = 'blocked'
+      else if (vote?.finalized && hasPoa) status = 'proxy'
+      else if (vote?.finalized) status = 'voted'
+      else if (votedUserIds.length > 0) status = 'pending'
+      else status = 'not_started'
+
+      return {
+        status,
+        voteValue: vote?.vote_value ?? null,
+        decidedBy: vote?.decided_by ?? null,
+        finalized: vote?.finalized ?? false,
+        internalVotes,
+        votedOwners: votedUserIds,
+        totalOwners,
+        owners: (owners ?? []).map((o: any) => ({
+          userId: o.user_id,
+          name: o.profiles?.full_name ?? 'בעלים',
+          voted: votedUserIds.includes(o.user_id),
+        })),
+        hasDispute,
+        hasPoa,
+      }
+    }),
+
+  getApartmentVotesForPoll: protectedProcedure
+    .input(z.object({ pollId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      // Get the poll's group → building → units
+      const { data: poll } = await ctx.supabase
+        .from('polls')
+        .select('group_id, building_groups(building_id)')
+        .eq('id', input.pollId)
+        .single()
+      if (!poll) throw new TRPCError({ code: 'NOT_FOUND', message: 'סקר לא נמצא' })
+
+      const buildingId = (poll as any).building_groups?.building_id
+      if (!buildingId) return { apartments: [], totalApartments: 0, votedCount: 0 }
+
+      // Get all units in building
+      const { data: units } = await ctx.supabase
+        .from('units')
+        .select('id, floor, unit_number')
+        .eq('building_id', buildingId)
+        .order('floor', { ascending: true })
+
+      if (!units || units.length === 0) return { apartments: [], totalApartments: 0, votedCount: 0 }
+
+      // Get all apartment votes for this poll
+      const { data: votes } = await ctx.supabase
+        .from('apartment_votes')
+        .select('*')
+        .eq('poll_id', input.pollId)
+
+      // Get disputes for all apartments
+      const unitIds = units.map((u: any) => u.id)
+      const { data: disputes } = await ctx.supabase
+        .from('ownership_disputes')
+        .select('apartment_id')
+        .in('apartment_id', unitIds)
+        .eq('status', 'open')
+
+      // Get POAs
+      const { data: poas } = await ctx.supabase
+        .from('power_of_attorney')
+        .select('apartment_id')
+        .in('apartment_id', unitIds)
+        .eq('status', 'approved')
+
+      const disputeSet = new Set((disputes ?? []).map((d: any) => d.apartment_id))
+      const poaSet = new Set((poas ?? []).map((p: any) => p.apartment_id))
+      const voteMap = new Map((votes ?? []).map((v: any) => [v.apartment_id, v]))
+
+      const apartments = units.map((u: any) => {
+        const vote = voteMap.get(u.id)
+        const hasDispute = disputeSet.has(u.id)
+        const hasPoa = poaSet.has(u.id)
+
+        let status: string
+        if (hasDispute) status = 'blocked'
+        else if (vote?.finalized && hasPoa) status = 'proxy'
+        else if (vote?.finalized) status = 'voted'
+        else if (vote && !vote.finalized) status = 'pending'
+        else status = 'not_started'
+
+        return {
+          apartmentId: u.id,
+          floor: u.floor,
+          unitNumber: u.unit_number,
+          status,
+          voteValue: vote?.vote_value ?? null,
+          decidedBy: vote?.decided_by ?? null,
+        }
+      })
+
+      const votedCount = apartments.filter(a => a.status === 'voted' || a.status === 'proxy').length
+
+      return { apartments, totalApartments: apartments.length, votedCount }
+    }),
+
+  // ─── B2: Stage Requirements (Guardrails) ───────────────
+
+  checkStageRequirements: protectedProcedure
+    .input(z.object({ projectId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      // Get project current stage
+      const { data: project } = await ctx.supabase
+        .from('projects')
+        .select('id, stage, name')
+        .eq('id', input.projectId)
+        .single()
+      if (!project) throw new TRPCError({ code: 'NOT_FOUND', message: 'פרויקט לא נמצא' })
+
+      const currentStage = (project as any).stage ?? 'initial'
+
+      // Get requirements for this stage
+      const { data: requirements } = await ctx.supabase
+        .from('project_stage_requirements')
+        .select('*')
+        .eq('project_id', input.projectId)
+        .eq('stage', currentStage)
+        .order('requirement_type')
+
+      if (!requirements || requirements.length === 0) {
+        return {
+          projectId: input.projectId,
+          currentStage,
+          nextStage: null,
+          requirements: [],
+          canAdvance: true,
+        }
+      }
+
+      // Check each requirement
+      const checkedReqs = await Promise.all(
+        requirements.map(async (req: any) => {
+          let isMet = false
+
+          switch (req.requirement_type) {
+            case 'min_vote_pct': {
+              // Check apartment votes percentage across all open polls
+              const { data: buildings } = await ctx.supabase
+                .from('buildings').select('id').eq('project_id', input.projectId)
+              if (buildings && buildings.length > 0) {
+                const buildingIds = buildings.map((b: any) => b.id)
+                const { data: groups } = await ctx.supabase
+                  .from('building_groups').select('id').in('building_id', buildingIds)
+                if (groups && groups.length > 0) {
+                  const groupIds = groups.map((g: any) => g.id)
+                  const { data: polls } = await ctx.supabase
+                    .from('polls').select('id').in('group_id', groupIds)
+                  if (polls && polls.length > 0) {
+                    // Check latest poll
+                    const latestPollId = polls[polls.length - 1].id
+                    const { count: totalUnits } = await ctx.supabase
+                      .from('units').select('*', { count: 'exact', head: true })
+                      .in('building_id', buildingIds)
+                    const { count: votedUnits } = await ctx.supabase
+                      .from('apartment_votes').select('*', { count: 'exact', head: true })
+                      .eq('poll_id', latestPollId).eq('finalized', true)
+                    const pct = (totalUnits ?? 0) > 0
+                      ? Math.round(((votedUnits ?? 0) / (totalUnits ?? 1)) * 100)
+                      : 0
+                    isMet = pct >= parseInt(req.requirement_value ?? '67')
+                  }
+                }
+              }
+              break
+            }
+            case 'required_documents': {
+              const { count } = await ctx.supabase
+                .from('documents').select('*', { count: 'exact', head: true })
+                .eq('building_id', input.projectId)
+              isMet = (count ?? 0) > 0
+              break
+            }
+            case 'no_open_disputes': {
+              const { data: buildings } = await ctx.supabase
+                .from('buildings').select('id').eq('project_id', input.projectId)
+              if (buildings && buildings.length > 0) {
+                const { data: units } = await ctx.supabase
+                  .from('units').select('id').in('building_id', buildings.map((b: any) => b.id))
+                if (units && units.length > 0) {
+                  const { count } = await ctx.supabase
+                    .from('ownership_disputes').select('*', { count: 'exact', head: true })
+                    .in('apartment_id', units.map((u: any) => u.id))
+                    .eq('status', 'open')
+                  isMet = (count ?? 0) === 0
+                }
+              }
+              break
+            }
+            case 'has_representative': {
+              const { data: buildings } = await ctx.supabase
+                .from('buildings').select('id').eq('project_id', input.projectId)
+              if (buildings && buildings.length > 0) {
+                const { count } = await ctx.supabase
+                  .from('building_representatives').select('*', { count: 'exact', head: true })
+                  .in('building_id', buildings.map((b: any) => b.id))
+                isMet = (count ?? 0) > 0
+              }
+              break
+            }
+            case 'has_lawyer': {
+              // Check if project has a provider with lawyer role
+              const { data: buildings } = await ctx.supabase
+                .from('buildings').select('id').eq('project_id', input.projectId)
+              if (buildings && buildings.length > 0) {
+                const { count } = await ctx.supabase
+                  .from('service_listings').select('*', { count: 'exact', head: true })
+                  .eq('category', 'lawyer')
+                isMet = (count ?? 0) > 0
+              }
+              break
+            }
+            case 'has_protocol': {
+              const { data: buildings } = await ctx.supabase
+                .from('buildings').select('id').eq('project_id', input.projectId)
+              if (buildings && buildings.length > 0) {
+                const { count } = await ctx.supabase
+                  .from('meeting_minutes').select('*', { count: 'exact', head: true })
+                  .in('building_id', buildings.map((b: any) => b.id))
+                isMet = (count ?? 0) > 0
+              }
+              break
+            }
+          }
+
+          // Update the requirement
+          await ctx.supabase
+            .from('project_stage_requirements')
+            .update({ is_met: isMet, checked_at: new Date().toISOString() })
+            .eq('id', req.id)
+
+          return {
+            id: req.id,
+            type: req.requirement_type,
+            value: req.requirement_value,
+            isMet,
+            nextStage: req.next_stage,
+          }
+        })
+      )
+
+      const canAdvance = checkedReqs.every(r => r.isMet)
+      const nextStage = requirements[0]?.next_stage ?? null
+
+      return {
+        projectId: input.projectId,
+        currentStage,
+        nextStage,
+        requirements: checkedReqs,
+        canAdvance,
+      }
+    }),
+
+  advanceStage: protectedProcedure
+    .input(z.object({ projectId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      // Re-check all requirements first
+      const { data: project } = await ctx.supabase
+        .from('projects')
+        .select('id, stage')
+        .eq('id', input.projectId)
+        .single()
+      if (!project) throw new TRPCError({ code: 'NOT_FOUND', message: 'פרויקט לא נמצא' })
+
+      const currentStage = (project as any).stage ?? 'initial'
+
+      const { data: requirements } = await ctx.supabase
+        .from('project_stage_requirements')
+        .select('*')
+        .eq('project_id', input.projectId)
+        .eq('stage', currentStage)
+
+      if (!requirements || requirements.length === 0) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'אין דרישות מוגדרות לשלב זה' })
+      }
+
+      const unmet = requirements.filter((r: any) => !r.is_met)
+      if (unmet.length > 0) {
+        const missing = unmet.map((r: any) => {
+          const labels: Record<string, string> = {
+            min_vote_pct: `אחוז הצבעה מינימלי (${r.requirement_value}%)`,
+            required_documents: 'מסמכים נדרשים',
+            no_open_disputes: 'אין סכסוכי בעלות פתוחים',
+            has_representative: 'נציג בניין ממונה',
+            has_lawyer: 'עורך דין מלווה',
+            has_protocol: 'פרוטוקול ישיבה',
+          }
+          return labels[r.requirement_type] ?? r.requirement_type
+        })
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: `לא ניתן להתקדם. חסר: ${missing.join(', ')}`,
+        })
+      }
+
+      const nextStage = requirements[0].next_stage
+
+      const { error } = await ctx.supabase
+        .from('projects')
+        .update({ stage: nextStage })
+        .eq('id', input.projectId)
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+
+      return { advanced: true, from: currentStage, to: nextStage }
+    }),
+
+  getStageRequirements: protectedProcedure
+    .input(z.object({ projectId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data } = await ctx.supabase
+        .from('project_stage_requirements')
+        .select('*')
+        .eq('project_id', input.projectId)
+        .order('stage')
+      return data ?? []
     }),
 })
 

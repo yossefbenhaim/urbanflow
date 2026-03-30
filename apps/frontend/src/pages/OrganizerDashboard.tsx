@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import BuildingLoader from '../components/BuildingLoader'
 
-type Tab = 'project' | 'tenants' | 'group' | 'contract'
+type Tab = 'project' | 'tenants' | 'group' | 'contract' | 'stages'
 
 function CountdownTimer({ endDate }: { endDate: string }) {
   const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number; expired: boolean; daysExpired: number }>({
@@ -196,6 +196,126 @@ function ContractTab({ project, onSaved }: { project: any; onSaved: () => void }
   )
 }
 
+const REQ_LABELS: Record<string, string> = {
+  min_vote_pct: 'אחוז הצבעה מינימלי',
+  required_documents: 'מסמכים נדרשים',
+  no_open_disputes: 'אין סכסוכי בעלות פתוחים',
+  has_representative: 'נציג בניין ממונה',
+  has_lawyer: 'עורך דין מלווה',
+  has_protocol: 'פרוטוקול ישיבה',
+}
+
+function StageRequirementsTab({ projectId }: { projectId: string }) {
+  const utils = trpc.useUtils()
+  const { data, isLoading, refetch } = trpc.committee.checkStageRequirements.useQuery({ projectId })
+  const advance = trpc.committee.advanceStage.useMutation({
+    onSuccess: () => {
+      utils.organizer.getMyProjects.invalidate()
+      refetch()
+    },
+  })
+
+  if (isLoading) return <div className="flex justify-center py-12"><BuildingLoader size="md" /></div>
+  if (!data) return <p className="text-center text-sc-gray py-8">אין נתוני שלבים לפרויקט זה</p>
+
+  const { currentStage, nextStage, requirements, canAdvance } = data as any
+
+  const STAGE_LABELS: Record<string, string> = {
+    initial: 'התחלה',
+    feasibility: 'בדיקת היתכנות',
+    signatures: 'איסוף חתימות',
+    planning: 'תכנון',
+    permits: 'היתרים',
+    construction: 'בנייה',
+    completion: 'סיום',
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Current stage */}
+      <div className="sc-card p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-sc-blue-pale flex items-center justify-center text-xl">🏗️</div>
+          <div>
+            <h3 className="font-bold text-sc-dark text-lg">שלב נוכחי: {STAGE_LABELS[currentStage] ?? currentStage}</h3>
+            {nextStage && (
+              <p className="text-sm text-sc-gray">שלב הבא: {STAGE_LABELS[nextStage] ?? nextStage}</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Requirements checklist */}
+      {requirements.length > 0 ? (
+        <div className="sc-card p-6">
+          <h3 className="font-semibold text-sc-dark mb-4">דרישות למעבר שלב</h3>
+          <div className="space-y-3">
+            {requirements.map((req: any) => (
+              <div key={req.id} className={`flex items-center gap-3 p-3 rounded-xl ${req.isMet ? 'bg-green-50' : 'bg-red-50'}`}>
+                <span className="text-xl">{req.isMet ? '✅' : '❌'}</span>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-sc-dark">
+                    {REQ_LABELS[req.type] ?? req.type}
+                  </div>
+                  {req.value && (
+                    <div className="text-xs text-sc-gray">
+                      {req.type === 'min_vote_pct' ? `נדרש: ${req.value}%` : req.value}
+                    </div>
+                  )}
+                </div>
+                <span className={`text-xs font-semibold ${req.isMet ? 'text-green-600' : 'text-red-600'}`}>
+                  {req.isMet ? 'תקין' : 'חסר'}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Advance button */}
+          <div className="mt-6">
+            {canAdvance ? (
+              <button
+                onClick={() => advance.mutate({ projectId })}
+                disabled={advance.isPending}
+                className="sc-btn-primary w-full py-3 text-base font-bold disabled:opacity-50"
+              >
+                {advance.isPending ? 'מתקדם...' : `🚀 התקדם ל${STAGE_LABELS[nextStage] ?? nextStage}`}
+              </button>
+            ) : (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+                <p className="text-amber-700 font-medium text-sm">
+                  ⚠️ לא ניתן להתקדם — יש דרישות שלא מולאו
+                </p>
+                <p className="text-amber-600 text-xs mt-1">
+                  השלם את כל הדרישות המסומנות ב-❌ כדי להתקדם
+                </p>
+              </div>
+            )}
+            {advance.isError && (
+              <p className="text-red-600 text-sm mt-2 text-center">
+                {(advance.error as any)?.message ?? 'שגיאה בהתקדמות'}
+              </p>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="sc-card p-8 text-center">
+          <div className="text-4xl mb-3">🎯</div>
+          <p className="text-sc-gray">אין דרישות מוגדרות לשלב זה — ניתן להתקדם</p>
+          {nextStage && (
+            <button
+              onClick={() => advance.mutate({ projectId })}
+              disabled={advance.isPending}
+              className="sc-btn-primary mt-4 px-8 py-2.5"
+            >
+              {advance.isPending ? 'מתקדם...' : `🚀 התקדם ל${STAGE_LABELS[nextStage] ?? nextStage}`}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function TenantsTab({ projectId }: { projectId: string }) {
   const navigate = useNavigate()
   const startConv = trpc.chat.startConversation.useMutation({
@@ -298,6 +418,7 @@ export default function OrganizerDashboard() {
     { key: 'tenants', label: 'דיירים' },
     { key: 'group', label: 'קבוצה' },
     { key: 'contract', label: 'חוזה' },
+    { key: 'stages', label: 'שלבים' },
   ]
 
   return (
@@ -426,6 +547,10 @@ export default function OrganizerDashboard() {
 
             {activeTab === 'contract' && (
               <ContractTab project={selectedProject} onSaved={() => utils.organizer.getMyProjects.invalidate()} />
+            )}
+
+            {activeTab === 'stages' && (
+              <StageRequirementsTab projectId={selectedProject.id} />
             )}
           </div>
         )}
