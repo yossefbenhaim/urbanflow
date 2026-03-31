@@ -32,6 +32,8 @@ import PowerOfAttorneyForm from './pages/PowerOfAttorneyForm'
 import UnlocatedTenantForm from './pages/UnlocatedTenantForm'
 import OwnershipDisputeForm from './pages/OwnershipDisputeForm'
 import TenantReportForm from './pages/TenantReportForm'
+import ElderlyForm from './pages/ElderlyForm'
+import TimelinePage from './pages/TimelinePage'
 
 function OAuthCallback() {
   const navigate = useNavigate()
@@ -87,6 +89,8 @@ export default function App() {
         <Route path="/unlocated-tenant" element={<UnlocatedTenantForm />} />
         <Route path="/ownership-dispute" element={<OwnershipDisputeForm />} />
         <Route path="/tenant-report" element={<TenantReportForm />} />
+        <Route path="/elderly-form" element={<ElderlyForm />} />
+        <Route path="/timeline" element={<TimelinePage />} />
       </Routes>
       <FaqBot />
       <AccessibilityWidget />

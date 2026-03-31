@@ -1,0 +1,276 @@
+import { useState } from 'react'
+import Navbar from '../components/Navbar'
+import { trpc } from '../lib/trpc'
+
+function WeeklyUpdateForm({ projectId }: { projectId: string }) {
+  const [form, setForm] = useState({
+    statusUpdate: '',
+    progressPct: 0,
+    blockers: '',
+    nextSteps: '',
+  })
+  const utils = trpc.useUtils()
+  const submit = trpc.provider.submitWeeklyUpdate.useMutation({
+    onSuccess: () => {
+      utils.provider.getTimeline.invalidate({ projectId })
+      setForm({ statusUpdate: '', progressPct: 0, blockers: '', nextSteps: '' })
+    },
+  })
+
+  return (
+    <div className="sc-card p-6 border-t-4 border-t-sc-blue">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-xl bg-sc-blue flex items-center justify-center text-xl">📝</div>
+        <div>
+          <h3 className="text-base font-bold text-sc-dark">עדכון שבועי</h3>
+          <p className="text-xs text-sc-gray">עדכן את סטטוס העבודה השבועי</p>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-sc-dark mb-1">סטטוס עדכני *</label>
+          <textarea
+            value={form.statusUpdate}
+            onChange={e => setForm(f => ({ ...f, statusUpdate: e.target.value }))}
+            placeholder="מה בוצע השבוע?"
+            rows={3}
+            className="sc-input w-full"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-sc-dark mb-1">אחוז התקדמות: {form.progressPct}%</label>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            value={form.progressPct}
+            onChange={e => setForm(f => ({ ...f, progressPct: parseInt(e.target.value) }))}
+            className="w-full accent-sc-blue"
+          />
+          <div className="flex justify-between text-xs text-sc-gray">
+            <span>0%</span>
+            <span>50%</span>
+            <span>100%</span>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-sc-dark mb-1">חסמים</label>
+          <textarea
+            value={form.blockers}
+            onChange={e => setForm(f => ({ ...f, blockers: e.target.value }))}
+            placeholder="יש משהו שמעכב? (אופציונלי)"
+            rows={2}
+            className="sc-input w-full"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-sc-dark mb-1">צעדים הבאים</label>
+          <textarea
+            value={form.nextSteps}
+            onChange={e => setForm(f => ({ ...f, nextSteps: e.target.value }))}
+            placeholder="מה מתוכנן לשבוע הבא? (אופציונלי)"
+            rows={2}
+            className="sc-input w-full"
+          />
+        </div>
+
+        <button
+          onClick={() => submit.mutate({
+            projectId,
+            statusUpdate: form.statusUpdate,
+            progressPct: form.progressPct,
+            blockers: form.blockers || undefined,
+            nextSteps: form.nextSteps || undefined,
+          })}
+          disabled={!form.statusUpdate || submit.isPending}
+          className="sc-btn-primary w-full py-2.5 disabled:opacity-50"
+        >
+          {submit.isPending ? 'שולח...' : '📤 שלח עדכון'}
+        </button>
+        {submit.isError && <p className="text-sc-error text-sm text-center">שגיאה בשליחה</p>}
+        {submit.isSuccess && <p className="text-sc-success text-sm text-center">✅ העדכון נשלח בהצלחה!</p>}
+      </div>
+    </div>
+  )
+}
+
+function TimelineView({ projectId }: { projectId: string }) {
+  const { data: timeline, isLoading } = trpc.provider.getTimeline.useQuery({ projectId })
+
+  if (isLoading) return (
+    <div className="flex items-center justify-center py-12">
+      <div className="animate-spin w-8 h-8 border-4 border-sc-blue border-t-transparent rounded-full" />
+    </div>
+  )
+
+  if (!timeline || timeline.length === 0) return (
+    <div className="sc-card p-8 text-center">
+      <div className="text-4xl mb-3">📅</div>
+      <p className="text-sc-gray text-sm">אין עדכונים עדיין</p>
+    </div>
+  )
+
+  // Group by provider
+  const byProvider: Record<string, any[]> = {}
+  for (const entry of timeline) {
+    const name = (entry as any).provider?.full_name ?? 'לא ידוע'
+    if (!byProvider[name]) byProvider[name] = []
+    byProvider[name].push(entry)
+  }
+
+  const now = new Date()
+  const day = now.getDay()
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1)
+  const weekStart = new Date(now.setDate(diff)).toISOString().split('T')[0]
+
+  return (
+    <div className="space-y-6">
+      {Object.entries(byProvider).map(([providerName, entries]) => {
+        const latest = entries[0]
+        const isCurrentWeek = (latest as any).week_start === weekStart
+        const progress = (latest as any).progress_pct ?? 0
+
+        return (
+          <div key={providerName} className="sc-card p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-sc-blue/10 flex items-center justify-center text-lg">👷</div>
+                <div>
+                  <h3 className="text-base font-bold text-sc-dark">{providerName}</h3>
+                  <p className="text-xs text-sc-gray">
+                    עדכון אחרון: {new Date((latest as any).updated_at).toLocaleDateString('he-IL')}
+                  </p>
+                </div>
+              </div>
+              {!isCurrentWeek && (
+                <span className="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                  ⚠️ לא עודכן השבוע
+                </span>
+              )}
+            </div>
+
+            {/* Progress Bar */}
+            <div className="mb-4">
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-sc-gray">התקדמות כללית</span>
+                <span className="font-bold text-sc-dark">{progress}%</span>
+              </div>
+              <div className="w-full bg-sc-gray-light rounded-full h-3">
+                <div
+                  className={`h-3 rounded-full transition-all ${
+                    progress >= 75 ? 'bg-green-500' : progress >= 40 ? 'bg-sc-blue' : 'bg-orange-400'
+                  }`}
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Timeline entries */}
+            <div className="space-y-3 border-r-2 border-sc-blue/20 pr-4 mr-2">
+              {entries.slice(0, 5).map((entry: any, i: number) => (
+                <div key={entry.id} className="relative">
+                  <div className="absolute -right-[1.35rem] top-1.5 w-3 h-3 rounded-full bg-sc-blue border-2 border-white" />
+                  <div className="bg-sc-bg rounded-xl p-3">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs font-medium text-sc-blue">
+                        שבוע {new Date(entry.week_start).toLocaleDateString('he-IL')}
+                      </span>
+                      <span className="text-xs text-sc-gray">{entry.progress_pct}%</span>
+                    </div>
+                    <p className="text-sm text-sc-dark">{entry.status_update}</p>
+                    {entry.blockers && (
+                      <p className="text-xs text-orange-600 mt-1">🚧 {entry.blockers}</p>
+                    )}
+                    {entry.next_steps && (
+                      <p className="text-xs text-sc-blue mt-1">📋 {entry.next_steps}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+export default function TimelinePage() {
+  const { data: project, isLoading: projectLoading } = trpc.tenant.getMyProject.useQuery(undefined, { retry: false })
+  const { data: activeProjects } = trpc.provider.getActiveProjects.useQuery(undefined, { retry: false })
+  const [activeTab, setActiveTab] = useState<'view' | 'update'>('view')
+
+  const isProvider = activeProjects && activeProjects.length > 0
+  const projectId = (project as any)?.id ?? (activeProjects?.[0] as any)?.id
+
+  if (projectLoading) return (
+    <div className="min-h-screen bg-sc-bg" dir="rtl">
+      <Navbar />
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="animate-spin w-8 h-8 border-4 border-sc-blue border-t-transparent rounded-full" />
+      </div>
+    </div>
+  )
+
+  if (!projectId) return (
+    <div className="min-h-screen bg-sc-bg" dir="rtl">
+      <Navbar />
+      <div className="max-w-2xl mx-auto px-4 py-12 text-center">
+        <div className="text-5xl mb-4">📅</div>
+        <h1 className="text-xl font-bold text-sc-dark mb-2">לוח זמנים</h1>
+        <p className="text-sc-gray">טרם שויכת לפרויקט</p>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="min-h-screen bg-sc-bg" dir="rtl">
+      <Navbar />
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 rounded-xl bg-sc-blue flex items-center justify-center text-2xl">📅</div>
+          <div>
+            <h1 className="text-xl font-bold text-sc-dark">לוח זמנים — עדכונים שבועיים</h1>
+            <p className="text-sm text-sc-gray">מעקב אחר התקדמות נותני השירות בפרויקט</p>
+          </div>
+        </div>
+
+        {/* Tabs for providers */}
+        {isProvider && (
+          <div className="flex gap-2 mb-6">
+            <button
+              onClick={() => setActiveTab('view')}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                activeTab === 'view'
+                  ? 'bg-sc-blue text-white'
+                  : 'bg-white text-sc-dark border border-sc-gray-light'
+              }`}
+            >
+              📊 צפה בעדכונים
+            </button>
+            <button
+              onClick={() => setActiveTab('update')}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                activeTab === 'update'
+                  ? 'bg-sc-blue text-white'
+                  : 'bg-white text-sc-dark border border-sc-gray-light'
+              }`}
+            >
+              📝 שלח עדכון
+            </button>
+          </div>
+        )}
+
+        {activeTab === 'update' && isProvider ? (
+          <WeeklyUpdateForm projectId={projectId} />
+        ) : (
+          <TimelineView projectId={projectId} />
+        )}
+      </div>
+    </div>
+  )
+}

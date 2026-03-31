@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { router, protectedProcedure } from '../middleware/auth'
+import { TRPCError } from '@trpc/server'
 
 export const providerRouter = router({
   registerProfile: protectedProcedure
@@ -84,5 +85,77 @@ export const providerRouter = router({
       .select('listing:service_listings(project:projects(*))')
       .eq('provider_id', ctx.user.id).eq('status', 'ACCEPTED')
     return (data ?? []).map((d: any) => d.listing?.project).filter(Boolean)
-  })
+  }),
+
+  // ─── E2: Weekly Timeline Updates ───────────────────────
+  submitWeeklyUpdate: protectedProcedure
+    .input(z.object({
+      projectId: z.string().uuid(),
+      statusUpdate: z.string().min(1),
+      progressPct: z.number().min(0).max(100),
+      blockers: z.string().optional(),
+      nextSteps: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      // Calculate current week start (Monday)
+      const now = new Date()
+      const day = now.getDay()
+      const diff = now.getDate() - day + (day === 0 ? -6 : 1)
+      const weekStart = new Date(now.setDate(diff))
+      const weekStartStr = weekStart.toISOString().split('T')[0]
+
+      const { error } = await ctx.supabase.from('service_timeline').upsert({
+        project_id: input.projectId,
+        provider_id: ctx.user.id,
+        week_start: weekStartStr,
+        status_update: input.statusUpdate,
+        progress_pct: input.progressPct,
+        blockers: input.blockers ?? null,
+        next_steps: input.nextSteps ?? null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'project_id,provider_id,week_start' })
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return { ok: true }
+    }),
+
+  getTimeline: protectedProcedure
+    .input(z.object({ projectId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data } = await ctx.supabase.from('service_timeline')
+        .select('*, provider:profiles!service_timeline_provider_id_fkey(full_name)')
+        .eq('project_id', input.projectId)
+        .order('week_start', { ascending: false })
+      return data ?? []
+    }),
+
+  getMissingUpdates: protectedProcedure
+    .input(z.object({ projectId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      // Get current week start
+      const now = new Date()
+      const day = now.getDay()
+      const diff = now.getDate() - day + (day === 0 ? -6 : 1)
+      const weekStart = new Date(now.setDate(diff))
+      const weekStartStr = weekStart.toISOString().split('T')[0]
+
+      // Get all accepted providers for this project
+      const { data: apps } = await ctx.supabase.from('service_applications')
+        .select('provider_id, provider:profiles!service_applications_provider_id_fkey(full_name)')
+        .eq('status', 'ACCEPTED')
+        .eq('listing_id', input.projectId)
+
+      if (!apps || apps.length === 0) return []
+
+      // Get who updated this week
+      const { data: updates } = await ctx.supabase.from('service_timeline')
+        .select('provider_id')
+        .eq('project_id', input.projectId)
+        .eq('week_start', weekStartStr)
+
+      const updatedIds = new Set((updates ?? []).map((u: any) => u.provider_id))
+      return (apps ?? []).filter((a: any) => !updatedIds.has(a.provider_id)).map((a: any) => ({
+        providerId: a.provider_id,
+        providerName: a.provider?.full_name ?? 'לא ידוע',
+      }))
+    }),
 })

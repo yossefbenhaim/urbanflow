@@ -496,4 +496,113 @@ export const tenantRouter = router({
     return data ?? []
   }),
 
+  // ─── E1: Elderly / Disability Profile ──────────────────
+  saveElderlyProfile: protectedProcedure
+    .input(z.object({
+      apartmentId: z.string().uuid().optional(),
+      age: z.number().optional(),
+      isOver70: z.boolean().optional(),
+      isOver80: z.boolean().optional(),
+      hasDisability: z.boolean().optional(),
+      disabilityDescription: z.string().optional(),
+      needsAccessibility: z.boolean().optional(),
+      needsLowFloor: z.boolean().optional(),
+      needsElevator: z.boolean().optional(),
+      cannotRelocateFar: z.boolean().optional(),
+      preferredArea: z.string().optional(),
+      hasCompanion: z.boolean().optional(),
+      companionName: z.string().optional(),
+      companionPhone: z.string().optional(),
+      legalAlternatives: z.array(z.string()).optional(),
+      notes: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const isOver80 = input.isOver80 || (input.age ? input.age >= 80 : false)
+      const isOver70 = input.isOver70 || (input.age ? input.age >= 70 : false)
+
+      const { error } = await ctx.supabase.from('elderly_profiles').upsert({
+        user_id: ctx.user.id,
+        apartment_id: input.apartmentId ?? null,
+        age: input.age ?? null,
+        is_over_70: isOver70,
+        is_over_80: isOver80,
+        has_disability: input.hasDisability ?? false,
+        disability_description: input.disabilityDescription ?? null,
+        needs_accessibility: input.needsAccessibility ?? false,
+        needs_low_floor: input.needsLowFloor ?? false,
+        needs_elevator: input.needsElevator ?? false,
+        cannot_relocate_far: input.cannotRelocateFar ?? false,
+        preferred_area: input.preferredArea ?? null,
+        has_companion: input.hasCompanion ?? false,
+        companion_name: input.companionName ?? null,
+        companion_phone: input.companionPhone ?? null,
+        legal_alternatives: input.legalAlternatives ?? [],
+        notes: input.notes ?? null,
+      }, { onConflict: 'user_id' })
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+
+      // Alert for 80+ tenants — notify project manager
+      if (isOver80) {
+        const { data: tp } = await ctx.supabase.from('tenant_profiles').select('unit:units(building:buildings(project:projects(id, manager_id)))').eq('user_id', ctx.user.id).single()
+        const project = (tp?.unit as any)?.building?.project
+        if (project?.manager_id) {
+          await ctx.supabase.from('notifications').insert({
+            user_id: project.manager_id,
+            title: '⚠️ חובת הצגת חלופה לקשיש (תיקון 6)',
+            body: `דייר מעל גיל 80 מילא טופס קשיש — חובה להציג חלופות דיור לפי חוק פינוי-בינוי תיקון 6`,
+            type: 'elderly_alert',
+            is_read: false,
+          })
+        }
+      }
+
+      return { ok: true }
+    }),
+
+  getElderlyProfile: protectedProcedure.query(async ({ ctx }) => {
+    const { data } = await ctx.supabase.from('elderly_profiles').select('*').eq('user_id', ctx.user.id).single()
+    return data ?? null
+  }),
+
+  // ─── E3: Next Step ─────────────────────────────────────
+  getNextStep: protectedProcedure.query(async ({ ctx }) => {
+    // Check profile completion
+    const { data: tp } = await ctx.supabase.from('tenant_profiles').select('is_onboarded, tabu_file_url').eq('user_id', ctx.user.id).single()
+    if (!tp || !(tp as any).is_onboarded) {
+      return { action: 'complete_profile', text: 'השלם את הפרופיל שלך', link: '/onboarding', icon: '📋' }
+    }
+    // Check tabu upload
+    if (!(tp as any).tabu_file_url) {
+      return { action: 'upload_tabu', text: 'העלה נסח טאבו', link: '/profile', icon: '📄' }
+    }
+    // Check open polls
+    const { data: bgm } = await ctx.supabase.from('building_group_members').select('group_id').eq('user_id', ctx.user.id)
+    if (bgm && bgm.length > 0) {
+      const groupIds = bgm.map((m: any) => m.group_id)
+      const { data: polls } = await ctx.supabase.from('polls').select('id, question').in('group_id', groupIds).eq('status', 'open')
+      if (polls && polls.length > 0) {
+        // Check if user voted
+        const { data: votes } = await ctx.supabase.from('poll_votes').select('poll_id').eq('voter_id', ctx.user.id).in('poll_id', polls.map((p: any) => p.id))
+        const votedIds = new Set((votes ?? []).map((v: any) => v.poll_id))
+        const unvoted = polls.find((p: any) => !votedIds.has(p.id))
+        if (unvoted) {
+          return { action: 'vote', text: `הצבע בהצבעה: ${(unvoted as any).question}`, link: '/building-chat', icon: '🗳️' }
+        }
+      }
+    }
+    // Check unsigned documents
+    const { data: tpUnit } = await ctx.supabase.from('tenant_profiles').select('unit:units(building:buildings(project_id))').eq('user_id', ctx.user.id).single()
+    const projectId = (tpUnit?.unit as any)?.building?.project_id
+    if (projectId) {
+      const { data: docs } = await ctx.supabase.from('documents').select('id, title, signatures(signed_at)').eq('project_id', projectId).eq('type', 'SIGN_REQUIRED')
+      if (docs) {
+        const unsigned = docs.find((d: any) => !d.signatures || d.signatures.length === 0)
+        if (unsigned) {
+          return { action: 'sign_document', text: `חתום על מסמך: ${(unsigned as any).title}`, link: '/documents', icon: '✍️' }
+        }
+      }
+    }
+    return { action: 'all_done', text: 'הפרויקט מתקדם, אין פעולות נדרשות ✅', link: '/dashboard', icon: '✅' }
+  }),
+
 })

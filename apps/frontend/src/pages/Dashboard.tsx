@@ -204,6 +204,7 @@ export default function Dashboard() {
   const { data: project, isLoading, isFetched } = trpc.tenant.getMyProject.useQuery(undefined, { retry: false })
   const { data: docs } = trpc.tenant.getDocuments.useQuery()
   const { data: leadership } = trpc.tenant.getLeadership.useQuery()
+  const { data: nextStep } = trpc.tenant.getNextStep.useQuery()
   const signDoc = trpc.tenant.signDocument.useMutation()
 
   // Silent load — LoadingScreen already covers initial wait
@@ -239,6 +240,31 @@ export default function Dashboard() {
         </div>
       )}
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+
+        {/* E3: Next Step Banner */}
+        {nextStep && (nextStep as any).action !== 'all_done' && (
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-sc-blue flex items-center justify-center text-2xl flex-shrink-0">
+              {(nextStep as any).icon}
+            </div>
+            <div className="flex-1">
+              <p className="text-xs text-blue-600 font-medium mb-0.5">הצעד הבא שלך</p>
+              <p className="text-base font-bold text-blue-900">{(nextStep as any).text}</p>
+            </div>
+            <a
+              href={(nextStep as any).link}
+              className="sc-btn-primary px-5 py-2.5 text-sm no-underline whitespace-nowrap flex-shrink-0"
+            >
+              בצע עכשיו ←
+            </a>
+          </div>
+        )}
+        {nextStep && (nextStep as any).action === 'all_done' && (
+          <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center gap-3">
+            <span className="text-2xl">✅</span>
+            <p className="text-sm font-medium text-green-800">{(nextStep as any).text}</p>
+          </div>
+        )}
 
         {/* Onboarding Tasks Card */}
         {myStatus && !myStatus.isOnboarded && (
@@ -325,6 +351,24 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* Elderly Form + Timeline Quick Links */}
+        <div className="grid grid-cols-2 gap-3">
+          <a href="/elderly-form" className="no-underline sc-card p-4 flex items-center gap-3 hover:bg-sc-blue-pale transition-colors">
+            <span className="text-2xl">👴</span>
+            <div>
+              <p className="text-sm font-bold text-sc-dark">טופס קשיש / מוגבלות</p>
+              <p className="text-xs text-sc-gray">זכויות מיוחדות בפרויקט</p>
+            </div>
+          </a>
+          <a href="/timeline" className="no-underline sc-card p-4 flex items-center gap-3 hover:bg-sc-blue-pale transition-colors">
+            <span className="text-2xl">📅</span>
+            <div>
+              <p className="text-sm font-bold text-sc-dark">לוח זמנים</p>
+              <p className="text-xs text-sc-gray">עדכונים שבועיים מספקים</p>
+            </div>
+          </a>
+        </div>
 
         {/* Project Status Card */}
         {project ? (
