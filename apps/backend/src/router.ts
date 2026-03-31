@@ -12,6 +12,8 @@ import { directoryRouter } from './routers/directory'
 import { quotesRouter } from './routers/quotes'
 import { inspectionsRouter } from './routers/inspections'
 import { tendersRouter } from './routers/tenders'
+import { validationRouter } from './routers/validation'
+import { learningRouter } from './routers/learning'
 
 export const appRouter = router({
   auth: authRouter,
@@ -27,6 +29,8 @@ export const appRouter = router({
   quotes: quotesRouter,
   inspections: inspectionsRouter,
   tenders: tendersRouter,
+  validation: validationRouter,
+  learning: learningRouter,
 })
 
 export type AppRouter = typeof appRouter

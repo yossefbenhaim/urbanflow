@@ -424,3 +424,126 @@
   from { opacity: 1; }
   to   { opacity: 0; transform: translateY(6px); }
 }
+
+/* =====================
+   User Message Bubble
+   ===================== */
+.userMessage {
+  background: #2563eb;
+  color: white;
+  border-radius: 14px 14px 2px 14px;
+  padding: 10px 14px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  align-self: flex-start;
+  max-width: 85%;
+  direction: rtl;
+}
+
+.userMessage p {
+  margin: 0;
+}
+
+/* =====================
+   Microphone Button
+   ===================== */
+.micBtn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: 1.5px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  font-size: 1rem;
+}
+
+.micBtn:hover {
+  background: #e2e8f0;
+}
+
+.micRecording {
+  background: #fef2f2 !important;
+  border-color: #dc2626 !important;
+  animation: micPulse 1s infinite;
+}
+
+@keyframes micPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+}
+
+/* =====================
+   Speaker Buttons
+   ===================== */
+.speakerBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  background: white;
+  color: #374151;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  margin-bottom: 8px;
+}
+
+.speakerBtn:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+  background: #eff6ff;
+}
+
+.speakerBtnSmall {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 2px 4px;
+  margin-top: 4px;
+  display: inline-block;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.speakerBtnSmall:hover {
+  opacity: 1;
+}
+
+/* =====================
+   Typing Indicator
+   ===================== */
+.typingIndicator {
+  display: flex;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.typingIndicator span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #94a3b8;
+  animation: typingBounce 1.4s infinite;
+}
+
+.typingIndicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typingIndicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
