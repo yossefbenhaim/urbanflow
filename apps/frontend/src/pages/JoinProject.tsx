@@ -34,23 +34,26 @@ export default function JoinProject() {
   }, [code])
 
   return (
-    <div className="min-h-screen bg-sc-bg flex items-center justify-center" dir="rtl">
-      <div className="sc-card p-10 text-center max-w-sm w-full">
+    <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center" dir="rtl">
+      <div className="bg-white rounded-[20px] shadow-card p-10 text-center max-w-sm w-full border border-[#eeeeee]">
         {status === 'checking' || status === 'joining' ? (
           <>
+            <div className="w-[50px] h-[50px] bg-[#ebf1f7] rounded-[24px] flex items-center justify-center text-2xl mx-auto mb-4">🏰</div>
             <BuildingLoader size="lg" />
-            <p className="text-sc-text-light">מצטרף לפרויקט...</p>
+            <p className="text-[#5a5a6e] text-[13px]">מצטרף לפרויקט...</p>
           </>
         ) : status === 'done' ? (
           <>
-            <div className="text-4xl mb-4">✅</div>
-            <p className="text-sc-success font-semibold text-lg">{message}</p>
-            <p className="text-sc-text-light text-sm mt-2">מועבר לדשבורד...</p>
+            <div className="w-[50px] h-[50px] bg-[#ebf1f7] rounded-[24px] flex items-center justify-center text-2xl mx-auto mb-4">🏰</div>
+            <div className="bg-[#edf5ef] text-[#4a8c5c] rounded-[14px] p-4 mb-3">
+              <p className="font-semibold text-[16px]">{message}</p>
+            </div>
+            <p className="text-[#5a5a6e] text-[13px] mt-2">מועבר לדשבורד...</p>
           </>
         ) : (
           <>
             <div className="text-4xl mb-4">❌</div>
-            <p className="text-sc-error font-semibold">{message}</p>
+            <p className="text-red-500 font-semibold">{message}</p>
             <button
               onClick={() => navigate('/dashboard')}
               className="sc-btn-primary mt-4"

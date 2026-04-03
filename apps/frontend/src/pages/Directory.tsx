@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import { useUser } from '../hooks/useUser'
-import Navbar from '../components/Navbar'
+import PageLayout, { PageTitle } from '../components/PageLayout'
 
 type FilterType = 'all' | 'developer' | 'provider' | 'lawyer'
 
@@ -17,24 +17,24 @@ function QuoteModal({ recipientId, recipientName, onClose }: { recipientId: stri
     <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" dir="rtl">
       <div className="sc-card rounded-t-3xl sm:rounded-2xl p-6 w-full sm:max-w-md shadow-2xl">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-bold text-sc-text">📋 הצעת מחיר — {recipientName}</h2>
-          <button onClick={onClose} className="text-sc-text-light text-xl leading-none">✕</button>
+          <h2 className="text-base font-bold text-[#212121]">📋 הצעת מחיר — {recipientName}</h2>
+          <button onClick={onClose} className="text-[#5a5a6e] text-xl leading-none">✕</button>
         </div>
         <div className="space-y-3">
           <div>
-            <label className="text-sm font-medium text-sc-text">תיאור הפרויקט *</label>
+            <label className="text-sm font-medium text-[#212121]">תיאור הפרויקט *</label>
             <textarea value={desc} onChange={e => setDesc(e.target.value)} rows={3}
               placeholder="תאר את הפרויקט בפירוט..."
               className="sc-input mt-1 resize-none"/>
           </div>
           <div>
-            <label className="text-sm font-medium text-sc-text">טווח תקציב</label>
+            <label className="text-sm font-medium text-[#212121]">טווח תקציב</label>
             <input value={budget} onChange={e => setBudget(e.target.value)}
               placeholder="לדוגמה: 500,000–800,000 ₪"
               className="sc-input mt-1"/>
           </div>
           <div>
-            <label className="text-sm font-medium text-sc-text">ציר זמן</label>
+            <label className="text-sm font-medium text-[#212121]">ציר זמן</label>
             <input value={timeline} onChange={e => setTimeline(e.target.value)}
               placeholder="לדוגמה: 12–18 חודשים"
               className="sc-input mt-1"/>
@@ -77,20 +77,16 @@ export default function Directory() {
 
   if (!roleLoading && !(myRole as any)?.isRepresentative) {
     return (
-      <div className="min-h-screen page-content bg-sc-bg flex flex-col" dir="rtl">
-        <Navbar />
+      <PageLayout>
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="text-center">
             <div className="text-5xl mb-4">🔒</div>
-            <h2 className="text-xl font-bold text-sc-text mb-2">גישה לנציגי ועד בלבד</h2>
-            <p className="text-sc-text-light mb-6 text-sm">רק נציגי ועד הבניין יכולים לגשת לספריית השירותים</p>
-            <button onClick={() => navigate('/dashboard')}
-              className="sc-btn-primary active:scale-95">
-              חזרה לדשבורד
-            </button>
+            <h2 className="text-[18px] font-bold text-[#212121] mb-2">גישה לנציגי ועד בלבד</h2>
+            <p className="text-[#5a5a6e] mb-6 text-[13px]">רק נציגי ועד הבניין יכולים לגשת לספריית השירותים</p>
+            <button onClick={() => navigate('/dashboard')} className="sc-btn-primary">חזרה לדשבורד</button>
           </div>
         </div>
-      </div>
+      </PageLayout>
     )
   }
 
@@ -112,49 +108,44 @@ export default function Directory() {
   ]
 
   return (
-    <div className="min-h-screen bg-sc-bg" dir="rtl">
-      <Navbar />
-
-      <div className="max-w-4xl mx-auto px-4 py-5">
-
-        {/* Page title */}
-        <h1 className="sc-section-title mb-4">🏢 ספריית שירותים</h1>
+    <PageLayout>
+        <PageTitle>🏢 ספריית שירותים</PageTitle>
 
         {/* ── Conversations collapsible ── */}
         <div className="sc-card mb-5 overflow-hidden">
           <button
             onClick={() => setConvsOpen(o => !o)}
-            className="w-full flex items-center justify-between px-4 py-3.5 text-right active:bg-sc-bg transition-colors"
+            className="w-full flex items-center justify-between px-4 py-3.5 text-right active:bg-[#f8f9fa] transition-colors"
           >
             <div className="flex items-center gap-2">
-              <span className="text-base font-semibold text-sc-text">💬 השיחות שלי</span>
+              <span className="text-base font-semibold text-[#212121]">💬 השיחות שלי</span>
               {conversations.length > 0 && (
-                <span className="sc-badge bg-sc-primary text-white">
+                <span className="sc-badge bg-[#3b6b9c] text-white">
                   {conversations.length}
                 </span>
               )}
             </div>
-            <span className={`text-sc-text-light text-lg transition-transform duration-200 ${convsOpen ? 'rotate-180' : ''}`}>
+            <span className={`text-[#5a5a6e] text-lg transition-transform duration-200 ${convsOpen ? 'rotate-180' : ''}`}>
               ⌄
             </span>
           </button>
 
           {convsOpen && (
-            <div className="border-t border-sc-border">
+            <div className="border-t border-[#eeeeee]">
               {conversations.length === 0 ? (
-                <p className="text-sc-text-light text-sm text-center py-6">אין שיחות עדיין</p>
+                <p className="text-[#5a5a6e] text-sm text-center py-6">אין שיחות עדיין</p>
               ) : (
                 conversations.map((conv: any) => {
                   const other = conv.participant_a === meId ? conv.pb : conv.pa
                   return (
                     <button key={conv.id} onClick={() => navigate(`/chat/${conv.id}`)}
-                      className="w-full text-right px-4 py-3 hover:bg-sc-bg active:bg-sc-border border-b border-sc-border/50 last:border-0 transition-colors flex items-center gap-3">
-                      <div className="w-9 h-9 bg-sc-primary rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                      className="w-full text-right px-4 py-3 hover:bg-[#f8f9fa] active:bg-sc-border border-b border-[#eeeeee]/50 last:border-0 transition-colors flex items-center gap-3">
+                      <div className="w-9 h-9 bg-[#3b6b9c] rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
                         {other?.full_name?.[0]?.toUpperCase() ?? '?'}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-sc-text truncate">{other?.full_name || 'משתמש'}</p>
-                        <p className="text-xs text-sc-text-light truncate">{conv.last_message || 'אין הודעות'}</p>
+                        <p className="text-sm font-medium text-[#212121] truncate">{other?.full_name || 'משתמש'}</p>
+                        <p className="text-xs text-[#5a5a6e] truncate">{conv.last_message || 'אין הודעות'}</p>
                       </div>
                       <span className="text-sc-border text-lg flex-shrink-0">›</span>
                     </button>
@@ -173,8 +164,8 @@ export default function Directory() {
           <div className="flex gap-2 overflow-x-auto pb-1">
             {filterBtns.map(btn => (
               <button key={btn.key} onClick={() => setFilter(btn.key)}
-                className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-colors active:scale-95 ${
-                  filter === btn.key ? 'bg-sc-primary text-white shadow-sm' : 'bg-sc-bg border border-sc-border text-sc-text-light'
+                className={`flex-shrink-0 px-4 py-2 rounded-[8px] text-[13px] font-semibold transition-colors ${
+                  filter === btn.key ? 'bg-[#3b6b9c] text-white' : 'bg-[#f8f9fa] text-[#8e8e9e]'
                 }`}>
                 {btn.label}
               </button>
@@ -195,52 +186,52 @@ export default function Directory() {
 
             return (
               <div key={p.id} className={`sc-card p-5 border-2 transition-shadow active:scale-[0.99] ${
-                isDev ? 'border-sc-gold-dark' : 'border-sc-border'
+                isDev ? 'border-[#8b6f47]' : 'border-[#eeeeee]'
               }`}>
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2.5">
                     <div className={`w-11 h-11 rounded-full flex items-center justify-center text-xl flex-shrink-0 ${
-                      isDev ? 'bg-sc-gold-dark/10' : 'bg-sc-light-blue'
+                      isDev ? 'bg-[#8b6f47]/10' : 'bg-[#ebf1f7]'
                     }`}>
                       {isDev ? '🏗️' : '🔧'}
                     </div>
                     <div>
-                      <p className="font-semibold text-sc-text text-sm">{p.full_name}</p>
-                      {company && <p className="text-xs text-sc-text-light">{company}</p>}
+                      <p className="font-semibold text-[#212121] text-sm">{p.full_name}</p>
+                      {company && <p className="text-xs text-[#5a5a6e]">{company}</p>}
                     </div>
                   </div>
                   {isDev && (
-                    <span className="sc-badge bg-sc-gold-dark/10 text-sc-gold-dark">
+                    <span className="sc-badge bg-[#8b6f47]/10 text-[#8b6f47]">
                       👑 יזם
                     </span>
                   )}
                 </div>
 
                 {bio
-                  ? <p className="text-sm text-sc-text-light mb-3 leading-relaxed line-clamp-2">{bio}</p>
-                  : <p className="text-xs text-sc-text-light mb-3 italic">לא הוזן תיאור</p>
+                  ? <p className="text-sm text-[#5a5a6e] mb-3 leading-relaxed line-clamp-2">{bio}</p>
+                  : <p className="text-xs text-[#5a5a6e] mb-3 italic">לא הוזן תיאור</p>
                 }
 
                 {serviceTypes && serviceTypes.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-2">
                     {serviceTypes.slice(0, 3).map((s: string) => (
-                      <span key={s} className="sc-badge bg-sc-light-blue text-sc-primary">{s}</span>
+                      <span key={s} className="sc-badge bg-[#ebf1f7] text-[#3b6b9c]">{s}</span>
                     ))}
                   </div>
                 )}
                 {regions && regions.length > 0 && (
-                  <p className="text-xs text-sc-text-light mb-3">📍 {regions.slice(0, 2).join(', ')}</p>
+                  <p className="text-xs text-[#5a5a6e] mb-3">📍 {regions.slice(0, 2).join(', ')}</p>
                 )}
 
                 <div className="flex gap-2 mt-3">
                   <button
                     onClick={() => startConversation.mutate({ recipientId: p.id })}
-                    className="flex-1 flex items-center justify-center gap-1.5 bg-sc-light-blue text-sc-primary rounded-xl py-2.5 text-sm font-medium hover:bg-sc-light-blue/70 active:scale-95 transition-all">
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-[#ebf1f7] text-[#3b6b9c] rounded-xl py-2.5 text-sm font-medium hover:bg-[#ebf1f7]/70 active:scale-95 transition-all">
                     💬 הודעה
                   </button>
                   <button
                     onClick={() => setQuoteModal({ id: p.id, name: p.full_name })}
-                    className="flex-1 flex items-center justify-center gap-1.5 bg-sc-success/10 text-sc-success rounded-xl py-2.5 text-sm font-medium hover:bg-sc-success/20 active:scale-95 transition-all">
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-[#4a8c5c]/10 text-[#4a8c5c] rounded-xl py-2.5 text-sm font-medium hover:bg-[#4a8c5c]/20 active:scale-95 transition-all">
                     📋 הצעה
                   </button>
                 </div>
@@ -250,11 +241,10 @@ export default function Directory() {
           {filtered.length === 0 && (
             <div className="col-span-2 text-center py-12">
               <p className="text-3xl mb-2">🔍</p>
-              <p className="text-sc-text-light text-sm">לא נמצאו תוצאות</p>
+              <p className="text-[#5a5a6e] text-sm">לא נמצאו תוצאות</p>
             </div>
           )}
         </div>
-      </div>
 
       {quoteModal && (
         <QuoteModal
@@ -263,6 +253,6 @@ export default function Directory() {
           onClose={() => setQuoteModal(null)}
         />
       )}
-    </div>
+    </PageLayout>
   )
 }

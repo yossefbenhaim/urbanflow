@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import Navbar from '../components/Navbar'
+import PageLayout, { PageTitle } from '../components/PageLayout'
 import { trpc } from '../lib/trpc'
 import AddressPicker from '../components/AddressPicker/AddressPicker'
 import BuildingLoader from '../components/BuildingLoader'
@@ -23,23 +23,25 @@ export default function ManagerDashboard() {
 
   const selectedProject = projects?.find((p: any) => p.id === selectedProjectId)
 
-  if (isLoading) return (<div className="flex justify-center items-center h-64"><BuildingLoader size="lg" /></div>)
+  const managerSidebar = [
+    { to: '/manager', icon: '🏠', label: 'ראשי' },
+    { to: '/manager', icon: '📊', label: 'פרויקטים' },
+    { to: '/manager', icon: '👥', label: 'דיירים' },
+    { to: '/tenders', icon: '📋', label: 'מכרזים' },
+    { to: '/profile', icon: '👤', label: 'פרופיל' },
+  ]
+
+  if (isLoading) return (<PageLayout sidebarItems={managerSidebar}><div className="flex justify-center items-center h-64"><BuildingLoader size="lg" /></div></PageLayout>)
 
   return (
-    <div className="min-h-screen bg-sc-bg" dir="rtl">
-      <Navbar />
-      <div className="max-w-5xl mx-auto px-4 py-8">
-
+    <PageLayout sidebarItems={managerSidebar}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="sc-section-title text-2xl">לוח הבקרה — מארגן דיירים</h1>
-            <p className="text-sc-text-light text-sm mt-1">{projects?.length ?? 0} פרויקטים פעילים</p>
+            <PageTitle>לוח הבקרה — מארגן דיירים</PageTitle>
+            <p className="text-[#5a5a6e] text-[13px] mt-1">{projects?.length ?? 0} פרויקטים פעילים</p>
           </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="sc-btn-primary"
-          >
+          <button onClick={() => setShowModal(true)} className="sc-btn-gold">
             + פרויקט חדש
           </button>
         </div>
@@ -48,7 +50,7 @@ export default function ManagerDashboard() {
           {/* Projects list */}
           <div className="flex-1">
             {!projects || projects.length === 0 ? (
-              <div className="sc-card p-12 text-center text-sc-text-light">
+              <div className="sc-card p-12 text-center text-[#5a5a6e]">
                 <div className="text-5xl mb-4">🏗️</div>
                 <p className="text-lg font-medium">אין פרויקטים עדיין</p>
                 <p className="text-sm mt-1">לחץ על "פרויקט חדש" כדי להתחיל</p>
@@ -60,24 +62,24 @@ export default function ManagerDashboard() {
                     key={project.id}
                     onClick={() => setSelectedProjectId(project.id === selectedProjectId ? null : project.id)}
                     className={`sc-card p-6 cursor-pointer transition-all ${
-                      selectedProjectId === project.id ? 'border-sc-primary ring-2 ring-sc-light-blue' : 'hover:shadow-md'
+                      selectedProjectId === project.id ? 'border-[#3b6b9c] ring-2 ring-sc-light-blue' : 'hover:shadow-md'
                     }`}
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <h3 className="font-semibold text-sc-text text-lg">{project.name}</h3>
-                        {project.address && <p className="text-sc-text-light text-sm mt-0.5">{project.address}</p>}
+                        <h3 className="font-semibold text-[#212121] text-lg">{project.name}</h3>
+                        {project.address && <p className="text-[#5a5a6e] text-sm mt-0.5">{project.address}</p>}
                       </div>
-                      <span className="text-xs text-sc-text-light">
+                      <span className="text-xs text-[#5a5a6e]">
                         {(project.project_tenants as any)?.[0]?.count ?? 0} דיירים
                       </span>
                     </div>
                     <div className="flex items-center gap-2 mt-3">
-                      <span className="text-xs text-sc-text-light">קוד הצטרפות:</span>
-                      <span className="sc-badge bg-sc-light-blue text-sc-primary font-mono font-bold">{project.invite_code}</span>
+                      <span className="text-xs text-[#5a5a6e]">קוד הצטרפות:</span>
+                      <span className="sc-badge bg-[#ebf1f7] text-[#3b6b9c] font-mono font-bold">{project.invite_code}</span>
                       <button
                         onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(project.invite_code) }}
-                        className="text-xs text-sc-text-light hover:text-sc-text transition-colors"
+                        className="text-xs text-[#5a5a6e] hover:text-[#212121] transition-colors"
                         title="העתק קוד"
                       >
                         📋 העתק
@@ -92,11 +94,11 @@ export default function ManagerDashboard() {
           {/* Project detail panel */}
           {selectedProject && (
             <div className="w-80 sc-card p-6 self-start">
-              <h2 className="font-bold text-sc-text text-lg mb-4">{selectedProject.name}</h2>
+              <h2 className="font-bold text-[#212121] text-lg mb-4">{selectedProject.name}</h2>
 
               {/* Invite by email */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-sc-text mb-2">הזמן דייר במייל</label>
+                <label className="block text-sm font-medium text-[#212121] mb-2">הזמן דייר במייל</label>
                 <div className="flex gap-2">
                   <input
                     type="email"
@@ -114,24 +116,24 @@ export default function ManagerDashboard() {
                     שלח
                   </button>
                 </div>
-                {inviteByEmail.isSuccess && <p className="text-sc-success text-xs mt-1">ההזמנה נשלחה ✓</p>}
+                {inviteByEmail.isSuccess && <p className="text-[#4a8c5c] text-xs mt-1">ההזמנה נשלחה ✓</p>}
               </div>
 
               {/* Tenants list */}
               <div>
-                <h3 className="text-sm font-medium text-sc-text mb-3">דיירים ({tenants?.length ?? 0})</h3>
+                <h3 className="text-sm font-medium text-[#212121] mb-3">דיירים ({tenants?.length ?? 0})</h3>
                 {!tenants || tenants.length === 0 ? (
-                  <p className="text-sc-text-light text-sm">אין דיירים עדיין</p>
+                  <p className="text-[#5a5a6e] text-sm">אין דיירים עדיין</p>
                 ) : (
                   <div className="space-y-2">
                     {tenants.map((t: any) => (
-                      <div key={t.tenant_id} className="flex items-center gap-3 p-2 bg-sc-bg rounded-lg">
-                        <div className="w-8 h-8 bg-sc-light-blue rounded-full flex items-center justify-center text-sc-primary font-medium text-sm">
+                      <div key={t.tenant_id} className="flex items-center gap-3 p-2 bg-[#f8f9fa] rounded-lg">
+                        <div className="w-8 h-8 bg-[#ebf1f7] rounded-full flex items-center justify-center text-[#3b6b9c] font-medium text-sm">
                           {t.profiles?.full_name?.[0] ?? '?'}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-sc-text truncate">{t.profiles?.full_name ?? 'ללא שם'}</p>
-                          <p className="text-xs text-sc-text-light truncate">{t.profiles?.email}</p>
+                          <p className="text-sm font-medium text-[#212121] truncate">{t.profiles?.full_name ?? 'ללא שם'}</p>
+                          <p className="text-xs text-[#5a5a6e] truncate">{t.profiles?.email}</p>
                         </div>
                       </div>
                     ))}
@@ -141,16 +143,15 @@ export default function ManagerDashboard() {
             </div>
           )}
         </div>
-      </div>
 
       {/* New Project Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => { setShowModal(false); setAddress({ city: '', street: '', buildingNumber: '' }) }}>
-          <div className="sc-card p-6 w-full max-w-sm mx-4" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-lg font-bold text-sc-text mb-4">פרויקט חדש</h2>
+          <div className="bg-white rounded-[14px] shadow-card p-6 w-full max-w-sm mx-4" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-[18px] font-bold text-[#212121] mb-4">פרויקט חדש</h2>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-sc-text mb-1">שם הפרויקט *</label>
+                <label className="sc-label">שם הפרויקט *</label>
                 <input
                   type="text"
                   value={newName}
@@ -160,7 +161,7 @@ export default function ManagerDashboard() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-sc-text mb-1">סוג התחדשות</label>
+                <label className="block text-sm font-medium text-[#212121] mb-1">סוג התחדשות</label>
                 <select
                   value={renewalType}
                   onChange={(e) => setRenewalType(e.target.value as any)}
@@ -173,7 +174,7 @@ export default function ManagerDashboard() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-sc-text mb-1">כתובת</label>
+                <label className="block text-sm font-medium text-[#212121] mb-1">כתובת</label>
                 <AddressPicker value={address} onChange={setAddress} />
               </div>
             </div>
@@ -195,6 +196,6 @@ export default function ManagerDashboard() {
           </div>
         </div>
       )}
-    </div>
+    </PageLayout>
   )
 }

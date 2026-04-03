@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import AddressPicker from '../components/AddressPicker/AddressPicker'
-import Navbar from '../components/Navbar'
+import PageLayout from '../components/PageLayout'
 
 const CURRENT_YEAR = new Date().getFullYear()
 const YEARS = Array.from({ length: 60 }, (_, i) => String(CURRENT_YEAR - i))
@@ -73,21 +73,21 @@ function StepBar({ current }: { current: number }) {
         <div key={s.id} className="flex items-center flex-shrink-0">
           <div className="flex flex-col items-center gap-1">
             <div className={`w-9 h-9 rounded-full flex items-center justify-center text-base font-bold transition-all ${
-              current > s.id ? 'bg-sc-success text-white' :
-              current === s.id ? 'bg-sc-primary text-white shadow-[0_0_0_4px_rgba(59,107,156,0.2)]' :
-              'bg-sc-border text-sc-text-light'
+              current > s.id ? 'bg-[#4a8c5c] text-white' :
+              current === s.id ? 'bg-[#3b6b9c] text-white shadow-[0_0_0_4px_rgba(59,107,156,0.2)]' :
+              'bg-sc-border text-[#5a5a6e]'
             }`}>
               {current > s.id ? '✓' : s.id}
             </div>
             <span className={`text-[10px] whitespace-nowrap ${
-              current === s.id ? 'text-sc-primary font-semibold' : 'text-sc-text-light'
+              current === s.id ? 'text-[#3b6b9c] font-semibold' : 'text-[#5a5a6e]'
             }`}>
               {s.title}
             </span>
           </div>
           {i < STEPS.length - 1 && (
             <div className={`w-10 h-0.5 mx-0.5 mb-5 flex-shrink-0 transition-all ${
-              current > s.id + 1 ? 'bg-sc-success' : current > s.id ? 'bg-sc-primary' : 'bg-sc-border'
+              current > s.id + 1 ? 'bg-[#4a8c5c]' : current > s.id ? 'bg-[#3b6b9c]' : 'bg-sc-border'
             }`} />
           )}
         </div>
@@ -115,14 +115,14 @@ function CheckboxGroup({ options, selected, onChange }: {
           onClick={() => toggle(opt.key)}
           className={`p-2.5 rounded-xl border-2 text-[13px] cursor-pointer text-right transition-all flex items-center gap-1.5 ${
             selected.includes(opt.key)
-              ? 'border-sc-primary bg-sc-light-blue text-sc-primary font-semibold'
-              : 'border-sc-border bg-white text-sc-text-light'
+              ? 'border-[#3b6b9c] bg-[#ebf1f7] text-[#3b6b9c] font-semibold'
+              : 'border-[#eeeeee] bg-white text-[#5a5a6e]'
           }`}
         >
           <span className={`w-[18px] h-[18px] rounded-[5px] border-2 flex-shrink-0 flex items-center justify-center text-[11px] ${
             selected.includes(opt.key)
-              ? 'border-sc-primary bg-sc-primary text-white'
-              : 'border-sc-border bg-white'
+              ? 'border-[#3b6b9c] bg-[#3b6b9c] text-white'
+              : 'border-[#eeeeee] bg-white'
           }`}>
             {selected.includes(opt.key) ? '✓' : ''}
           </span>
@@ -223,12 +223,12 @@ export default function TenantOnboarding() {
   }
 
   return (
-    <div className="min-h-screen bg-sc-bg" dir="rtl">
-      <Navbar />
+    <PageLayout>
+      
       <div className="max-w-[560px] mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-[22px] font-bold text-sc-text mb-1">השלמת פרופיל דייר</h1>
-          <p className="text-sc-text-light text-sm">מלא את הפרטים הנדרשים כדי להשתמש בכל הפיצ׳רים</p>
+          <h1 className="text-[22px] font-bold text-[#212121] mb-1">השלמת פרופיל דייר</h1>
+          <p className="text-[#5a5a6e] text-sm">מלא את הפרטים הנדרשים כדי להשתמש בכל הפיצ׳רים</p>
         </div>
 
         <div className="sc-card p-8">
@@ -237,14 +237,14 @@ export default function TenantOnboarding() {
           {/* ─── Step 1 - Personal ─── */}
           {step === 1 && (
             <div className="flex flex-col gap-4">
-              <h2 className="text-[17px] font-bold text-sc-text mb-1">👤 פרטים אישיים</h2>
+              <h2 className="text-[17px] font-bold text-[#212121] mb-1">👤 פרטים אישיים</h2>
               <div>
-                <label className="block text-[13px] font-semibold text-sc-text mb-1">תעודת זהות *</label>
+                <label className="block text-[13px] font-semibold text-[#212121] mb-1">תעודת זהות *</label>
                 <input className="sc-input" placeholder="9 ספרות" maxLength={9} value={form.idNumber}
                   onChange={e => update('idNumber', e.target.value.replace(/\D/g,''))} />
               </div>
               <div>
-                <label className="block text-[13px] font-semibold text-sc-text mb-1">טלפון נייד *</label>
+                <label className="block text-[13px] font-semibold text-[#212121] mb-1">טלפון נייד *</label>
                 <input className="sc-input" placeholder="05XXXXXXXX" value={form.phone} dir="ltr"
                   onChange={e => update('phone', e.target.value)} />
               </div>
@@ -254,13 +254,13 @@ export default function TenantOnboarding() {
           {/* ─── Step 2 - Address ─── */}
           {step === 2 && (
             <div className="flex flex-col gap-4">
-              <h2 className="text-[17px] font-bold text-sc-text mb-1">🏠 כתובת הדירה</h2>
+              <h2 className="text-[17px] font-bold text-[#212121] mb-1">🏠 כתובת הדירה</h2>
               <AddressPicker value={address} onChange={setAddress} />
               <div>
-                <label className="block text-[13px] font-semibold text-sc-text mb-1">כמה דירות יש בבניין? *</label>
+                <label className="block text-[13px] font-semibold text-[#212121] mb-1">כמה דירות יש בבניין? *</label>
                 <input className="sc-input" placeholder="לדוג׳ 24" type="number" min="2" value={form.apartmentsInBuilding}
                   onChange={e => update('apartmentsInBuilding', e.target.value)} />
-                <p className="text-[11px] text-sc-text-light mt-1">מידע זה יסייע בארגון הדיירים</p>
+                <p className="text-[11px] text-[#5a5a6e] mt-1">מידע זה יסייע בארגון הדיירים</p>
               </div>
             </div>
           )}
@@ -268,26 +268,26 @@ export default function TenantOnboarding() {
           {/* ─── Step 3 - Apartment details ─── */}
           {step === 3 && (
             <div className="flex flex-col gap-4">
-              <h2 className="text-[17px] font-bold text-sc-text mb-1">📋 פרטי הדירה</h2>
+              <h2 className="text-[17px] font-bold text-[#212121] mb-1">📋 פרטי הדירה</h2>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[13px] font-semibold text-sc-text mb-1">קומה *</label>
+                  <label className="block text-[13px] font-semibold text-[#212121] mb-1">קומה *</label>
                   <input className="sc-input" placeholder="0 = קרקע" type="number" min="0" value={form.floor}
                     onChange={e => update('floor', e.target.value)} />
                 </div>
                 <div>
-                  <label className="block text-[13px] font-semibold text-sc-text mb-1">מספר דירה *</label>
+                  <label className="block text-[13px] font-semibold text-[#212121] mb-1">מספר דירה *</label>
                   <input className="sc-input" placeholder="דירה" value={form.apartmentNumber}
                     onChange={e => update('apartmentNumber', e.target.value)} />
                 </div>
               </div>
               <div>
-                <label className="block text-[13px] font-semibold text-sc-text mb-1">גודל הדירה (מ"ר) *</label>
+                <label className="block text-[13px] font-semibold text-[#212121] mb-1">גודל הדירה (מ"ר) *</label>
                 <input className="sc-input" placeholder="לדוג׳ 85" type="number" min="10" value={form.apartmentSqm}
                   onChange={e => update('apartmentSqm', e.target.value)} />
               </div>
               <div>
-                <label className="block text-[13px] font-semibold text-sc-text mb-1">שנת כניסה לדירה</label>
+                <label className="block text-[13px] font-semibold text-[#212121] mb-1">שנת כניסה לדירה</label>
                 <select className="sc-input" value={form.moveInYear} onChange={e => update('moveInYear', e.target.value)}>
                   <option value="">בחר שנה</option>
                   {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
@@ -298,8 +298,8 @@ export default function TenantOnboarding() {
                   <button key={type} onClick={() => update('isOwner', type === 'owner')}
                     className={`flex-1 py-2.5 rounded-[10px] border-2 font-semibold text-sm cursor-pointer transition-colors ${
                       (form.isOwner ? 'owner' : 'renter') === type
-                        ? 'border-sc-primary bg-sc-light-blue text-sc-primary'
-                        : 'border-sc-border bg-white text-sc-text-light'
+                        ? 'border-[#3b6b9c] bg-[#ebf1f7] text-[#3b6b9c]'
+                        : 'border-[#eeeeee] bg-white text-[#5a5a6e]'
                     }`}>
                     {type === 'owner' ? '🏠 בעל דירה' : '🔑 שוכר'}
                   </button>
@@ -312,8 +312,8 @@ export default function TenantOnboarding() {
           {step === 4 && (
             <div className="flex flex-col gap-5">
               <div>
-                <h2 className="text-[17px] font-bold text-sc-text mb-1">📄 העלאת נסח טאבו</h2>
-                <p className="text-[13px] text-sc-text-light mb-4">
+                <h2 className="text-[17px] font-bold text-[#212121] mb-1">📄 העלאת נסח טאבו</h2>
+                <p className="text-[13px] text-[#5a5a6e] mb-4">
                   נסח טאבו מעיד על בעלות הדירה. ניתן לדלג — אך מומלץ להעלות לצורך אימות מהיר.
                 </p>
               </div>
@@ -321,37 +321,37 @@ export default function TenantOnboarding() {
               <div
                 onDrop={handleTabuDrop}
                 onDragOver={e => e.preventDefault()}
-                className="border-2 border-dashed border-sc-border rounded-xl p-8 text-center cursor-pointer hover:border-sc-primary hover:bg-sc-light-blue/30 transition-colors"
+                className="border-2 border-dashed border-[#eeeeee] rounded-xl p-8 text-center cursor-pointer hover:border-[#3b6b9c] hover:bg-[#ebf1f7]/30 transition-colors"
                 onClick={() => document.getElementById('tabu-input')?.click()}
               >
                 <input id="tabu-input" type="file" accept="application/pdf" onChange={handleTabuSelect} className="hidden" />
                 {tabuFile ? (
                   <div className="flex flex-col items-center gap-2">
                     <span className="text-3xl">✅</span>
-                    <p className="text-sm font-semibold text-sc-text">{tabuFile.name}</p>
-                    <p className="text-xs text-sc-text-light">{(tabuFile.size / 1024).toFixed(0)} KB</p>
+                    <p className="text-sm font-semibold text-[#212121]">{tabuFile.name}</p>
+                    <p className="text-xs text-[#5a5a6e]">{(tabuFile.size / 1024).toFixed(0)} KB</p>
                     <button
                       onClick={e => { e.stopPropagation(); setTabuFile(null); setTabuUrl(null) }}
-                      className="text-xs text-sc-error underline bg-transparent border-none cursor-pointer mt-1"
+                      className="text-xs text-red-500 underline bg-transparent border-none cursor-pointer mt-1"
                     >הסר קובץ</button>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-2">
                     <span className="text-4xl">📄</span>
-                    <p className="text-sm font-semibold text-sc-text">גרור קובץ PDF לכאן</p>
-                    <p className="text-xs text-sc-text-light">או לחץ לבחירת קובץ</p>
+                    <p className="text-sm font-semibold text-[#212121]">גרור קובץ PDF לכאן</p>
+                    <p className="text-xs text-[#5a5a6e]">או לחץ לבחירת קובץ</p>
                   </div>
                 )}
               </div>
 
-              <div className="bg-sc-gold-dark/10 border border-sc-gold-dark/30 rounded-xl p-3">
-                <p className="text-xs text-sc-gold-dark m-0">
+              <div className="bg-[#8b6f47]/10 border border-[#8b6f47]/30 rounded-xl p-3">
+                <p className="text-xs text-[#8b6f47] m-0">
                   ⏰ <strong>שים לב:</strong> לאחר שעה מההעלאה, הקובץ ננעל ולא ניתן לשנות אותו
                 </p>
               </div>
 
-              <div className="bg-sc-light-blue border border-sc-primary-light rounded-xl p-3">
-                <p className="text-xs text-sc-primary m-0">
+              <div className="bg-[#ebf1f7] border border-[#3b6b9c]-light rounded-xl p-3">
+                <p className="text-xs text-[#3b6b9c] m-0">
                   💡 <strong>אופציונלי</strong> — ניתן לדלג ולהעלות מאוחר יותר מהפרופיל שלך
                 </p>
               </div>
@@ -362,8 +362,8 @@ export default function TenantOnboarding() {
           {step === 5 && (
             <div className="flex flex-col gap-5">
               <div>
-                <h2 className="text-[17px] font-bold text-sc-text mb-1">✨ דרישות לדירה החדשה</h2>
-                <p className="text-[13px] text-sc-text-light mb-4">
+                <h2 className="text-[17px] font-bold text-[#212121] mb-1">✨ דרישות לדירה החדשה</h2>
+                <p className="text-[13px] text-[#5a5a6e] mb-4">
                   סמן מה חשוב לך במיוחד בדירה החדשה — המידע יועבר לשמאי ולאדריכל
                 </p>
               </div>
@@ -375,7 +375,7 @@ export default function TenantOnboarding() {
               />
 
               <div>
-                <label className="block text-[13px] font-semibold text-sc-text mb-1">פירוט דרישות נוספות</label>
+                <label className="block text-[13px] font-semibold text-[#212121] mb-1">פירוט דרישות נוספות</label>
                 <textarea
                   value={form.specialRequestsNotes}
                   onChange={e => update('specialRequestsNotes', e.target.value)}
@@ -386,15 +386,15 @@ export default function TenantOnboarding() {
               </div>
 
               {form.specialRequests.length > 0 && (
-                <div className="bg-sc-success/10 border-2 border-sc-success/30 rounded-xl p-3">
-                  <p className="text-xs text-sc-success font-semibold m-0">
+                <div className="bg-[#4a8c5c]/10 border-2 border-sc-success/30 rounded-xl p-3">
+                  <p className="text-xs text-[#4a8c5c] font-semibold m-0">
                     ✅ נבחרו {form.specialRequests.length} דרישות — יישמרו בפרופיל שלך
                   </p>
                 </div>
               )}
 
-              <div className="bg-sc-gold-dark/10 border border-sc-gold-dark/30 rounded-xl p-3">
-                <p className="text-xs text-sc-gold-dark m-0">
+              <div className="bg-[#8b6f47]/10 border border-[#8b6f47]/30 rounded-xl p-3">
+                <p className="text-xs text-[#8b6f47] m-0">
                   💡 <strong>טיפ:</strong> ניתן לדלג על שלב זה ולעדכן מאוחר יותר מהפרופיל שלך
                 </p>
               </div>
@@ -405,22 +405,22 @@ export default function TenantOnboarding() {
           {step === 6 && (
             <div className="flex flex-col gap-5">
               <div>
-                <h2 className="text-[17px] font-bold text-sc-text mb-1">📎 חריגות והצמדות בדירה הנוכחית</h2>
-                <p className="text-[13px] text-sc-text-light mb-4">
+                <h2 className="text-[17px] font-bold text-[#212121] mb-1">📎 חריגות והצמדות בדירה הנוכחית</h2>
+                <p className="text-[13px] text-[#5a5a6e] mb-4">
                   האם יש בדירה שלך משהו מיוחד מעבר לדירה הרגילה בבניין? תיעוד זה חשוב להסכם הפינוי
                 </p>
               </div>
 
               {/* שאלת פתיחה */}
               <div>
-                <label className="block text-[13px] font-semibold text-sc-text mb-2.5">האם יש בדירה שלך יתרון מיוחד לעומת שאר הדירות?</label>
+                <label className="block text-[13px] font-semibold text-[#212121] mb-2.5">האם יש בדירה שלך יתרון מיוחד לעומת שאר הדירות?</label>
                 <div className="flex gap-2.5">
                   {[true, false].map(v => (
                     <button key={String(v)} onClick={() => update('hasSpecialAdvantage', v)}
                       className={`flex-1 py-3 rounded-xl border-2 font-semibold text-[15px] cursor-pointer transition-colors ${
                         form.hasSpecialAdvantage === v
-                          ? (v ? 'border-sc-primary bg-sc-light-blue text-sc-primary' : 'border-sc-border bg-sc-bg text-sc-text')
-                          : 'border-sc-border bg-white text-sc-text'
+                          ? (v ? 'border-[#3b6b9c] bg-[#ebf1f7] text-[#3b6b9c]' : 'border-[#eeeeee] bg-[#f8f9fa] text-[#212121]')
+                          : 'border-[#eeeeee] bg-white text-[#212121]'
                       }`}>
                       {v ? '✅ כן' : '❌ לא'}
                     </button>
@@ -431,7 +431,7 @@ export default function TenantOnboarding() {
               {form.hasSpecialAdvantage === true && (
                 <>
                   <div>
-                    <label className="block text-[13px] font-semibold text-sc-text mb-2.5">סמן מה קיים בדירה שלך:</label>
+                    <label className="block text-[13px] font-semibold text-[#212121] mb-2.5">סמן מה קיים בדירה שלך:</label>
                     <CheckboxGroup
                       options={APARTMENT_EXTRAS_OPTIONS}
                       selected={form.apartmentExtras}
@@ -440,7 +440,7 @@ export default function TenantOnboarding() {
                   </div>
 
                   <div>
-                    <label className="block text-[13px] font-semibold text-sc-text mb-1">תיאור התוספת או היתרון הקיים</label>
+                    <label className="block text-[13px] font-semibold text-[#212121] mb-1">תיאור התוספת או היתרון הקיים</label>
                     <textarea
                       value={form.apartmentExtrasNotes}
                       onChange={e => update('apartmentExtrasNotes', e.target.value)}
@@ -451,8 +451,8 @@ export default function TenantOnboarding() {
                   </div>
 
                   {form.apartmentExtras.length > 0 && (
-                    <div className="bg-sc-gold-dark/10 border-2 border-sc-gold-dark/30 rounded-xl p-3">
-                      <p className="text-xs text-sc-gold-dark font-semibold m-0">
+                    <div className="bg-[#8b6f47]/10 border-2 border-[#8b6f47]/30 rounded-xl p-3">
+                      <p className="text-xs text-[#8b6f47] font-semibold m-0">
                         ⚠️ {form.apartmentExtras.length} חריגות יועברו לשמאי ולאדריכל לבדיקה ותיעוד רשמי
                       </p>
                     </div>
@@ -460,8 +460,8 @@ export default function TenantOnboarding() {
                 </>
               )}
 
-              <div className="bg-sc-light-blue border border-sc-primary-light rounded-xl p-3">
-                <p className="text-xs text-sc-primary m-0">
+              <div className="bg-[#ebf1f7] border border-[#3b6b9c]-light rounded-xl p-3">
+                <p className="text-xs text-[#3b6b9c] m-0">
                   📋 <strong>למה זה חשוב?</strong> בפינוי-בינוי, חריגות לא מתועדות עלולות לגרום לאובדן זכויות. תיעוד מראש מגן עליך.
                 </p>
               </div>
@@ -469,7 +469,7 @@ export default function TenantOnboarding() {
           )}
 
           {error && (
-            <div className="mt-4 p-2.5 bg-sc-error/10 border border-sc-error/30 rounded-[10px] text-sc-error text-[13px]">
+            <div className="mt-4 p-2.5 bg-red-500/10 border border-sc-error/30 rounded-[10px] text-red-500 text-[13px]">
               {error}
             </div>
           )}
@@ -490,17 +490,17 @@ export default function TenantOnboarding() {
           {step >= 4 && (
             <button
               onClick={() => step === 6 ? handleNext() : setStep(s => s + 1)}
-              className="w-full mt-2.5 py-2.5 bg-transparent border-none text-sc-text-light text-[13px] cursor-pointer underline"
+              className="w-full mt-2.5 py-2.5 bg-transparent border-none text-[#5a5a6e] text-[13px] cursor-pointer underline"
             >
               דלג על שלב זה
             </button>
           )}
         </div>
 
-        <p className="text-center mt-4 text-xs text-sc-text-light">
+        <p className="text-center mt-4 text-xs text-[#5a5a6e]">
           ניתן לעדכן פרטים אלו בכל עת מהפרופיל שלך
         </p>
       </div>
-    </div>
+    </PageLayout>
   )
 }

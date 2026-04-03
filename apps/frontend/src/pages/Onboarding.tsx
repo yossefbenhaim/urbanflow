@@ -26,17 +26,17 @@ export default function Onboarding() {
         <div className="mb-6">
           <div className="flex justify-between mb-2">
             {steps.map((s, i) => (
-              <span key={i} className={`text-xs font-medium ${i <= step ? 'text-sc-primary' : 'text-sc-text-light'}`}>{s}</span>
+              <span key={i} className={`text-xs font-medium ${i <= step ? 'text-[#3b6b9c]' : 'text-[#5a5a6e]'}`}>{s}</span>
             ))}
           </div>
           <div className="w-full bg-sc-border rounded-full h-1.5">
-            <div className="bg-sc-primary h-1.5 rounded-full transition-all" style={{ width: `${((step + 1) / 3) * 100}%` }} />
+            <div className="bg-[#3b6b9c] h-1.5 rounded-full transition-all" style={{ width: `${((step + 1) / 3) * 100}%` }} />
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-sc-border/50 p-6">
-          <h2 className="text-xl font-bold text-sc-text mb-1">{steps[step]}</h2>
-          <p className="text-sc-text-light text-sm mb-6">שלב {step + 1} מתוך 3</p>
+        <div className="bg-white rounded-2xl shadow-sm border border-[#eeeeee]/50 p-6">
+          <h2 className="text-xl font-bold text-[#212121] mb-1">{steps[step]}</h2>
+          <p className="text-[#5a5a6e] text-sm mb-6">שלב {step + 1} מתוך 3</p>
 
           {step === 0 && (
             <div className="space-y-4">
@@ -49,7 +49,7 @@ export default function Onboarding() {
           {step === 1 && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-sc-text mb-1">כתובת *</label>
+                <label className="block text-sm font-medium text-[#212121] mb-1">כתובת *</label>
                 <AddressPicker
                   value={address}
                   onChange={(v) => {
@@ -67,11 +67,11 @@ export default function Onboarding() {
                 <Field label="מספר חדרים" value={data.rooms} onChange={v => update('rooms', v)} placeholder="3" type="number" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-sc-text mb-1">סוג דיירות</label>
+                <label className="block text-sm font-medium text-[#212121] mb-1">סוג דיירות</label>
                 <select
                   value={data.isOwner}
                   onChange={e => update('isOwner', e.target.value)}
-                  className="w-full px-4 py-3 border border-sc-border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sc-text bg-white"
+                  className="w-full px-4 py-3 border border-[#eeeeee] rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-[#212121] bg-white"
                 >
                   <option value="true">בעל הדירה</option>
                   <option value="false">שוכר</option>
@@ -86,21 +86,21 @@ export default function Onboarding() {
 
           {step === 2 && (
             <div className="space-y-4">
-              <div className="bg-sc-light-blue rounded-xl p-4 text-center">
-                <p className="text-sc-primary text-sm font-medium">קוד אימות נשלח ל-{data.phone || '050-XXXX'}</p>
+              <div className="bg-[#ebf1f7] rounded-xl p-4 text-center">
+                <p className="text-[#3b6b9c] text-sm font-medium">קוד אימות נשלח ל-{data.phone || '050-XXXX'}</p>
               </div>
               <Field label="קוד אימות (4 ספרות)" value={data.otp} onChange={v => update('otp', v)} placeholder="1234" maxLength={4} className="text-center text-2xl tracking-widest" />
-              <p className="text-center text-sm text-sc-text-light">לא קיבלת? <button className="text-sc-primary">שלח שוב</button></p>
+              <p className="text-center text-sm text-[#5a5a6e]">לא קיבלת? <button className="text-[#3b6b9c]">שלח שוב</button></p>
             </div>
           )}
 
           <div className="flex gap-3 mt-6">
             {step > 0 && (
-              <button onClick={back} className="flex-1 border border-sc-border text-sc-text py-3 rounded-xl font-medium hover:bg-sc-bg">
+              <button onClick={back} className="flex-1 border border-[#eeeeee] text-[#212121] py-3 rounded-xl font-medium hover:bg-[#f8f9fa]">
                 חזרה
               </button>
             )}
-            <button onClick={next} className="flex-1 bg-sc-primary text-white py-3 rounded-xl font-medium hover:bg-sc-navy transition-colors">
+            <button onClick={next} className="flex-1 bg-[#3b6b9c] text-white py-3 rounded-xl font-medium hover:bg-[#1e3a5f] transition-colors">
               {step === 2 ? 'סיום ✓' : 'המשך'}
             </button>
           </div>
@@ -116,11 +116,11 @@ function Field({ label, value, onChange, placeholder, type = 'text', maxLength, 
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-sc-text mb-1">{label}</label>
+      <label className="block text-sm font-medium text-[#212121] mb-1">{label}</label>
       <input
         type={type} value={value} onChange={e => onChange(e.target.value)}
         placeholder={placeholder} maxLength={maxLength}
-        className={`w-full px-4 py-3 border border-sc-border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sc-text ${className}`}
+        className={`w-full px-4 py-3 border border-[#eeeeee] rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-[#212121] ${className}`}
       />
     </div>
   )

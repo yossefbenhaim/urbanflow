@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import Navbar from '../components/Navbar'
+import PageLayout, { PageTitle } from '../components/PageLayout'
 import { trpc } from '../lib/trpc'
 
 function WeeklyUpdateForm({ projectId }: { projectId: string }) {
@@ -20,16 +20,16 @@ function WeeklyUpdateForm({ projectId }: { projectId: string }) {
   return (
     <div className="sc-card p-6 border-t-4 border-t-sc-primary">
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-xl bg-sc-primary flex items-center justify-center text-xl">📝</div>
+        <div className="w-10 h-10 rounded-xl bg-[#3b6b9c] flex items-center justify-center text-xl">📝</div>
         <div>
-          <h3 className="text-base font-bold text-sc-text">עדכון שבועי</h3>
-          <p className="text-xs text-sc-text-light">עדכן את סטטוס העבודה השבועי</p>
+          <h3 className="text-base font-bold text-[#212121]">עדכון שבועי</h3>
+          <p className="text-xs text-[#5a5a6e]">עדכן את סטטוס העבודה השבועי</p>
         </div>
       </div>
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-sc-text mb-1">סטטוס עדכני *</label>
+          <label className="block text-sm font-medium text-[#212121] mb-1">סטטוס עדכני *</label>
           <textarea
             value={form.statusUpdate}
             onChange={e => setForm(f => ({ ...f, statusUpdate: e.target.value }))}
@@ -40,7 +40,7 @@ function WeeklyUpdateForm({ projectId }: { projectId: string }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-sc-text mb-1">אחוז התקדמות: {form.progressPct}%</label>
+          <label className="block text-sm font-medium text-[#212121] mb-1">אחוז התקדמות: {form.progressPct}%</label>
           <input
             type="range"
             min={0}
@@ -49,7 +49,7 @@ function WeeklyUpdateForm({ projectId }: { projectId: string }) {
             onChange={e => setForm(f => ({ ...f, progressPct: parseInt(e.target.value) }))}
             className="w-full accent-sc-primary"
           />
-          <div className="flex justify-between text-xs text-sc-text-light">
+          <div className="flex justify-between text-xs text-[#5a5a6e]">
             <span>0%</span>
             <span>50%</span>
             <span>100%</span>
@@ -57,7 +57,7 @@ function WeeklyUpdateForm({ projectId }: { projectId: string }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-sc-text mb-1">חסמים</label>
+          <label className="block text-sm font-medium text-[#212121] mb-1">חסמים</label>
           <textarea
             value={form.blockers}
             onChange={e => setForm(f => ({ ...f, blockers: e.target.value }))}
@@ -68,7 +68,7 @@ function WeeklyUpdateForm({ projectId }: { projectId: string }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-sc-text mb-1">צעדים הבאים</label>
+          <label className="block text-sm font-medium text-[#212121] mb-1">צעדים הבאים</label>
           <textarea
             value={form.nextSteps}
             onChange={e => setForm(f => ({ ...f, nextSteps: e.target.value }))}
@@ -91,8 +91,8 @@ function WeeklyUpdateForm({ projectId }: { projectId: string }) {
         >
           {submit.isPending ? 'שולח...' : '📤 שלח עדכון'}
         </button>
-        {submit.isError && <p className="text-sc-error text-sm text-center">שגיאה בשליחה</p>}
-        {submit.isSuccess && <p className="text-sc-success text-sm text-center">✅ העדכון נשלח בהצלחה!</p>}
+        {submit.isError && <p className="text-red-500 text-sm text-center">שגיאה בשליחה</p>}
+        {submit.isSuccess && <p className="text-[#4a8c5c] text-sm text-center">✅ העדכון נשלח בהצלחה!</p>}
       </div>
     </div>
   )
@@ -103,14 +103,14 @@ function TimelineView({ projectId }: { projectId: string }) {
 
   if (isLoading) return (
     <div className="flex items-center justify-center py-12">
-      <div className="animate-spin w-8 h-8 border-4 border-sc-primary border-t-transparent rounded-full" />
+      <div className="animate-spin w-8 h-8 border-4 border-[#3b6b9c] border-t-transparent rounded-full" />
     </div>
   )
 
   if (!timeline || timeline.length === 0) return (
     <div className="sc-card p-8 text-center">
       <div className="text-4xl mb-3">📅</div>
-      <p className="text-sc-text-light text-sm">אין עדכונים עדיין</p>
+      <p className="text-[#5a5a6e] text-sm">אין עדכונים עדיין</p>
     </div>
   )
 
@@ -138,16 +138,16 @@ function TimelineView({ projectId }: { projectId: string }) {
           <div key={providerName} className="sc-card p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-sc-primary/10 flex items-center justify-center text-lg">👷</div>
+                <div className="w-10 h-10 rounded-full bg-[#3b6b9c]/10 flex items-center justify-center text-lg">👷</div>
                 <div>
-                  <h3 className="text-base font-bold text-sc-text">{providerName}</h3>
-                  <p className="text-xs text-sc-text-light">
+                  <h3 className="text-base font-bold text-[#212121]">{providerName}</h3>
+                  <p className="text-xs text-[#5a5a6e]">
                     עדכון אחרון: {new Date((latest as any).updated_at).toLocaleDateString('he-IL')}
                   </p>
                 </div>
               </div>
               {!isCurrentWeek && (
-                <span className="bg-sc-gold/15 text-sc-gold-dark text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                <span className="bg-[#8b6f47]/15 text-[#8b6f47] text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
                   ⚠️ לא עודכן השבוע
                 </span>
               )}
@@ -156,13 +156,13 @@ function TimelineView({ projectId }: { projectId: string }) {
             {/* Progress Bar */}
             <div className="mb-4">
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-sc-text-light">התקדמות כללית</span>
-                <span className="font-bold text-sc-text">{progress}%</span>
+                <span className="text-[#5a5a6e]">התקדמות כללית</span>
+                <span className="font-bold text-[#212121]">{progress}%</span>
               </div>
               <div className="w-full bg-sc-border rounded-full h-3">
                 <div
                   className={`h-3 rounded-full transition-all ${
-                    progress >= 75 ? 'bg-sc-success/100' : progress >= 40 ? 'bg-sc-primary' : 'bg-sc-gold-dark'
+                    progress >= 75 ? 'bg-[#4a8c5c]/100' : progress >= 40 ? 'bg-[#3b6b9c]' : 'bg-[#8b6f47]'
                   }`}
                   style={{ width: `${progress}%` }}
                 />
@@ -170,23 +170,23 @@ function TimelineView({ projectId }: { projectId: string }) {
             </div>
 
             {/* Timeline entries */}
-            <div className="space-y-3 border-r-2 border-sc-primary/20 pr-4 mr-2">
+            <div className="space-y-3 border-r-2 border-[#3b6b9c]/20 pr-4 mr-2">
               {entries.slice(0, 5).map((entry: any, i: number) => (
                 <div key={entry.id} className="relative">
-                  <div className="absolute -right-[1.35rem] top-1.5 w-3 h-3 rounded-full bg-sc-primary border-2 border-white" />
-                  <div className="bg-sc-bg rounded-xl p-3">
+                  <div className="absolute -right-[1.35rem] top-1.5 w-3 h-3 rounded-full bg-[#3b6b9c] border-2 border-white" />
+                  <div className="bg-[#f8f9fa] rounded-xl p-3">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs font-medium text-sc-primary">
+                      <span className="text-xs font-medium text-[#3b6b9c]">
                         שבוע {new Date(entry.week_start).toLocaleDateString('he-IL')}
                       </span>
-                      <span className="text-xs text-sc-text-light">{entry.progress_pct}%</span>
+                      <span className="text-xs text-[#5a5a6e]">{entry.progress_pct}%</span>
                     </div>
-                    <p className="text-sm text-sc-text">{entry.status_update}</p>
+                    <p className="text-sm text-[#212121]">{entry.status_update}</p>
                     {entry.blockers && (
-                      <p className="text-xs text-sc-gold-dark mt-1">🚧 {entry.blockers}</p>
+                      <p className="text-xs text-[#8b6f47] mt-1">🚧 {entry.blockers}</p>
                     )}
                     {entry.next_steps && (
-                      <p className="text-xs text-sc-primary mt-1">📋 {entry.next_steps}</p>
+                      <p className="text-xs text-[#3b6b9c] mt-1">📋 {entry.next_steps}</p>
                     )}
                   </div>
                 </div>
@@ -208,34 +208,34 @@ export default function TimelinePage() {
   const projectId = (project as any)?.id ?? (activeProjects?.[0] as any)?.id
 
   if (projectLoading) return (
-    <div className="min-h-screen bg-sc-bg" dir="rtl">
-      <Navbar />
+    <PageLayout>
+      
       <div className="flex items-center justify-center h-[60vh]">
-        <div className="animate-spin w-8 h-8 border-4 border-sc-primary border-t-transparent rounded-full" />
+        <div className="animate-spin w-8 h-8 border-4 border-[#3b6b9c] border-t-transparent rounded-full" />
       </div>
     </div>
   )
 
   if (!projectId) return (
-    <div className="min-h-screen bg-sc-bg" dir="rtl">
-      <Navbar />
+    <PageLayout>
+      
       <div className="max-w-2xl mx-auto px-4 py-12 text-center">
         <div className="text-5xl mb-4">📅</div>
-        <h1 className="text-xl font-bold text-sc-text mb-2">לוח זמנים</h1>
-        <p className="text-sc-text-light">טרם שויכת לפרויקט</p>
+        <h1 className="text-xl font-bold text-[#212121] mb-2">לוח זמנים</h1>
+        <p className="text-[#5a5a6e]">טרם שויכת לפרויקט</p>
       </div>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-sc-bg" dir="rtl">
-      <Navbar />
+    <PageLayout>
+      
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-xl bg-sc-primary flex items-center justify-center text-2xl">📅</div>
+          <div className="w-12 h-12 rounded-xl bg-[#3b6b9c] flex items-center justify-center text-2xl">📅</div>
           <div>
-            <h1 className="text-xl font-bold text-sc-text">לוח זמנים — עדכונים שבועיים</h1>
-            <p className="text-sm text-sc-text-light">מעקב אחר התקדמות נותני השירות בפרויקט</p>
+            <h1 className="text-xl font-bold text-[#212121]">לוח זמנים — עדכונים שבועיים</h1>
+            <p className="text-sm text-[#5a5a6e]">מעקב אחר התקדמות נותני השירות בפרויקט</p>
           </div>
         </div>
 
@@ -246,8 +246,8 @@ export default function TimelinePage() {
               onClick={() => setActiveTab('view')}
               className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                 activeTab === 'view'
-                  ? 'bg-sc-primary text-white'
-                  : 'bg-white text-sc-text border border-sc-border'
+                  ? 'bg-[#3b6b9c] text-white'
+                  : 'bg-white text-[#212121] border border-[#eeeeee]'
               }`}
             >
               📊 צפה בעדכונים
@@ -256,13 +256,13 @@ export default function TimelinePage() {
               onClick={() => setActiveTab('update')}
               className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                 activeTab === 'update'
-                  ? 'bg-sc-primary text-white'
-                  : 'bg-white text-sc-text border border-sc-border'
+                  ? 'bg-[#3b6b9c] text-white'
+                  : 'bg-white text-[#212121] border border-[#eeeeee]'
               }`}
             >
               📝 שלח עדכון
             </button>
-          </div>
+          </PageLayout>
         )}
 
         {activeTab === 'update' && isProvider ? (
@@ -270,7 +270,7 @@ export default function TimelinePage() {
         ) : (
           <TimelineView projectId={projectId} />
         )}
-      </div>
-    </div>
+      </PageLayout>
+    </PageLayout>
   )
 }

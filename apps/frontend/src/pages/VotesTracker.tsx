@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
-import Navbar from '../components/Navbar'
+import PageLayout, { PageTitle } from '../components/PageLayout'
 import BuildingLoader from '../components/BuildingLoader'
 
 const STATUS_CONFIG: Record<string, { icon: string; label: string; color: string; bg: string }> = {
-  voted:       { icon: '✅', label: 'הצביעה',              color: 'text-sc-success',  bg: 'bg-sc-success/10' },
-  pending:     { icon: '⏳', label: 'ממתינה לבעלים נוספים', color: 'text-sc-gold-dark',  bg: 'bg-sc-gold/10' },
-  blocked:     { icon: '🔒', label: 'חסומה (סכסוך)',       color: 'text-sc-error',    bg: 'bg-sc-error/10' },
-  proxy:       { icon: '📜', label: 'מיופה כוח הצביע',     color: 'text-sc-teal', bg: 'bg-sc-teal/10' },
-  not_started: { icon: '⬜', label: 'לא הצביעה',           color: 'text-sc-text-light',   bg: 'bg-sc-bg' },
+  voted:       { icon: '✅', label: 'הצביעה',              color: 'text-[#4a8c5c]',  bg: 'bg-[#4a8c5c]/10' },
+  pending:     { icon: '⏳', label: 'ממתינה לבעלים נוספים', color: 'text-[#8b6f47]',  bg: 'bg-[#8b6f47]/10' },
+  blocked:     { icon: '🔒', label: 'חסומה (סכסוך)',       color: 'text-red-500',    bg: 'bg-red-500/10' },
+  proxy:       { icon: '📜', label: 'מיופה כוח הצביע',     color: 'text-[#4DB6C4]', bg: 'bg-[#4DB6C4]/10' },
+  not_started: { icon: '⬜', label: 'לא הצביעה',           color: 'text-[#5a5a6e]',   bg: 'bg-[#f8f9fa]' },
 }
 
 export default function VotesTracker() {
@@ -26,30 +26,28 @@ export default function VotesTracker() {
 
   const polls = (messages as any[]).filter(m => m.message_type === 'poll' && m.poll_id)
 
+  const votesTrackerSidebar = [
+    { to: '/committee', icon: '🏠', label: 'ראשי' },
+    { to: '/votes-tracker', icon: '📊', label: 'מעקב הצבעות' },
+    { to: '/committee-actions', icon: '📢', label: 'שידורים' },
+    { to: '/committee', icon: '📝', label: 'פרוטוקולים' },
+    { to: '/committee', icon: '👥', label: 'דיירים' },
+  ]
+
   if (!group) return (
-    <div className="min-h-screen bg-sc-bg" dir="rtl">
-      <Navbar />
+    <PageLayout sidebarItems={votesTrackerSidebar}>
       <div className="flex items-center justify-center h-64"><BuildingLoader size="lg" /></div>
-    </div>
+    </PageLayout>
   )
 
   return (
-    <div className="min-h-screen bg-sc-bg page-content" dir="rtl">
-      <Navbar />
-      <div className="max-w-[680px] mx-auto px-4 py-6">
-        <div className="flex items-center gap-3 mb-6">
-          <button onClick={() => navigate('/committee-actions')}
-            className="bg-sc-bg border-none rounded-[10px] px-3.5 py-2 cursor-pointer text-sc-primary font-semibold text-sm">
-            ‹ חזרה
-          </button>
-          <div>
-            <h1 className="sc-section-title text-xl m-0">📊 מעקב הצבעות לפי דירות</h1>
-            <p className="mt-0.5 text-[13px] text-sc-text-light">דירה = קול אחד · מעקב בזמן אמת</p>
-          </div>
-        </div>
+    <PageLayout sidebarItems={votesTrackerSidebar}>
+      <div>
+        <PageTitle>📊 מעקב הצבעות לפי דירות</PageTitle>
+        <p className="mt-0.5 text-[13px] text-[#5a5a6e] mb-6">דירה = קול אחד · מעקב בזמן אמת</p>
 
         {polls.length === 0 ? (
-          <div className="text-center py-16 text-sc-text-light">
+          <div className="text-center py-16 text-[#5a5a6e]">
             <div className="text-5xl mb-3">📊</div>
             <p className="text-[15px]">אין סקרים עדיין בקבוצת הבניין</p>
           </div>
@@ -66,7 +64,7 @@ export default function VotesTracker() {
           </div>
         )}
       </div>
-    </div>
+    </PageLayout>
   )
 }
 
@@ -93,33 +91,33 @@ function ApartmentPollCard({ pollId, isActive, onToggle }: {
       {/* Header */}
       <button onClick={onToggle} className="w-full p-4 flex items-center gap-3 bg-transparent border-none cursor-pointer text-right">
         <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center text-xl flex-shrink-0 ${
-          p.status === 'open' ? 'bg-sc-light-blue' : 'bg-sc-success/15'
+          p.status === 'open' ? 'bg-[#ebf1f7]' : 'bg-[#4a8c5c]/15'
         }`}>
           {p.status === 'open' ? '📊' : '✅'}
         </div>
         <div className="flex-1 text-right">
-          <div className="text-sm font-bold text-sc-text">{p.question}</div>
-          <div className="text-xs text-sc-text-light mt-0.5">
-            {votedApt}/{totalApt} דירות הצביעו · {p.status === 'open' ? '🟢 פתוח' : '🔴 סגור'}
+          <div className="text-sm font-bold text-[#212121]">{p.question}</div>
+          <div className="text-xs text-[#5a5a6e] mt-0.5">
+            {votedApt}/{totalApt} דירות הצביעו · {p.status === 'open' ? <span className="bg-[#fcf4e7] text-[#c4841d] text-[10px] rounded-full px-2 py-0.5 font-semibold">פתוח</span> : <span className="bg-[#edf5ef] text-[#4a8c5c] text-[10px] rounded-full px-2 py-0.5 font-semibold">סגור</span>}
           </div>
         </div>
         <div className="flex flex-col items-center gap-1 flex-shrink-0">
-          <div className={`text-base font-extrabold ${pct >= (p.threshold_pct ?? 60) ? 'text-sc-success' : 'text-sc-primary'}`}>
+          <div className={`text-base font-extrabold ${pct >= (p.threshold_pct ?? 60) ? 'text-[#4a8c5c]' : 'text-[#3b6b9c]'}`}>
             {pct}%
           </div>
-          <span className="text-[11px] text-sc-text-light">{isActive ? '▲' : '▼'}</span>
+          <span className="text-[11px] text-[#5a5a6e]">{isActive ? '▲' : '▼'}</span>
         </div>
       </button>
 
       {/* Progress bar */}
-      <div className="h-1.5 bg-sc-bg relative">
+      <div className="h-1.5 bg-[#f8f9fa] relative">
         <div
-          className="h-full bg-sc-primary transition-all duration-500 rounded-r"
+          className="h-full bg-[#3b6b9c] transition-all duration-500 rounded-r"
           style={{ width: `${pct}%` }}
         />
         {p.threshold_pct && (
           <div
-            className="absolute top-0 bottom-0 w-0.5 bg-sc-error"
+            className="absolute top-0 bottom-0 w-0.5 bg-red-500"
             style={{ left: `${p.threshold_pct}%` }}
             title={`סף: ${p.threshold_pct}%`}
           />
@@ -147,7 +145,7 @@ function ApartmentPollCard({ pollId, isActive, onToggle }: {
           </div>
 
           {/* Apartment grid */}
-          <div className="text-xs font-bold text-sc-primary mb-2.5 uppercase tracking-wider">
+          <div className="text-xs font-bold text-[#3b6b9c] mb-2.5 uppercase tracking-wider">
             רשימת דירות
           </div>
           <div className="space-y-1.5">
@@ -157,16 +155,16 @@ function ApartmentPollCard({ pollId, isActive, onToggle }: {
                 <div key={apt.apartmentId} className={`flex items-center gap-3 p-3 rounded-xl ${cfg.bg} transition-colors`}>
                   <span className="text-lg flex-shrink-0">{cfg.icon}</span>
                   <div className="flex-1">
-                    <div className="text-[13px] font-semibold text-sc-text">
+                    <div className="text-[13px] font-semibold text-[#212121]">
                       דירה {apt.unitNumber} · קומה {apt.floor}
                     </div>
                     <div className={`text-[11px] ${cfg.color}`}>
                       {cfg.label}
                       {apt.voteValue && apt.status !== 'blocked' && (
-                        <span className="mr-1 text-sc-text-light">· {apt.voteValue}</span>
+                        <span className="mr-1 text-[#5a5a6e]">· {apt.voteValue}</span>
                       )}
                       {apt.decidedBy && apt.status === 'voted' && apt.decidedBy !== 'unanimous' && (
-                        <span className="mr-1 text-sc-text-light">({apt.decidedBy === 'majority' ? 'רוב' : apt.decidedBy})</span>
+                        <span className="mr-1 text-[#5a5a6e]">({apt.decidedBy === 'majority' ? 'רוב' : apt.decidedBy})</span>
                       )}
                     </div>
                   </div>

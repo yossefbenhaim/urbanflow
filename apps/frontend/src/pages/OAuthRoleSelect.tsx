@@ -46,14 +46,16 @@ export default function OAuthRoleSelect() {
   }
 
   return (
-    <div dir="rtl" className="min-h-screen bg-sc-bg flex items-center justify-center font-heebo p-6">
-      <div className="bg-white border border-sc-border rounded-3xl shadow-sm p-10 sm:p-12 max-w-[520px] w-full">
+    <div dir="rtl" className="min-h-screen bg-[#f8f9fa] flex items-center justify-center font-heebo p-6">
+      <div className="bg-white border border-[#eeeeee] rounded-[20px] shadow-card p-10 sm:p-12 max-w-[520px] w-full">
         <div className="text-center mb-10">
-          <div className="text-5xl mb-3">👋</div>
-          <h1 className="text-sc-text text-2xl font-extrabold mb-2">
+          <div className="w-[50px] h-[50px] bg-[#1e3a5f] rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-4">
+            {isLoading ? '...' : (googleName?.[0] || '?').toUpperCase()}
+          </div>
+          <h1 className="text-[#212121] text-2xl font-extrabold mb-2">
             {isLoading ? '...' : googleName ? `שלום, ${googleName.split(' ')[0]}!` : 'ברוך הבא!'}
           </h1>
-          <p className="text-sc-text-light text-sm">
+          <p className="text-[#5a5a6e] text-sm">
             רק שלב אחד לפני שמתחילים — מה התפקיד שלך?
           </p>
         </div>
@@ -61,7 +63,7 @@ export default function OAuthRoleSelect() {
         {/* Name field if Google didn't provide one */}
         {needsName && (
           <div className="mb-6">
-            <label className="text-sc-text-light text-sm block mb-2">
+            <label className="text-[#5a5a6e] text-sm block mb-2">
               שמך המלא
             </label>
             <input
@@ -77,20 +79,20 @@ export default function OAuthRoleSelect() {
         <div className="flex flex-col gap-3 mb-8">
           {roles.map((r) => (
             <button key={r.key} onClick={() => setSelectedRole(r.key)}
-              className={`flex items-center gap-4 p-4 rounded-2xl border-2 text-right w-full transition-all
-                ${selectedRole === r.key ? 'border-sc-primary bg-sc-light-blue' : 'border-sc-border bg-white hover:bg-sc-bg'}`}
+              className={`flex items-center gap-4 p-4 rounded-[14px] border-2 text-right w-full transition-all
+                ${selectedRole === r.key ? 'border-[#3b6b9c] bg-[#f5f0e8]' : 'border-[#eeeeee] bg-[#ebf1f7] hover:bg-[#f8f9fa]'}`}
             >
               <span className="text-3xl">{r.icon}</span>
               <div className="flex-1">
-                <div className="text-sc-text font-semibold">{r.title}</div>
-                <div className="text-sc-text-light text-sm mt-0.5">{r.subtitle}</div>
+                <div className="text-[#212121] font-semibold">{r.title}</div>
+                <div className="text-[#5a5a6e] text-sm mt-0.5">{r.subtitle}</div>
               </div>
-              {selectedRole === r.key && <span className="text-sc-primary text-xl">✓</span>}
+              {selectedRole === r.key && <span className="text-[#3b6b9c] text-xl">✓</span>}
             </button>
           ))}
         </div>
 
-        {error && <p className="text-sc-error text-center mb-4 text-sm">{error}</p>}
+        {error && <p className="text-red-500 text-center mb-4 text-sm">{error}</p>}
 
         <button onClick={handleSubmit} disabled={complete.isPending || !selectedRole}
           className="sc-btn-primary w-full py-4 text-base disabled:opacity-50">

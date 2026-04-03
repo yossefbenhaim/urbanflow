@@ -1,5 +1,14 @@
 import { useState } from 'react'
-import Navbar from '../components/Navbar'
+import PageLayout, { PageTitle } from '../components/PageLayout'
+import type { NavItem } from '../components/Sidebar'
+
+const committeeSidebar: NavItem[] = [
+  { to: '/committee', icon: '🏠', label: 'ראשי' },
+  { to: '/votes-tracker', icon: '📊', label: 'מעקב הצבעות' },
+  { to: '/committee-actions', icon: '📢', label: 'שידורים' },
+  { to: '/committee', icon: '📝', label: 'פרוטוקולים' },
+  { to: '/committee', icon: '👥', label: 'דיירים' },
+]
 
 const mockTenants = [
   { id: 1, name: 'דוד כהן', unit: 'דירה 1', floor: 1, signed: true, onboarded: true, phone: '050-1111111' },
@@ -27,58 +36,51 @@ export default function CommitteeDashboard() {
     return true
   })
 
+  const tabs: [Tab, string][] = [['overview','סקירה'],['tenants','דיירים'],['broadcast','הודעה'],['minutes','פרוטוקול']]
+
   return (
-    <div className="min-h-screen bg-sc-bg" dir="rtl">
-      <Navbar />
+    <PageLayout sidebarItems={committeeSidebar}>
+      <PageTitle>ועד בניין — רחוב הרצל 15</PageTitle>
 
       {/* Tabs */}
-      <div className="bg-white border-b border-sc-border sticky top-14 z-10">
-        <div className="max-w-lg mx-auto flex overflow-x-auto">
-          {([['overview','סקירה'],['tenants','דיירים'],['broadcast','הודעה'],['minutes','פרוטוקול']] as [Tab,string][]).map(([v,label]) => (
-            <button key={v} onClick={() => setTab(v)}
-              className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${tab === v ? 'border-sc-primary text-sc-primary' : 'border-transparent text-sc-text-light'}`}>
-              {label}
-            </button>
-          ))}
-        </div>
+      <div className="flex gap-2 mb-5">
+        {tabs.map(([v, label]) => (
+          <button key={v} onClick={() => setTab(v)}
+            className={`px-4 py-2 rounded-[8px] text-[13px] font-semibold transition-colors ${
+              tab === v ? 'bg-[#3b6b9c] text-white' : 'bg-[#f8f9fa] text-[#8e8e9e]'
+            }`}>
+            {label}
+          </button>
+        ))}
       </div>
 
-      <div className="max-w-lg mx-auto p-4 space-y-4 pb-8">
+      <div className="space-y-4">
         {tab === 'overview' && (
           <>
-            {/* Signature progress */}
             <div className="sc-card p-6">
-              <h3 className="sc-section-title text-base mb-4">סטטוס חתימות הבניין</h3>
+              <h3 className="text-[16px] font-bold text-[#212121] mb-4">סטטוס חתימות הבניין</h3>
               <div className="flex items-center gap-4 mb-4">
-                <div className="text-4xl font-bold text-sc-primary">{pct}%</div>
+                <div className="text-4xl font-extrabold text-[#3b6b9c]">{pct}%</div>
                 <div>
-                  <p className="text-sm text-sc-text-light">{signed} מתוך {total} דיירים חתמו</p>
-                  <p className="text-xs text-sc-gold-dark mt-0.5">נדרש 80% לפינוי בינוי</p>
+                  <p className="text-[13px] text-[#5a5a6e]">{signed} מתוך {total} דיירים חתמו</p>
+                  <p className="text-[11px] text-[#c4841d] mt-0.5">נדרש 80% לפינוי בינוי</p>
                 </div>
               </div>
-              <div className="w-full bg-sc-border rounded-full h-3">
-                <div className="bg-sc-primary h-3 rounded-full transition-all relative" style={{ width: `${pct}%` }}>
-                  <div className="absolute left-0 top-0 h-full bg-sc-navy rounded-full" style={{ width: `${pct}%` }} />
-                </div>
-              </div>
-              <div className="mt-3 flex justify-between text-xs text-sc-text-light">
-                <span>0%</span>
-                <span className="text-sc-gold-dark font-medium">80% (סף)</span>
-                <span>100%</span>
+              <div className="w-full bg-[#eeeeee] rounded-full h-3">
+                <div className="bg-[#3b6b9c] h-3 rounded-full transition-all" style={{ width: `${pct}%` }} />
               </div>
             </div>
 
-            {/* Quick alerts */}
             <div className="sc-card p-6">
-              <h3 className="sc-section-title text-base mb-3">התראות</h3>
+              <h3 className="text-[16px] font-bold text-[#212121] mb-3">התראות</h3>
               <div className="space-y-2">
                 {mockTenants.filter(t => !t.signed).map(t => (
-                  <div key={t.id} className="flex items-center justify-between p-3 bg-sc-gold-dark/10 rounded-xl">
+                  <div key={t.id} className="flex items-center justify-between p-3 bg-[#fcf4e7] rounded-[10px]">
                     <div>
-                      <p className="text-sm font-medium text-sc-text">{t.name} — {t.unit}</p>
-                      <p className="text-xs text-sc-gold-dark">טרם חתם</p>
+                      <p className="text-[13px] font-medium text-[#212121]">{t.name} — {t.unit}</p>
+                      <p className="text-[11px] text-[#c4841d]">טרם חתם</p>
                     </div>
-                    <a href={`tel:${t.phone}`} className="text-sc-primary text-sm">📞</a>
+                    <a href={`tel:${t.phone}`} className="text-[#3b6b9c] text-sm">📞</a>
                   </div>
                 ))}
               </div>
@@ -91,26 +93,23 @@ export default function CommitteeDashboard() {
             <div className="flex gap-2">
               {([['ALL','הכל'],['UNSIGNED','לא חתמו'],['INCOMPLETE','פרטים חסרים']] as ['ALL'|'UNSIGNED'|'INCOMPLETE',string][]).map(([v,l]) => (
                 <button key={v} onClick={() => setFilter(v)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${filter === v ? 'bg-sc-primary text-white' : 'bg-sc-bg border border-sc-border text-sc-text-light'}`}>{l}</button>
+                  className={`px-4 py-2 rounded-[8px] text-[13px] font-semibold transition-colors ${
+                    filter === v ? 'bg-[#3b6b9c] text-white' : 'bg-[#f8f9fa] text-[#8e8e9e]'
+                  }`}>{l}</button>
               ))}
             </div>
             {filtered.map(t => (
               <div key={t.id} className="sc-card p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-sc-text">{t.name}</p>
-                    <p className="text-xs text-sc-text-light">{t.unit} | קומה {t.floor}</p>
+                    <p className="font-semibold text-[#212121] text-[13px]">{t.name}</p>
+                    <p className="text-[11px] text-[#5a5a6e]">{t.unit} | קומה {t.floor}</p>
                   </div>
                   <div className="flex gap-2">
-                    <span className={`sc-badge ${t.signed ? 'bg-sc-success/15 text-sc-success' : 'bg-sc-gold-dark/15 text-sc-gold-dark'}`}>
+                    <span className={`rounded-full px-3 py-1 text-[10px] font-semibold ${t.signed ? 'bg-[#edf5ef] text-[#4a8c5c]' : 'bg-[#fcf4e7] text-[#c4841d]'}`}>
                       {t.signed ? 'חתם ✓' : 'לא חתם'}
                     </span>
-                    {!t.onboarded && <span className="sc-badge bg-sc-error/15 text-sc-error">פרטים חסרים</span>}
                   </div>
-                </div>
-                <div className="flex gap-2 mt-3">
-                  <a href={`tel:${t.phone}`} className="sc-btn-secondary flex-1 text-center text-xs py-1.5">📞 {t.phone}</a>
-                  <button className="flex-1 border border-sc-primary-light text-sc-primary py-1.5 rounded-lg text-xs hover:bg-sc-light-blue transition-colors">שלח תזכורת</button>
                 </div>
               </div>
             ))}
@@ -119,36 +118,28 @@ export default function CommitteeDashboard() {
 
         {tab === 'broadcast' && (
           <div className="sc-card p-6 space-y-4">
-            <h3 className="sc-section-title text-base">הודעה לכל הדיירים</h3>
+            <h3 className="text-[16px] font-bold text-[#212121]">הודעה לכל הדיירים</h3>
             {broadcastSent ? (
               <div className="text-center py-8">
                 <div className="text-5xl mb-3">📢</div>
-                <p className="font-medium text-sc-text">ההודעה נשלחה!</p>
-                <p className="text-sm text-sc-text-light mt-1">ל-{total} דיירים</p>
+                <p className="font-bold text-[#212121]">ההודעה נשלחה!</p>
+                <p className="text-[13px] text-[#8e8e9e] mt-1">ל-{total} דיירים</p>
                 <button onClick={() => { setBroadcastSent(false); setBroadcast({ title: '', body: '' }) }}
-                  className="mt-4 text-sc-primary text-sm">שלח הודעה נוספת</button>
+                  className="mt-4 text-[#3b6b9c] text-[13px] font-semibold">שלח הודעה נוספת</button>
               </div>
             ) : (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-sc-text mb-1">כותרת</label>
+                  <label className="sc-label">כותרת</label>
                   <input value={broadcast.title} onChange={e => setBroadcast(p => ({ ...p, title: e.target.value }))}
-                    placeholder="עדכון חשוב לדיירי הבניין"
-                    className="sc-input" />
+                    placeholder="עדכון חשוב לדיירי הבניין" className="sc-input" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-sc-text mb-1">גוף ההודעה</label>
+                  <label className="sc-label">גוף ההודעה</label>
                   <textarea value={broadcast.body} onChange={e => setBroadcast(p => ({ ...p, body: e.target.value }))}
-                    rows={5} placeholder="תוכן ההודעה לדיירים..."
-                    className="sc-input resize-none" />
+                    rows={5} placeholder="תוכן ההודעה לדיירים..." className="sc-input resize-none" />
                 </div>
-                <div className="bg-sc-light-blue rounded-xl p-3 text-sm text-sc-primary">
-                  📧 תישלח ל-{total} דיירים באימייל
-                </div>
-                <button onClick={() => setBroadcastSent(true)}
-                  className="sc-btn-primary w-full">
-                  שלח הודעה
-                </button>
+                <button onClick={() => setBroadcastSent(true)} className="sc-btn-primary w-full">שלח הודעה</button>
               </>
             )}
           </div>
@@ -157,19 +148,17 @@ export default function CommitteeDashboard() {
         {tab === 'minutes' && (
           <div className="space-y-4">
             <div className="sc-card p-6">
-              <h3 className="sc-section-title text-base mb-3">ישיבה אחרונה</h3>
-              <div className="text-sm text-sc-text-light space-y-2">
-                <p><span className="font-medium text-sc-text">תאריך:</span> 20/02/2026</p>
-                <p><span className="font-medium text-sc-text">משתתפים:</span> דוד כהן, שרה לוי, יוסי אלון</p>
-                <p><span className="font-medium text-sc-text">החלטות:</span> לשלוח תזכורת לדיירים שלא חתמו עד סוף השבוע. לתאם פגישה עם נציג היזם.</p>
+              <h3 className="text-[16px] font-bold text-[#212121] mb-3">ישיבה אחרונה</h3>
+              <div className="text-[13px] text-[#5a5a6e] space-y-2">
+                <p><span className="font-semibold text-[#212121]">תאריך:</span> 20/02/2026</p>
+                <p><span className="font-semibold text-[#212121]">משתתפים:</span> דוד כהן, שרה לוי, יוסי אלון</p>
+                <p><span className="font-semibold text-[#212121]">החלטות:</span> לשלוח תזכורת לדיירים שלא חתמו עד סוף השבוע.</p>
               </div>
             </div>
-            <button className="sc-btn-primary w-full">
-              + פרוטוקול ישיבה חדש
-            </button>
+            <button className="sc-btn-primary w-full">+ פרוטוקול ישיבה חדש</button>
           </div>
         )}
       </div>
-    </div>
+    </PageLayout>
   )
 }

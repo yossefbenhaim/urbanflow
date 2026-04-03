@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
-import Navbar from '../components/Navbar'
+import PageLayout from '../components/PageLayout'
 import BuildingLoader from '../components/BuildingLoader'
 
 function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; currentUserId: string; onUnvoted?: (id: string) => void }) {
@@ -45,28 +45,28 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
   }
 
   return (
-    <div className={`sc-card p-4 my-1 border-t-4 ${isOpen ? 'border-t-sc-primary bg-sc-light-blue/30' : 'border-t-sc-border'}`}>
-      <div className="font-bold text-sm text-sc-text mb-3">
+    <div className={`sc-card p-4 my-1 border-t-4 ${isOpen ? 'border-t-sc-primary bg-[#ebf1f7]/30' : 'border-t-sc-border'}`}>
+      <div className="font-bold text-sm text-[#212121] mb-3">
         {isOpen ? '📊' : '✅'} {p.question}
       </div>
 
       {/* Progress bar */}
       <div className="mb-3">
-        <div className="flex justify-between text-xs text-sc-text-light mb-1">
+        <div className="flex justify-between text-xs text-[#5a5a6e] mb-1">
           <span>{p.voteCount} הצביעו מתוך {p.memberCount}</span>
           <span>{p.votePercent}%</span>
         </div>
         <div className="h-1.5 bg-sc-border rounded-full overflow-hidden">
-          <div className="h-full bg-sc-primary rounded-full transition-all duration-500" style={{ width: `${p.votePercent}%` }} />
+          <div className="h-full bg-[#3b6b9c] rounded-full transition-all duration-500" style={{ width: `${p.votePercent}%` }} />
         </div>
-        <div className="flex justify-between items-center text-[11px] text-sc-text-light mt-1.5 gap-2">
+        <div className="flex justify-between items-center text-[11px] text-[#5a5a6e] mt-1.5 gap-2">
             <span>נדרש {p.threshold_pct}% להכרעה</span>
             {p.close_at && (() => {
               const ms = new Date(p.close_at).getTime() - now
-              if (ms <= 0) return <span className="text-sc-error font-bold">⏰ פג תוקף</span>
+              if (ms <= 0) return <span className="text-red-500 font-bold">⏰ פג תוקף</span>
               const days = Math.floor(ms / 86400000)
               const hours = Math.floor((ms % 86400000) / 3600000)
-              return <span className={`font-bold ${days < 1 ? 'text-sc-error' : days < 2 ? 'text-sc-gold-dark' : 'text-sc-text-light'}`}>
+              return <span className={`font-bold ${days < 1 ? 'text-red-500' : days < 2 ? 'text-[#8b6f47]' : 'text-[#5a5a6e]'}`}>
                 ⏱ {days > 0 ? `${days} ימים נותרו` : `${hours} שעות נותרו`}
               </span>
             })()}
@@ -75,7 +75,7 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
 
       {/* Closed poll result */}
       {!isOpen && (
-        <div className="p-2.5 bg-sc-success/15 rounded-lg text-[13px] text-sc-success font-semibold">
+        <div className="p-2.5 bg-[#4a8c5c]/15 rounded-lg text-[13px] text-[#4a8c5c] font-semibold">
           {isApartmentCount && `תוצאה: ${p.result_value} דירות בבניין`}
           {isElection && p.candidates?.length > 0 && `נבחר: ${p.candidates.find((c: any) => c.id === p.result_user_id)?.full_name ?? p.result_value}`}
           {isCustom && `תוצאה: ${p.result_value}`}
@@ -98,8 +98,8 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
             <div className="flex flex-col gap-1.5 mb-2">
               {(p.candidates ?? []).map((c: any) => (
                 <button key={c.id} onClick={() => setSelectedValue(c.id)}
-                  className={`p-2 rounded-lg border-2 text-right text-[13px] text-sc-text cursor-pointer transition-colors ${
-                    selectedValue === c.id ? 'border-sc-primary bg-sc-light-blue' : 'border-sc-border bg-white'
+                  className={`p-2 rounded-lg border-2 text-right text-[13px] text-[#212121] cursor-pointer transition-colors ${
+                    selectedValue === c.id ? 'border-[#3b6b9c] bg-[#ebf1f7]' : 'border-[#eeeeee] bg-white'
                   }`}>
                   👤 {c.full_name}
                   {c.id === currentUserId && ' (אני)'}
@@ -111,11 +111,11 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
             <div className="flex flex-col gap-2 mb-2.5">
               {options.map((opt: string) => (
                 <button key={opt} onClick={() => setSelectedValue(opt)}
-                  className={`p-2.5 rounded-[10px] border-2 text-right text-sm text-sc-text cursor-pointer flex items-center gap-2 transition-colors ${
-                    selectedValue === opt ? 'border-sc-primary bg-sc-light-blue font-bold' : 'border-sc-border bg-white'
+                  className={`p-2.5 rounded-[10px] border-2 text-right text-sm text-[#212121] cursor-pointer flex items-center gap-2 transition-colors ${
+                    selectedValue === opt ? 'border-[#3b6b9c] bg-[#ebf1f7] font-bold' : 'border-[#eeeeee] bg-white'
                   }`}>
                   <span className={`w-[18px] h-[18px] rounded-full flex-shrink-0 border-2 inline-block ${
-                    selectedValue === opt ? 'border-sc-primary bg-sc-primary' : 'border-sc-border bg-transparent'
+                    selectedValue === opt ? 'border-[#3b6b9c] bg-[#3b6b9c]' : 'border-[#eeeeee] bg-transparent'
                   }`} />
                   {opt}
                 </button>
@@ -140,15 +140,15 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
 
       {/* Expired — didn't vote */}
       {isExpired && !hasVoted && (
-        <div className="p-2.5 bg-sc-error/10 rounded-lg text-[13px] text-sc-error font-semibold">
+        <div className="p-2.5 bg-red-500/10 rounded-lg text-[13px] text-red-500 font-semibold">
           ⏰ מועד ההצבעה עבר
         </div>
       )}
 
       {/* Already voted */}
       {(isOpen || isExpired) && hasVoted && !changing && (
-        <div className="flex items-center justify-between p-2.5 bg-sc-light-blue rounded-lg">
-          <span className="text-[13px] text-sc-primary font-semibold">
+        <div className="flex items-center justify-between p-2.5 bg-[#ebf1f7] rounded-lg">
+          <span className="text-[13px] text-[#3b6b9c] font-semibold">
             ✓ הצבעת על: {isElection
               ? (p.candidates ?? []).find((c: any) => c.id === p.myVote)?.full_name ?? p.myVote
               : isApartmentCount ? `${p.myVote} דירות`
@@ -166,15 +166,15 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
           {isApartmentCount && (
             <div className="mb-2">
               <input type="number" min="2" placeholder="הזן מספר דירות" value={customNumber} onChange={e => setCustomNumber(e.target.value)}
-                className="sc-input border-sc-primary-light" />
+                className="sc-input border-[#3b6b9c]-light" />
             </div>
           )}
           {isElection && (
             <div className="flex flex-col gap-1.5 mb-2">
               {(p.candidates ?? []).map((c: any) => (
                 <button key={c.id} onClick={() => setSelectedValue(c.id)}
-                  className={`p-2 rounded-lg border-2 text-right text-[13px] text-sc-text cursor-pointer ${
-                    selectedValue === c.id ? 'border-sc-primary bg-sc-light-blue' : 'border-sc-border bg-white'
+                  className={`p-2 rounded-lg border-2 text-right text-[13px] text-[#212121] cursor-pointer ${
+                    selectedValue === c.id ? 'border-[#3b6b9c] bg-[#ebf1f7]' : 'border-[#eeeeee] bg-white'
                   }`}>
                   👤 {c.full_name}{c.id === currentUserId && ' (אני)'}
                 </button>
@@ -185,11 +185,11 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
             <div className="flex flex-col gap-2 mb-2.5">
               {options.map((opt: string) => (
                 <button key={opt} onClick={() => setSelectedValue(opt)}
-                  className={`p-2.5 rounded-[10px] border-2 text-right text-sm text-sc-text cursor-pointer flex items-center gap-2 ${
-                    selectedValue === opt ? 'border-sc-primary bg-sc-light-blue font-bold' : 'border-sc-border bg-white'
+                  className={`p-2.5 rounded-[10px] border-2 text-right text-sm text-[#212121] cursor-pointer flex items-center gap-2 ${
+                    selectedValue === opt ? 'border-[#3b6b9c] bg-[#ebf1f7] font-bold' : 'border-[#eeeeee] bg-white'
                   }`}>
                   <span className={`w-[18px] h-[18px] rounded-full flex-shrink-0 border-2 inline-block ${
-                    selectedValue === opt ? 'border-sc-primary bg-sc-primary' : 'border-sc-border bg-transparent'
+                    selectedValue === opt ? 'border-[#3b6b9c] bg-[#3b6b9c]' : 'border-[#eeeeee] bg-transparent'
                   }`} />
                   {opt}
                 </button>
@@ -290,17 +290,17 @@ export default function BuildingChatPage() {
   }
 
   return (
-    <div className="h-[100dvh] bg-sc-bg flex flex-col" dir="rtl">
-      <Navbar />
+    <div className="h-[100dvh] bg-[#f8f9fa] flex flex-col" dir="rtl">
+      
       <div className="max-w-[720px] mx-auto w-full flex-1 flex flex-col px-4 min-h-0">
 
         {/* Header */}
-        <div className="py-3.5 border-b border-sc-border flex items-center gap-3 flex-shrink-0">
+        <div className="py-3.5 border-b border-[#eeeeee] flex items-center gap-3 flex-shrink-0">
           <button onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-1.5 bg-sc-bg border-none rounded-[10px] px-3.5 py-2 cursor-pointer text-sm text-sc-primary font-semibold flex-shrink-0">
+            className="flex items-center gap-1.5 bg-[#f8f9fa] border-none rounded-[10px] px-3.5 py-2 cursor-pointer text-sm text-[#3b6b9c] font-semibold flex-shrink-0">
             ‹ דף הבית
           </button>
-          <h1 className="m-0 text-[17px] font-bold text-sc-text flex-1">🏢 קבוצת הבניין</h1>
+          <h1 className="m-0 text-[17px] font-bold text-[#212121] flex-1">🏢 קבוצת הבניין</h1>
         </div>
 
         {/* Messages scroll area */}
@@ -318,20 +318,20 @@ export default function BuildingChatPage() {
                 className={`flex gap-2 ${isPoll ? 'flex-col items-stretch' : isMe ? 'flex-row-reverse' : 'flex-row'} ${!isPoll ? 'items-start' : ''}`}>
                 {!isPoll && (
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 ${
-                    isMe ? 'bg-sc-primary text-white' : 'bg-sc-border text-sc-text'
+                    isMe ? 'bg-[#3b6b9c] text-white' : 'bg-sc-border text-[#212121]'
                   }`}>
                     {msg.sender?.full_name?.[0] ?? '?'}
                   </div>
                 )}
                 <div className={isPoll ? 'w-full' : 'max-w-[70%]'}>
-                  <div className={`text-[11px] text-sc-text-light mb-1 ${isPoll ? 'text-right' : isMe ? 'text-left' : 'text-right'}`}>
+                  <div className={`text-[11px] text-[#5a5a6e] mb-1 ${isPoll ? 'text-right' : isMe ? 'text-left' : 'text-right'}`}>
                     {isMe ? 'אני' : msg.sender?.full_name ?? 'דייר'} · {new Date(msg.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
                   </div>
                   {isPoll ? (
                     <PollCard pollId={msg.poll_id} currentUserId={currentUserId} onUnvoted={setUnvotedPollId} />
                   ) : (
                     <div className={`p-2.5 rounded-xl text-sm leading-relaxed shadow-sm ${
-                      isMe ? 'bg-sc-primary text-white' : 'bg-white text-sc-text border border-sc-border'
+                      isMe ? 'bg-[#3b6b9c] text-white' : 'bg-white text-[#212121] border border-[#eeeeee]'
                     }`}>
                       {msg.content}
                     </div>
@@ -348,7 +348,7 @@ export default function BuildingChatPage() {
           <div className="relative h-0 overflow-visible">
             <button
               onClick={() => { scrollToPoll(unvotedPollId); setUnvotedPollId(null) }}
-              className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-sc-navy text-white border-none rounded-full px-4.5 py-2 text-[13px] font-bold cursor-pointer shadow-lg z-10 whitespace-nowrap flex items-center gap-1.5">
+              className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-[#1e3a5f] text-white border-none rounded-full px-4.5 py-2 text-[13px] font-bold cursor-pointer shadow-lg z-10 whitespace-nowrap flex items-center gap-1.5">
               📊 יש סקר שממתין להצבעתך ↑
             </button>
           </div>
@@ -359,14 +359,14 @@ export default function BuildingChatPage() {
           <div className="relative h-0 overflow-visible">
             <button
               onClick={() => scrollToBottom(true)}
-              className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-sc-primary text-white border-none rounded-full px-4.5 py-2 text-[13px] font-bold cursor-pointer shadow-lg z-10 whitespace-nowrap flex items-center gap-1.5">
+              className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-[#3b6b9c] text-white border-none rounded-full px-4.5 py-2 text-[13px] font-bold cursor-pointer shadow-lg z-10 whitespace-nowrap flex items-center gap-1.5">
               ↓ {newMsgCount} הודעות חדשות
             </button>
           </div>
         )}
 
         {/* Input — always at bottom */}
-        <div className="py-2.5 pb-[env(safe-area-inset-bottom,16px)] flex gap-2 flex-shrink-0 bg-sc-bg">
+        <div className="py-2.5 pb-[env(safe-area-inset-bottom,16px)] flex gap-2 flex-shrink-0 bg-[#f8f9fa]">
           <input
             value={message} onChange={e => setMessage(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}

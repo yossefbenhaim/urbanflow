@@ -155,19 +155,19 @@ export default function RegisterProvider() {
   const stepTitles = ['פרטים אישיים', 'מקצועי ואזורים', 'פורטפוליו']
 
   return (
-    <div className="min-h-screen bg-sc-bg flex items-center justify-center p-4" dir="rtl">
+    <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center p-4" dir="rtl">
       <div className="w-full max-w-lg">
 
         {/* Header */}
         <div className="text-center mb-6">
-          <Link to="/register" className="inline-flex items-center gap-1 text-sm text-sc-text-light hover:text-sc-text mb-4">
+          <Link to="/register" className="inline-flex items-center gap-1 text-sm text-[#5a5a6e] hover:text-[#212121] mb-4">
             ← חזרה לבחירת תפקיד
           </Link>
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-sc-success rounded-2xl mb-3 shadow-lg">
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-[#4a8c5c] rounded-2xl mb-3 shadow-lg">
             <span className="text-2xl">🔧</span>
           </div>
-          <h1 className="text-xl font-bold text-sc-text">הרשמה כנותן שירות</h1>
-          <p className="text-sc-text-light text-sm mt-1">בנה פרופיל מקצועי ומצא פרויקטים</p>
+          <h1 className="text-xl font-bold text-[#212121]">הרשמה כנותן שירות</h1>
+          <p className="text-[#5a5a6e] text-sm mt-1">בנה פרופיל מקצועי ומצא פרויקטים</p>
         </div>
 
         {/* Steps */}
@@ -175,14 +175,14 @@ export default function RegisterProvider() {
           {stepTitles.map((title, i) => (
             <div key={i} className="flex items-center gap-2">
               <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
-                step === i + 1 ? 'bg-sc-primary text-white'
-                  : step > i + 1 ? 'bg-sc-success/15 text-sc-success'
-                  : 'bg-sc-border text-sc-text-light'
+                step === i + 1 ? 'bg-[#3b6b9c] text-white'
+                  : step > i + 1 ? 'bg-[#4a8c5c]/15 text-[#4a8c5c]'
+                  : 'bg-sc-border text-[#5a5a6e]'
               }`}>
                 <span>{step > i + 1 ? '✓' : i + 1}</span>
                 <span>{title}</span>
               </div>
-              {i < stepTitles.length - 1 && <div className={`w-6 h-px ${step > i + 1 ? 'bg-sc-success' : 'bg-sc-border'}`} />}
+              {i < stepTitles.length - 1 && <div className={`w-6 h-px ${step > i + 1 ? 'bg-[#4a8c5c]' : 'bg-sc-border'}`} />}
             </div>
           ))}
         </div>
@@ -192,7 +192,7 @@ export default function RegisterProvider() {
           {/* Step 1 */}
           {step === 1 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-sc-text mb-4">פרטים אישיים</h2>
+              <h2 className="text-lg font-semibold text-[#212121] mb-4">פרטים אישיים</h2>
               <Field label="שם מלא *">
                 <input type="text" placeholder="ישראל ישראלי" value={form.fullName}
                   onChange={e => update('fullName', e.target.value)} className="sc-input" />
@@ -220,8 +220,8 @@ export default function RegisterProvider() {
                   onChange={e => update('confirmPassword', e.target.value)} className="sc-input" />
               </Field>
 
-              <div className="border-t border-sc-border pt-4">
-                <p className="text-sm font-medium text-sc-text mb-3">פרטי חברה (אופציונלי)</p>
+              <div className="border-t border-[#eeeeee] pt-4">
+                <p className="text-sm font-medium text-[#212121] mb-3">פרטי חברה (אופציונלי)</p>
                 <Field label="שם חברה">
                   <input type="text" placeholder="חברת ABC בע״מ" value={form.companyName}
                     onChange={e => update('companyName', e.target.value)} className="sc-input" />
@@ -239,7 +239,7 @@ export default function RegisterProvider() {
           {/* Step 2 */}
           {step === 2 && (
             <div className="space-y-5">
-              <h2 className="text-lg font-semibold text-sc-text mb-4">מקצועי ואזורי פעילות</h2>
+              <h2 className="text-lg font-semibold text-[#212121] mb-4">מקצועי ואזורי פעילות</h2>
 
               <Field label="תחומי מקצוע * (ניתן לבחור מספר)">
                 <div className="grid grid-cols-2 gap-2 mt-1">
@@ -247,8 +247,8 @@ export default function RegisterProvider() {
                     <button key={p.value} type="button" onClick={() => toggleProfession(p.value)}
                       className={`p-2.5 rounded-xl border-2 text-right text-sm transition-colors ${
                         form.professionTypes.includes(p.value)
-                          ? 'border-sc-primary bg-sc-light-blue text-sc-navy font-medium'
-                          : 'border-sc-border text-sc-text-light hover:border-sc-primary-light'
+                          ? 'border-[#3b6b9c] bg-[#ebf1f7] text-[#1e3a5f] font-medium'
+                          : 'border-[#eeeeee] text-[#5a5a6e] hover:border-[#3b6b9c]-light'
                       }`}>
                       {p.label}
                     </button>
@@ -279,11 +279,11 @@ export default function RegisterProvider() {
                   onChange={e => update('licenseExpiry', e.target.value)} className="sc-input" />
               </Field>
 
-              <div className="flex items-center gap-3 p-3 bg-sc-success/10 rounded-xl border border-sc-success/30">
+              <div className="flex items-center gap-3 p-3 bg-[#4a8c5c]/10 rounded-xl border border-sc-success/30">
                 <input type="checkbox" id="pinuychk" checked={form.pinuyBinuyExperience}
                   onChange={e => update('pinuyBinuyExperience', e.target.checked)}
-                  className="w-4 h-4 text-sc-success rounded" />
-                <label htmlFor="pinuychk" className="text-sm font-medium text-sc-success cursor-pointer">
+                  className="w-4 h-4 text-[#4a8c5c] rounded" />
+                <label htmlFor="pinuychk" className="text-sm font-medium text-[#4a8c5c] cursor-pointer">
                   ✅ יש לי ניסיון ספציפי בפינוי-בינוי / תמ"א 38
                 </label>
               </div>
@@ -294,8 +294,8 @@ export default function RegisterProvider() {
                     <button key={r} type="button" onClick={() => toggleRegion(r)}
                       className={`px-3 py-1.5 rounded-full text-sm border-2 transition-colors ${
                         form.operatingRegions.includes(r)
-                          ? 'border-sc-primary bg-sc-light-blue text-sc-navy font-medium'
-                          : 'border-sc-border text-sc-text-light hover:border-sc-primary-light'
+                          ? 'border-[#3b6b9c] bg-[#ebf1f7] text-[#1e3a5f] font-medium'
+                          : 'border-[#eeeeee] text-[#5a5a6e] hover:border-[#3b6b9c]-light'
                       }`}>
                       {r}
                     </button>
@@ -308,7 +308,7 @@ export default function RegisterProvider() {
           {/* Step 3 */}
           {step === 3 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-sc-text mb-4">פורטפוליו ותיק עבודות</h2>
+              <h2 className="text-lg font-semibold text-[#212121] mb-4">פורטפוליו ותיק עבודות</h2>
 
               <Field label="תיאור מקצועי (Bio)">
                 <textarea
@@ -319,7 +319,7 @@ export default function RegisterProvider() {
                   maxLength={500}
                   className="sc-input resize-none"
                 />
-                <p className="text-xs text-sc-text-light mt-1 text-left">{form.bio.length}/500</p>
+                <p className="text-xs text-[#5a5a6e] mt-1 text-left">{form.bio.length}/500</p>
               </Field>
 
               <Field label="קישור לתיק עבודות / אתר">
@@ -328,12 +328,12 @@ export default function RegisterProvider() {
               </Field>
 
               <div>
-                <label className="block text-sm font-medium text-sc-text mb-2">
+                <label className="block text-sm font-medium text-[#212121] mb-2">
                   פרויקטים קודמים (עד 3)
                 </label>
                 {form.pastProjects.slice(0, 3).map((project, i) => (
-                  <div key={i} className="border border-sc-border rounded-xl p-3 mb-3">
-                    <p className="text-xs font-medium text-sc-text-light mb-2">פרויקט {i + 1}</p>
+                  <div key={i} className="border border-[#eeeeee] rounded-xl p-3 mb-3">
+                    <p className="text-xs font-medium text-[#5a5a6e] mb-2">פרויקט {i + 1}</p>
                     <div className="space-y-2">
                       <input type="text" placeholder="שם הפרויקט" value={project.name}
                         onChange={e => updateProject(i, 'name', e.target.value)}
@@ -355,30 +355,30 @@ export default function RegisterProvider() {
                 {form.pastProjects.length < 3 && (
                   <button type="button"
                     onClick={() => update('pastProjects', [...form.pastProjects, { name: '', city: '', year: '', role: '' }])}
-                    className="text-sm text-sc-primary hover:underline">
+                    className="text-sm text-[#3b6b9c] hover:underline">
                     + הוסף פרויקט נוסף
                   </button>
                 )}
               </div>
 
               {/* Summary badges */}
-              <div className="bg-sc-light-blue rounded-xl p-3 text-sm">
-                <p className="font-medium text-sc-navy mb-2">סיכום הפרופיל שלך:</p>
+              <div className="bg-[#ebf1f7] rounded-xl p-3 text-sm">
+                <p className="font-medium text-[#1e3a5f] mb-2">סיכום הפרופיל שלך:</p>
                 <div className="flex flex-wrap gap-1">
                   {form.professionTypes.map(p => (
-                    <span key={p} className="sc-badge bg-white border border-sc-primary-light text-sc-primary">
+                    <span key={p} className="sc-badge bg-white border border-[#3b6b9c]-light text-[#3b6b9c]">
                       {PROFESSION_TYPES.find(pt => pt.value === p)?.label}
                     </span>
                   ))}
                 </div>
-                <p className="text-sc-primary mt-1 text-xs">{form.operatingRegions.join(' • ')}</p>
+                <p className="text-[#3b6b9c] mt-1 text-xs">{form.operatingRegions.join(' • ')}</p>
               </div>
             </div>
           )}
 
           {/* Error */}
           {error && (
-            <div className="bg-sc-error/10 border border-sc-error/30 text-sc-error text-sm px-4 py-3 rounded-xl mt-4">
+            <div className="bg-red-500/10 border border-sc-error/30 text-red-500 text-sm px-4 py-3 rounded-xl mt-4">
               {error}
             </div>
           )}
@@ -412,7 +412,7 @@ export default function RegisterProvider() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-sc-text mb-1">{label}</label>
+      <label className="block text-sm font-medium text-[#212121] mb-1">{label}</label>
       {children}
     </div>
   )

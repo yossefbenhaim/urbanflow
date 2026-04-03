@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
-import Navbar from '../components/Navbar'
+import PageLayout, { PageTitle } from '../components/PageLayout'
 import BuildingLoader from '../components/BuildingLoader'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -18,9 +18,9 @@ function BottomSheet({ open, onClose, title, children }: {
         className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-lg max-h-[85vh] overflow-y-auto animate-slide-up"
         onClick={e => e.stopPropagation()}
       >
-        <div className="sticky top-0 bg-white rounded-t-3xl sm:rounded-t-2xl border-b border-sc-border px-5 py-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-sc-text">{title}</h2>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-sc-border text-sc-text-light text-xl">×</button>
+        <div className="sticky top-0 bg-white rounded-t-3xl sm:rounded-t-2xl border-b border-[#eeeeee] px-5 py-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-[#212121]">{title}</h2>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-sc-border text-[#5a5a6e] text-xl">×</button>
         </div>
         <div className="p-5">{children}</div>
       </div>
@@ -67,41 +67,41 @@ function PollWizard({ groupId, onSuccess }: { groupId: string; onSuccess: () => 
       <div className="flex items-center gap-2 mb-6">
         {[1, 2, 3].map(s => (
           <div key={s} className="flex items-center gap-2">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${s <= step ? 'bg-sc-primary text-white' : 'bg-sc-border text-sc-text-light'}`}>{s}</div>
-            {s < 3 && <div className={`flex-1 h-0.5 w-8 ${s < step ? 'bg-sc-primary' : 'bg-sc-border'}`} />}
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${s <= step ? 'bg-[#3b6b9c] text-white' : 'bg-sc-border text-[#5a5a6e]'}`}>{s}</div>
+            {s < 3 && <div className={`flex-1 h-0.5 w-8 ${s < step ? 'bg-[#3b6b9c]' : 'bg-sc-border'}`} />}
           </div>
         ))}
-        <span className="text-sm text-sc-text-light mr-auto">שלב {step} מתוך 3</span>
+        <span className="text-sm text-[#5a5a6e] mr-auto">שלב {step} מתוך 3</span>
       </div>
 
       {step === 1 && (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-sc-text mb-1">שאלת הסקר *</label>
+            <label className="block text-sm font-medium text-[#212121] mb-1">שאלת הסקר *</label>
             <textarea
               value={question}
               onChange={e => setQuestion(e.target.value)}
               className={`sc-input resize-none h-24 ${errors.question ? 'border-sc-error' : ''}`}
               placeholder="מה ברצונכם לשאול את הדיירים?"
             />
-            {errors.question && <p className="text-sc-error text-xs mt-1">{errors.question}</p>}
+            {errors.question && <p className="text-red-500 text-xs mt-1">{errors.question}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-sc-text mb-1">סוג הסקר</label>
+            <label className="block text-sm font-medium text-[#212121] mb-1">סוג הסקר</label>
             <div className="flex gap-2">
               {[{ v: 'single', l: '⚪ בחירה יחידה' }, { v: 'multiple', l: '☑️ ריבוי בחירות' }].map(({ v, l }) => (
                 <button key={v} onClick={() => setPollType(v as any)}
-                  className={`flex-1 py-2 px-3 rounded-xl border text-sm font-medium transition-colors active:scale-95 ${pollType === v ? 'border-sc-primary bg-sc-light-blue text-sc-primary' : 'border-sc-border text-sc-text-light'}`}>
+                  className={`flex-1 py-2 px-3 rounded-xl border text-sm font-medium transition-colors active:scale-95 ${pollType === v ? 'border-[#3b6b9c] bg-[#ebf1f7] text-[#3b6b9c]' : 'border-[#eeeeee] text-[#5a5a6e]'}`}>
                   {l}
                 </button>
               ))}
             </div>
           </div>
-          <div className="flex items-center justify-between bg-sc-bg rounded-xl p-3">
-            <span className="text-sm font-medium text-sc-text">🔒 סקר אנונימי</span>
+          <div className="flex items-center justify-between bg-[#f8f9fa] rounded-xl p-3">
+            <span className="text-sm font-medium text-[#212121]">🔒 סקר אנונימי</span>
             <div
               onClick={() => setIsAnonymous(!isAnonymous)}
-              className={`w-11 h-6 rounded-xl cursor-pointer flex-shrink-0 relative transition-colors ${isAnonymous ? 'bg-sc-primary' : 'bg-sc-border'}`}
+              className={`w-11 h-6 rounded-xl cursor-pointer flex-shrink-0 relative transition-colors ${isAnonymous ? 'bg-[#3b6b9c]' : 'bg-sc-border'}`}
             >
               <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all ${isAnonymous ? 'left-[22px]' : 'left-0.5'}`} />
             </div>
@@ -115,8 +115,8 @@ function PollWizard({ groupId, onSuccess }: { groupId: string; onSuccess: () => 
 
       {step === 2 && (
         <div className="space-y-4">
-          <h3 className="font-semibold text-sc-text">אפשרויות תשובה</h3>
-          {errors.options && <p className="text-sc-error text-sm">{errors.options}</p>}
+          <h3 className="font-semibold text-[#212121]">אפשרויות תשובה</h3>
+          {errors.options && <p className="text-red-500 text-sm">{errors.options}</p>}
           {options.map((opt, i) => (
             <div key={i} className="flex gap-2">
               <input
@@ -127,12 +127,12 @@ function PollWizard({ groupId, onSuccess }: { groupId: string; onSuccess: () => 
               />
               {options.length > 2 && (
                 <button onClick={() => setOptions(options.filter((_, j) => j !== i))}
-                  className="w-9 h-9 flex items-center justify-center text-sc-error hover:bg-sc-error/10 rounded-xl">✕</button>
+                  className="w-9 h-9 flex items-center justify-center text-red-500 hover:bg-red-500/10 rounded-xl">✕</button>
               )}
             </div>
           ))}
           <button onClick={() => setOptions([...options, ''])}
-            className="w-full border-2 border-dashed border-sc-border rounded-xl py-2 text-sm text-sc-text-light hover:border-sc-primary hover:text-sc-primary transition-colors">
+            className="w-full border-2 border-dashed border-[#eeeeee] rounded-xl py-2 text-sm text-[#5a5a6e] hover:border-[#3b6b9c] hover:text-[#3b6b9c] transition-colors">
             + הוסף אפשרות
           </button>
           <div className="flex gap-2">
@@ -145,33 +145,33 @@ function PollWizard({ groupId, onSuccess }: { groupId: string; onSuccess: () => 
       {step === 3 && (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-sc-text mb-1">תאריך סגירה (אופציונלי)</label>
+            <label className="block text-sm font-medium text-[#212121] mb-1">תאריך סגירה (אופציונלי)</label>
             <input type="date" value={closeAt} onChange={e => setCloseAt(e.target.value)}
               className="sc-input" />
           </div>
           <div>
             <div className="flex justify-between text-sm mb-1">
-              <span className="font-medium text-sc-text">רף רוב</span>
-              <span className="font-bold text-sc-primary">{thresholdPct}%</span>
+              <span className="font-medium text-[#212121]">רף רוב</span>
+              <span className="font-bold text-[#3b6b9c]">{thresholdPct}%</span>
             </div>
             <input type="range" min={50} max={90} value={thresholdPct} onChange={e => setThresholdPct(Number(e.target.value))}
               className="w-full accent-sc-primary" />
-            <div className="flex justify-between text-xs text-sc-text-light mt-1"><span>50%</span><span>90%</span></div>
+            <div className="flex justify-between text-xs text-[#5a5a6e] mt-1"><span>50%</span><span>90%</span></div>
           </div>
 
           {/* Preview */}
-          <div className="bg-sc-light-blue rounded-xl p-4 border border-sc-primary-light">
-            <p className="text-xs font-semibold text-sc-primary mb-2 uppercase tracking-wide">תצוגה מקדימה</p>
-            <p className="font-semibold text-sc-text text-sm mb-2">{question || '(שאלה)'}</p>
+          <div className="bg-[#ebf1f7] rounded-xl p-4 border border-[#3b6b9c]-light">
+            <p className="text-xs font-semibold text-[#3b6b9c] mb-2 uppercase tracking-wide">תצוגה מקדימה</p>
+            <p className="font-semibold text-[#212121] text-sm mb-2">{question || '(שאלה)'}</p>
             <div className="space-y-1">
               {options.filter(o => o.trim()).map((o, i) => (
-                <div key={i} className="flex items-center gap-2 text-sm text-sc-text-light">
-                  <div className={`w-4 h-4 rounded-${pollType === 'single' ? 'full' : 'sm'} border-2 border-sc-primary`} />
+                <div key={i} className="flex items-center gap-2 text-sm text-[#5a5a6e]">
+                  <div className={`w-4 h-4 rounded-${pollType === 'single' ? 'full' : 'sm'} border-2 border-[#3b6b9c]`} />
                   {o}
                 </div>
               ))}
             </div>
-            <div className="mt-2 flex gap-2 text-xs text-sc-text-light">
+            <div className="mt-2 flex gap-2 text-xs text-[#5a5a6e]">
               <span>{isAnonymous ? '🔒 אנונימי' : '👁 גלוי'}</span>
               <span>•</span>
               <span>רף: {thresholdPct}%</span>
@@ -186,7 +186,7 @@ function PollWizard({ groupId, onSuccess }: { groupId: string; onSuccess: () => 
               {createPoll.isPending ? 'מפרסם...' : '📊 פרסם לקבוצה'}
             </button>
           </div>
-          {createPoll.error && <p className="text-sc-error text-sm text-center">{createPoll.error.message}</p>}
+          {createPoll.error && <p className="text-red-500 text-sm text-center">{createPoll.error.message}</p>}
         </div>
       )}
     </div>
@@ -244,14 +244,14 @@ function DocumentUpload({ buildingId, groupId, onSuccess }: { buildingId: string
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-sc-text mb-1">שם המסמך *</label>
+        <label className="block text-sm font-medium text-[#212121] mb-1">שם המסמך *</label>
         <input value={name} onChange={e => setName(e.target.value)}
           className={`sc-input ${errors.name ? 'border-sc-error' : ''}`}
           placeholder="לדוגמה: חוזה שירות 2024" />
-        {errors.name && <p className="text-sc-error text-xs mt-1">{errors.name}</p>}
+        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
       </div>
       <div>
-        <label className="block text-sm font-medium text-sc-text mb-1">סוג המסמך</label>
+        <label className="block text-sm font-medium text-[#212121] mb-1">סוג המסמך</label>
         <select value={docType} onChange={e => setDocType(e.target.value as any)}
           className="sc-input">
           <option value="contract">📜 חוזה</option>
@@ -261,27 +261,27 @@ function DocumentUpload({ buildingId, groupId, onSuccess }: { buildingId: string
         </select>
       </div>
       <div>
-        <label className="block text-sm font-medium text-sc-text mb-1">קובץ (PDF / תמונה, עד 10MB) *</label>
-        <label className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 cursor-pointer transition-colors ${errors.file ? 'border-sc-error' : 'border-sc-border hover:border-sc-primary'}`}>
+        <label className="block text-sm font-medium text-[#212121] mb-1">קובץ (PDF / תמונה, עד 10MB) *</label>
+        <label className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 cursor-pointer transition-colors ${errors.file ? 'border-sc-error' : 'border-[#eeeeee] hover:border-[#3b6b9c]'}`}>
           <span className="text-2xl mb-1">📎</span>
-          <span className="text-sm text-sc-text-light">{file ? file.name : 'לחץ לבחירת קובץ'}</span>
+          <span className="text-sm text-[#5a5a6e]">{file ? file.name : 'לחץ לבחירת קובץ'}</span>
           <input type="file" accept=".pdf,image/*" className="hidden" onChange={e => setFile(e.target.files?.[0] ?? null)} />
         </label>
-        {errors.file && <p className="text-sc-error text-xs mt-1">{errors.file}</p>}
+        {errors.file && <p className="text-red-500 text-xs mt-1">{errors.file}</p>}
       </div>
       <div>
-        <label className="block text-sm font-medium text-sc-text mb-1">תיאור (אופציונלי)</label>
+        <label className="block text-sm font-medium text-[#212121] mb-1">תיאור (אופציונלי)</label>
         <textarea value={description} onChange={e => setDescription(e.target.value)}
           className="sc-input resize-none h-16"
           placeholder="תיאור קצר של המסמך..." />
       </div>
       {groupId && (
-        <label className="flex items-center gap-3 bg-sc-gold-dark/10 rounded-xl px-4 py-3 cursor-pointer">
+        <label className="flex items-center gap-3 bg-[#8b6f47]/10 rounded-xl px-4 py-3 cursor-pointer">
           <input type="checkbox" checked={shareToGroup} onChange={e => setShareToGroup(e.target.checked)} className="w-4 h-4 accent-sc-gold-dark" />
-          <span className="text-sm font-medium text-sc-text">📢 שתף עם כל הדיירים בקבוצה</span>
+          <span className="text-sm font-medium text-[#212121]">📢 שתף עם כל הדיירים בקבוצה</span>
         </label>
       )}
-      {errors.submit && <p className="text-sc-error text-sm text-center">{errors.submit}</p>}
+      {errors.submit && <p className="text-red-500 text-sm text-center">{errors.submit}</p>}
       <button onClick={handleSubmit} disabled={uploading}
         className="sc-btn-primary w-full active:scale-95 disabled:opacity-60 transition-transform">
         {uploading ? 'מעלה...' : '📄 העלה מסמך'}
@@ -311,41 +311,41 @@ function BroadcastForm({ buildingId, groupId, onSuccess }: { buildingId: string;
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-sc-text mb-1">כותרת *</label>
+        <label className="block text-sm font-medium text-[#212121] mb-1">כותרת *</label>
         <input value={title} onChange={e => setTitle(e.target.value)}
           className={`sc-input ${errors.title ? 'border-sc-error' : ''}`}
           placeholder="נושא ההודעה" />
-        {errors.title && <p className="text-sc-error text-xs mt-1">{errors.title}</p>}
+        {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
       </div>
       <div>
-        <label className="block text-sm font-medium text-sc-text mb-1">תוכן *</label>
+        <label className="block text-sm font-medium text-[#212121] mb-1">תוכן *</label>
         <textarea value={content} onChange={e => setContent(e.target.value)}
           className={`sc-input resize-none h-28 ${errors.content ? 'border-sc-error' : ''}`}
           placeholder="תוכן ההודעה לדיירים..." />
-        {errors.content && <p className="text-sc-error text-xs mt-1">{errors.content}</p>}
+        {errors.content && <p className="text-red-500 text-xs mt-1">{errors.content}</p>}
       </div>
       <div>
-        <label className="block text-sm font-medium text-sc-text mb-2">עדיפות</label>
+        <label className="block text-sm font-medium text-[#212121] mb-2">עדיפות</label>
         <div className="flex gap-2">
           <button onClick={() => setPriority('normal')}
-            className={`flex-1 py-2 rounded-xl border text-sm font-medium active:scale-95 transition-colors ${priority === 'normal' ? 'border-sc-primary bg-sc-light-blue text-sc-primary' : 'border-sc-border text-sc-text-light'}`}>
+            className={`flex-1 py-2 rounded-xl border text-sm font-medium active:scale-95 transition-colors ${priority === 'normal' ? 'border-[#3b6b9c] bg-[#ebf1f7] text-[#3b6b9c]' : 'border-[#eeeeee] text-[#5a5a6e]'}`}>
             🔔 רגילה
           </button>
           <button onClick={() => setPriority('urgent')}
-            className={`flex-1 py-2 rounded-xl border text-sm font-medium active:scale-95 transition-colors ${priority === 'urgent' ? 'border-sc-error bg-sc-error/10 text-sc-error' : 'border-sc-border text-sc-text-light'}`}>
+            className={`flex-1 py-2 rounded-xl border text-sm font-medium active:scale-95 transition-colors ${priority === 'urgent' ? 'border-sc-error bg-red-500/10 text-red-500' : 'border-[#eeeeee] text-[#5a5a6e]'}`}>
             🔴 דחוף
           </button>
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-sc-text mb-2">שלח ל</label>
+        <label className="block text-sm font-medium text-[#212121] mb-2">שלח ל</label>
         <div className="flex gap-2">
           <button onClick={() => setTarget('all')}
-            className={`flex-1 py-2 rounded-xl border text-sm font-medium active:scale-95 transition-colors ${target === 'all' ? 'border-sc-primary bg-sc-light-blue text-sc-primary' : 'border-sc-border text-sc-text-light'}`}>
+            className={`flex-1 py-2 rounded-xl border text-sm font-medium active:scale-95 transition-colors ${target === 'all' ? 'border-[#3b6b9c] bg-[#ebf1f7] text-[#3b6b9c]' : 'border-[#eeeeee] text-[#5a5a6e]'}`}>
             🏢 כל הדיירים
           </button>
           <button onClick={() => setTarget('group')}
-            className={`flex-1 py-2 rounded-xl border text-sm font-medium active:scale-95 transition-colors ${target === 'group' ? 'border-sc-primary bg-sc-light-blue text-sc-primary' : 'border-sc-border text-sc-text-light'}`}>
+            className={`flex-1 py-2 rounded-xl border text-sm font-medium active:scale-95 transition-colors ${target === 'group' ? 'border-[#3b6b9c] bg-[#ebf1f7] text-[#3b6b9c]' : 'border-[#eeeeee] text-[#5a5a6e]'}`}>
             👥 חברי הקבוצה
           </button>
         </div>
@@ -355,7 +355,7 @@ function BroadcastForm({ buildingId, groupId, onSuccess }: { buildingId: string;
         className="sc-btn-primary w-full active:scale-95 disabled:opacity-60 transition-transform">
         {sendBroadcast.isPending ? 'שולח...' : '📢 שלח הודעה'}
       </button>
-      {sendBroadcast.error && <p className="text-sc-error text-sm text-center">{sendBroadcast.error.message}</p>}
+      {sendBroadcast.error && <p className="text-red-500 text-sm text-center">{sendBroadcast.error.message}</p>}
     </div>
   )
 }
@@ -382,40 +382,40 @@ function MeetingForm({ buildingId, groupId, onSuccess }: { buildingId: string; g
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-sc-text mb-1">נושא הישיבה *</label>
+        <label className="block text-sm font-medium text-[#212121] mb-1">נושא הישיבה *</label>
         <input value={title} onChange={e => setTitle(e.target.value)}
           className={`sc-input ${errors.title ? 'border-sc-error' : ''}`}
           placeholder="לדוגמה: ישיבת ועד חודש מרץ" />
-        {errors.title && <p className="text-sc-error text-xs mt-1">{errors.title}</p>}
+        {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
       </div>
       <div>
-        <label className="block text-sm font-medium text-sc-text mb-1">תאריך ושעה *</label>
+        <label className="block text-sm font-medium text-[#212121] mb-1">תאריך ושעה *</label>
         <input type="datetime-local" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)}
           className={`sc-input ${errors.scheduledAt ? 'border-sc-error' : ''}`} />
-        {errors.scheduledAt && <p className="text-sc-error text-xs mt-1">{errors.scheduledAt}</p>}
+        {errors.scheduledAt && <p className="text-red-500 text-xs mt-1">{errors.scheduledAt}</p>}
       </div>
       <div>
-        <label className="block text-sm font-medium text-sc-text mb-1">מיקום</label>
+        <label className="block text-sm font-medium text-[#212121] mb-1">מיקום</label>
         <input value={location} onChange={e => setLocation(e.target.value)}
           className="sc-input"
           placeholder="לדוגמה: לובי הבניין" />
       </div>
       <div>
-        <label className="block text-sm font-medium text-sc-text mb-1">סדר יום</label>
+        <label className="block text-sm font-medium text-[#212121] mb-1">סדר יום</label>
         <textarea value={agenda} onChange={e => setAgenda(e.target.value)}
           className="sc-input resize-none h-20"
           placeholder="נושאים לדיון..." />
       </div>
-      <label className="flex items-center gap-3 bg-sc-success/10 rounded-xl px-4 py-3 cursor-pointer">
+      <label className="flex items-center gap-3 bg-[#4a8c5c]/10 rounded-xl px-4 py-3 cursor-pointer">
         <input type="checkbox" checked={notifyAll} onChange={e => setNotifyAll(e.target.checked)} className="w-4 h-4 accent-sc-success" />
-        <span className="text-sm font-medium text-sc-text">📲 שתף בקבוצה + שלח התראה לכולם</span>
+        <span className="text-sm font-medium text-[#212121]">📲 שתף בקבוצה + שלח התראה לכולם</span>
       </label>
       <button onClick={() => { if (validate()) scheduleMeeting.mutate({ title, scheduledAt, location: location || undefined, agenda: agenda || undefined, buildingId, groupId, notifyAll }) }}
         disabled={scheduleMeeting.isPending}
-        className="sc-btn-primary w-full bg-sc-success hover:bg-sc-success/90 active:scale-95 disabled:opacity-60 transition-transform">
+        className="sc-btn-primary w-full bg-[#4a8c5c] hover:bg-[#4a8c5c]/90 active:scale-95 disabled:opacity-60 transition-transform">
         {scheduleMeeting.isPending ? 'קובע...' : '📅 קבע ישיבה'}
       </button>
-      {scheduleMeeting.error && <p className="text-sc-error text-sm text-center">{scheduleMeeting.error.message}</p>}
+      {scheduleMeeting.error && <p className="text-red-500 text-sm text-center">{scheduleMeeting.error.message}</p>}
     </div>
   )
 }
@@ -447,37 +447,37 @@ function SignatureForm({ buildingId, groupId, onSuccess }: { buildingId: string;
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-sc-text mb-1">מסמך לחתימה *</label>
-        {docs.isLoading ? <p className="text-sm text-sc-text-light">טוען מסמכים...</p> : (
+        <label className="block text-sm font-medium text-[#212121] mb-1">מסמך לחתימה *</label>
+        {docs.isLoading ? <p className="text-sm text-[#5a5a6e]">טוען מסמכים...</p> : (
           <select value={documentId} onChange={e => setDocumentId(e.target.value)}
             className={`sc-input ${errors.doc ? 'border-sc-error' : ''}`}>
             <option value="">— בחר מסמך —</option>
             {(docs.data ?? []).map((d: any) => <option key={d.id} value={d.id}>{d.title}</option>)}
           </select>
         )}
-        {errors.doc && <p className="text-sc-error text-xs mt-1">{errors.doc}</p>}
+        {errors.doc && <p className="text-red-500 text-xs mt-1">{errors.doc}</p>}
       </div>
       <div>
-        <label className="block text-sm font-medium text-sc-text mb-1">הסבר (אופציונלי)</label>
+        <label className="block text-sm font-medium text-[#212121] mb-1">הסבר (אופציונלי)</label>
         <textarea value={message} onChange={e => setMessage(e.target.value)}
           className="sc-input resize-none h-16"
           placeholder="למה צריכים לחתום?" />
       </div>
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="text-sm font-medium text-sc-text">דיירים לחתימה *</label>
+          <label className="text-sm font-medium text-[#212121]">דיירים לחתימה *</label>
           <button onClick={() => setSelectedTenants(selectedTenants.length === allTenantIds.length ? [] : allTenantIds)}
-            className="text-xs text-sc-primary font-medium">
+            className="text-xs text-[#3b6b9c] font-medium">
             {selectedTenants.length === allTenantIds.length ? 'בטל הכל' : 'בחר הכל'}
           </button>
         </div>
-        {errors.tenants && <p className="text-sc-error text-xs mb-2">{errors.tenants}</p>}
-        {tenants.isLoading ? <p className="text-sm text-sc-text-light">טוען דיירים...</p> : (
-          <div className="space-y-1 max-h-40 overflow-y-auto border border-sc-border rounded-xl p-2">
+        {errors.tenants && <p className="text-red-500 text-xs mb-2">{errors.tenants}</p>}
+        {tenants.isLoading ? <p className="text-sm text-[#5a5a6e]">טוען דיירים...</p> : (
+          <div className="space-y-1 max-h-40 overflow-y-auto border border-[#eeeeee] rounded-xl p-2">
             {(tenants.data ?? []).map((t: any) => (
-              <label key={t.userId} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-sc-bg cursor-pointer">
+              <label key={t.userId} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-[#f8f9fa] cursor-pointer">
                 <input type="checkbox" checked={selectedTenants.includes(t.userId)} onChange={() => toggleTenant(t.userId)} className="w-4 h-4 accent-sc-primary" />
-                <span className="text-sm text-sc-text">{t.name}</span>
+                <span className="text-sm text-[#212121]">{t.name}</span>
               </label>
             ))}
           </div>
@@ -488,7 +488,7 @@ function SignatureForm({ buildingId, groupId, onSuccess }: { buildingId: string;
         className="sc-btn-primary w-full active:scale-95 disabled:opacity-60 transition-transform">
         {requestSig.isPending ? 'שולח...' : '✍️ שלח בקשת חתימה'}
       </button>
-      {requestSig.error && <p className="text-sc-error text-sm text-center">{requestSig.error.message}</p>}
+      {requestSig.error && <p className="text-red-500 text-sm text-center">{requestSig.error.message}</p>}
     </div>
   )
 }
@@ -503,45 +503,45 @@ function BuildingStatus({ status }: { status: any }) {
 
   return (
     <div className="sc-card p-4 border-t-4 border-t-sc-primary mb-4">
-      <h3 className="font-bold text-sc-text mb-3 flex items-center gap-2">📈 סטטוס הבניין</h3>
+      <h3 className="font-bold text-[#212121] mb-3 flex items-center gap-2">📈 סטטוס הבניין</h3>
 
       {/* Progress */}
       <div className="mb-4">
         <div className="flex justify-between text-sm mb-1">
-          <span className="text-sc-text-light">Onboarding דיירים</span>
-          <span className="font-bold text-sc-primary">{onboarded}/{totalUnits}</span>
+          <span className="text-[#5a5a6e]">Onboarding דיירים</span>
+          <span className="font-bold text-[#3b6b9c]">{onboarded}/{totalUnits}</span>
         </div>
         <div className="h-2.5 bg-sc-border rounded-full overflow-hidden">
-          <div className="h-full bg-sc-primary rounded-full transition-all duration-700" style={{ width: `${progress}%` }} />
+          <div className="h-full bg-[#3b6b9c] rounded-full transition-all duration-700" style={{ width: `${progress}%` }} />
         </div>
-        <p className="text-xs text-sc-text-light mt-1">{progress}% השלימו תהליך</p>
+        <p className="text-xs text-[#5a5a6e] mt-1">{progress}% השלימו תהליך</p>
       </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-2 mb-4">
-        <div className="bg-sc-bg rounded-xl p-2 text-center shadow-sm">
-          <p className="text-lg font-bold text-sc-primary">{tenants?.length ?? 0}</p>
-          <p className="text-xs text-sc-text-light">דיירים</p>
+        <div className="bg-[#f8f9fa] rounded-xl p-2 text-center shadow-sm">
+          <p className="text-lg font-bold text-[#3b6b9c]">{tenants?.length ?? 0}</p>
+          <p className="text-xs text-[#5a5a6e]">דיירים</p>
         </div>
-        <div className="bg-sc-bg rounded-xl p-2 text-center shadow-sm">
-          <p className="text-lg font-bold text-sc-gold-dark">{documents?.length ?? 0}</p>
-          <p className="text-xs text-sc-text-light">מסמכים</p>
+        <div className="bg-[#f8f9fa] rounded-xl p-2 text-center shadow-sm">
+          <p className="text-lg font-bold text-[#8b6f47]">{documents?.length ?? 0}</p>
+          <p className="text-xs text-[#5a5a6e]">מסמכים</p>
         </div>
-        <div className="bg-sc-bg rounded-xl p-2 text-center shadow-sm">
-          <p className="text-lg font-bold text-sc-success">{upcomingMeetings?.length ?? 0}</p>
-          <p className="text-xs text-sc-text-light">ישיבות קרובות</p>
+        <div className="bg-[#f8f9fa] rounded-xl p-2 text-center shadow-sm">
+          <p className="text-lg font-bold text-[#4a8c5c]">{upcomingMeetings?.length ?? 0}</p>
+          <p className="text-xs text-[#5a5a6e]">ישיבות קרובות</p>
         </div>
       </div>
 
       {/* Upcoming meetings */}
       {upcomingMeetings?.length > 0 && (
         <div className="mb-3">
-          <p className="text-xs font-semibold text-sc-text-light mb-1">📅 ישיבות קרובות</p>
+          <p className="text-xs font-semibold text-[#5a5a6e] mb-1">📅 ישיבות קרובות</p>
           {upcomingMeetings.map((m: any) => (
-            <div key={m.id} className="flex items-center gap-2 text-xs text-sc-text-light py-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-sc-success flex-shrink-0" />
+            <div key={m.id} className="flex items-center gap-2 text-xs text-[#5a5a6e] py-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#4a8c5c] flex-shrink-0" />
               <span className="font-medium">{m.title || 'ישיבה'}</span>
-              <span className="text-sc-text-light mr-auto">{m.date}</span>
+              <span className="text-[#5a5a6e] mr-auto">{m.date}</span>
             </div>
           ))}
         </div>
@@ -550,13 +550,13 @@ function BuildingStatus({ status }: { status: any }) {
       {/* Recent docs */}
       {documents?.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-sc-text-light mb-1">📄 מסמכים אחרונים</p>
+          <p className="text-xs font-semibold text-[#5a5a6e] mb-1">📄 מסמכים אחרונים</p>
           {documents.map((d: any) => (
-            <div key={d.id} className="flex items-center gap-2 text-xs text-sc-text-light py-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-sc-gold-dark flex-shrink-0" />
+            <div key={d.id} className="flex items-center gap-2 text-xs text-[#5a5a6e] py-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#8b6f47] flex-shrink-0" />
               <span>{d.title}</span>
               {d.file_url && (
-                <a href={d.file_url} target="_blank" rel="noopener noreferrer" className="text-sc-primary mr-auto">צפה</a>
+                <a href={d.file_url} target="_blank" rel="noopener noreferrer" className="text-[#3b6b9c] mr-auto">צפה</a>
               )}
             </div>
           ))}
@@ -585,20 +585,20 @@ function InviteForm({ buildingId, senderName }: { buildingId: string; senderName
 
   return (
     <div className="space-y-5">
-      <div className="flex rounded-xl overflow-hidden border border-sc-border text-sm font-medium">
+      <div className="flex rounded-xl overflow-hidden border border-[#eeeeee] text-sm font-medium">
         <button onClick={() => setType('phone')}
-          className={`flex-1 py-2.5 transition-colors ${type === 'phone' ? 'bg-sc-primary text-white' : 'bg-white text-sc-text-light hover:bg-sc-bg'}`}>
+          className={`flex-1 py-2.5 transition-colors ${type === 'phone' ? 'bg-[#3b6b9c] text-white' : 'bg-white text-[#5a5a6e] hover:bg-[#f8f9fa]'}`}>
           📱 טלפון
         </button>
         <button onClick={() => setType('email')}
-          className={`flex-1 py-2.5 transition-colors ${type === 'email' ? 'bg-sc-primary text-white' : 'bg-white text-sc-text-light hover:bg-sc-bg'}`}>
+          className={`flex-1 py-2.5 transition-colors ${type === 'email' ? 'bg-[#3b6b9c] text-white' : 'bg-white text-[#5a5a6e] hover:bg-[#f8f9fa]'}`}>
           ✉️ מייל
         </button>
       </div>
 
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="block text-sm font-medium text-sc-text">
+          <label className="block text-sm font-medium text-[#212121]">
             {type === 'phone' ? 'מספר טלפון' : 'כתובת מייל'}
           </label>
           {type === 'phone' && 'contacts' in navigator && (
@@ -611,7 +611,7 @@ function InviteForm({ buildingId, senderName }: { buildingId: string; senderName
                   }
                 } catch {}
               }}
-              className="flex items-center gap-1.5 text-xs font-semibold text-sc-primary bg-sc-light-blue hover:bg-sc-light-blue/70 px-3 py-1.5 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 text-xs font-semibold text-[#3b6b9c] bg-[#ebf1f7] hover:bg-[#ebf1f7]/70 px-3 py-1.5 rounded-lg transition-colors"
             >
               📇 בחר מאנשי קשר
             </button>
@@ -627,16 +627,16 @@ function InviteForm({ buildingId, senderName }: { buildingId: string; senderName
         />
       </div>
 
-      <div className="bg-sc-light-blue rounded-2xl p-4 border border-sc-primary-light">
-        <p className="text-xs text-sc-primary font-semibold mb-2">תצוגה מקדימה:</p>
-        <p className="text-sm text-sc-text leading-relaxed whitespace-pre-line">{msgText}</p>
+      <div className="bg-[#ebf1f7] rounded-2xl p-4 border border-[#3b6b9c]-light">
+        <p className="text-xs text-[#3b6b9c] font-semibold mb-2">תצוגה מקדימה:</p>
+        <p className="text-sm text-[#212121] leading-relaxed whitespace-pre-line">{msgText}</p>
       </div>
 
       <div className="space-y-3">
         {type === 'phone' ? (
           <>
             <button onClick={sendWhatsApp} disabled={phone.length < 10}
-              className="sc-btn-primary w-full flex items-center justify-center gap-3 bg-sc-success hover:bg-sc-success/90 disabled:opacity-40 text-sm">
+              className="sc-btn-primary w-full flex items-center justify-center gap-3 bg-[#4a8c5c] hover:bg-[#4a8c5c]/90 disabled:opacity-40 text-sm">
               <span className="text-lg">📱</span> שלח דרך WhatsApp
             </button>
             <button onClick={sendSMS} disabled={phone.length < 10}
@@ -654,7 +654,7 @@ function InviteForm({ buildingId, senderName }: { buildingId: string; senderName
 
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-sc-border" />
-        <span className="text-xs text-sc-text-light">או</span>
+        <span className="text-xs text-[#5a5a6e]">או</span>
         <div className="flex-1 h-px bg-sc-border" />
       </div>
       <button onClick={copyLink}
@@ -690,10 +690,10 @@ export default function CommitteeActions() {
 
 
   if (!isRep) return (
-    <div className="min-h-screen bg-sc-bg flex flex-col items-center justify-center gap-4 px-4 text-center">
+    <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center gap-4 px-4 text-center">
       <span className="text-5xl">🔒</span>
-      <h1 className="text-xl font-bold text-sc-text">גישה מוגבלת</h1>
-      <p className="text-sc-text-light">דף זה מיועד לנציגי ועד בניין בלבד</p>
+      <h1 className="text-xl font-bold text-[#212121]">גישה מוגבלת</h1>
+      <p className="text-[#5a5a6e]">דף זה מיועד לנציגי ועד בניין בלבד</p>
       <button onClick={() => navigate('/dashboard')} className="sc-btn-primary mt-2">חזרה לדף הבית</button>
     </div>
   )
@@ -731,21 +731,19 @@ export default function CommitteeActions() {
   }
 
   return (
-    <div className="min-h-screen bg-sc-bg" dir="rtl">
-      <Navbar />
-
-      <div className="max-w-lg mx-auto px-4 py-5 pb-20">
+    <PageLayout>
+      <div className="pb-20">
         {/* Header */}
         <div className="mb-5">
-          <h1 className="sc-section-title text-2xl">🏛️ לוח הפעולות שלי</h1>
+          <PageTitle>פעולות ועד</PageTitle>
           {building && (
-            <p className="text-sc-text-light text-sm mt-0.5">נציג ועד בניין — {building.address || `${building.street} ${building.number}`}</p>
+            <p className="text-[#5a5a6e] text-[13px] mt-0.5">נציג ועד בניין — {building.address || `${building.street} ${building.number}`}</p>
           )}
         </div>
 
         {/* Success toast */}
         {success && (
-          <div className="mb-4 bg-sc-success text-white rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2">
+          <div className="mb-4 bg-[#4a8c5c] text-white rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2">
             ✅ {success}
           </div>
         )}
@@ -754,19 +752,19 @@ export default function CommitteeActions() {
         <BuildingStatus status={statusQuery.data} />
 
         {/* Action cards */}
-        <h2 className="text-base font-bold text-sc-text mb-3">פעולות מהירות</h2>
+        <h2 className="text-[16px] font-bold text-[#212121] mb-3">פעולות מהירות</h2>
         <div className="grid grid-cols-2 gap-3 mb-6">
           {actions.map((action, i) => (
             <button
               key={action.id}
               onClick={() => setModal(action.id)}
-              className={`sc-card p-4 text-right active:scale-95 transition-transform hover:bg-sc-light-blue ${i === 4 ? 'col-span-2' : ''}`}
+              className={`sc-card p-4 text-right active:scale-95 transition-transform hover:bg-[#ebf1f7] ${i === 4 ? 'col-span-2' : ''}`}
             >
-              <div className="inline-flex w-10 h-10 bg-sc-primary rounded-xl items-center justify-center text-xl shadow-sm mb-2 text-white">
+              <div className="inline-flex w-12 h-12 bg-[#ebf1f7] rounded-[12px] items-center justify-center text-xl mb-2">
                 {action.icon}
               </div>
-              <h3 className="font-bold text-sc-text text-sm">{action.title}</h3>
-              <p className="text-sc-text-light text-xs mt-0.5 leading-snug">{action.desc}</p>
+              <h3 className="font-bold text-[#212121] text-[18px]">{action.title}</h3>
+              <p className="text-[#5a5a6e] text-[11px] mt-0.5 leading-snug">{action.desc}</p>
             </button>
           ))}
         </div>
@@ -774,25 +772,25 @@ export default function CommitteeActions() {
         {/* Recent tenants list */}
         {statusQuery.data?.tenants && statusQuery.data.tenants.length > 0 && (
           <div className="sc-card overflow-hidden">
-            <div className="px-4 py-3 border-b border-sc-border">
-              <h2 className="font-bold text-sc-text text-sm">👥 דיירי הבניין</h2>
+            <div className="px-4 py-3 border-b border-[#eeeeee]">
+              <h2 className="font-bold text-[#212121] text-sm">👥 דיירי הבניין</h2>
             </div>
             <div className="divide-y divide-sc-bg">
               {statusQuery.data.tenants.slice(0, 8).map((t: any) => (
                 <div key={t.id} className="flex items-center gap-3 px-4 py-3">
-                  <div className="w-8 h-8 bg-sc-light-blue rounded-full flex items-center justify-center text-sc-primary text-sm font-bold flex-shrink-0">
+                  <div className="w-8 h-8 bg-[#ebf1f7] rounded-full flex items-center justify-center text-[#3b6b9c] text-sm font-bold flex-shrink-0">
                     {t.profile?.full_name?.[0] ?? '?'}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-sc-text truncate">{t.profile?.full_name ?? t.profile?.email ?? 'דייר'}</p>
-                    <p className="text-xs text-sc-text-light">{t.is_onboarded ? '✅ הצטרף' : '⏳ בתהליך'}</p>
+                    <p className="text-sm font-medium text-[#212121] truncate">{t.profile?.full_name ?? t.profile?.email ?? 'דייר'}</p>
+                    <p className="text-xs text-[#5a5a6e]">{t.is_onboarded ? '✅ הצטרף' : '⏳ בתהליך'}</p>
                   </div>
                   <div className="flex gap-1">
                     {t.profile?.is_building_representative && (
-                      <span className="sc-badge bg-sc-light-blue text-sc-primary">ועד</span>
+                      <span className="sc-badge bg-[#ebf1f7] text-[#3b6b9c]">ועד</span>
                     )}
                     {t.signatures?.length > 0 && (
-                      <span className="sc-badge bg-sc-success/15 text-sc-success">חתם</span>
+                      <span className="sc-badge bg-[#4a8c5c]/15 text-[#4a8c5c]">חתם</span>
                     )}
                   </div>
                 </div>
@@ -808,7 +806,7 @@ export default function CommitteeActions() {
           <PollWizard groupId={groupId} onSuccess={() => handleSuccess('הסקר פורסם בהצלחה!')} />
         )}
         {modal === 'poll' && !groupId && (
-          <p className="text-sc-text-light text-center py-4">לא נמצאה קבוצת בניין. יש ליצור קבוצה תחילה.</p>
+          <p className="text-[#5a5a6e] text-center py-4">לא נמצאה קבוצת בניין. יש ליצור קבוצה תחילה.</p>
         )}
         {modal === 'document' && buildingId && (
           <DocumentUpload buildingId={buildingId} groupId={groupId} onSuccess={() => handleSuccess('המסמך הועלה בהצלחה!')} />
@@ -826,9 +824,9 @@ export default function CommitteeActions() {
           <InviteForm buildingId={buildingId} senderName={myRole?.fullName ?? undefined} />
         )}
         {!buildingId && modal && (
-          <p className="text-sc-text-light text-center py-4">לא נמצא בניין משויך. צור קשר עם המנהל.</p>
+          <p className="text-[#5a5a6e] text-center py-4">לא נמצא בניין משויך. צור קשר עם המנהל.</p>
         )}
       </BottomSheet>
-    </div>
+    </PageLayout>
   )
 }

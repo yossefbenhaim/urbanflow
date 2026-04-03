@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import Navbar from '../components/Navbar'
+import PageLayout, { PageTitle } from '../components/PageLayout'
 import { trpc } from '../lib/trpc'
 
 const STAGE_LABELS: Record<string, string> = {
@@ -50,12 +50,12 @@ export default function LearningPage() {
   const totalCount = progress.data?.total ?? items.length
 
   return (
-    <div className="min-h-screen bg-sc-bg" dir="rtl">
-      <Navbar />
+    <PageLayout>
+      
       <div className="max-w-3xl mx-auto px-4 pt-24 pb-12">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-sc-text mb-2">📚 מרכז הלמידה</h1>
-          <p className="text-sc-text-light text-sm">
+          <h1 className="text-2xl font-bold text-[#212121] mb-2">📚 מרכז הלמידה</h1>
+          <p className="text-[#5a5a6e] text-sm">
             למד על תהליך פינוי בינוי — סרטונים ומאמרים בשפה פשוטה
           </p>
         </div>
@@ -64,10 +64,10 @@ export default function LearningPage() {
         {isLoggedIn && totalCount > 0 && (
           <div className="sc-card p-4 mb-8">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-sc-text">
+              <span className="text-sm font-medium text-[#212121]">
                 התקדמות: {completedCount}/{totalCount} הושלמו
               </span>
-              <span className="text-xs text-sc-text-light">
+              <span className="text-xs text-[#5a5a6e]">
                 {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
               </span>
             </div>
@@ -87,17 +87,17 @@ export default function LearningPage() {
         {content.isLoading ? (
           <div className="text-center py-12">
             <div className="text-4xl mb-4 animate-bounce">📚</div>
-            <p className="text-sc-text-light">טוען תכנים...</p>
+            <p className="text-[#5a5a6e]">טוען תכנים...</p>
           </div>
         ) : items.length === 0 ? (
           <div className="sc-card p-8 text-center">
-            <p className="text-sc-text-light">אין תכנים זמינים כרגע.</p>
+            <p className="text-[#5a5a6e]">אין תכנים זמינים כרגע.</p>
           </div>
         ) : (
           Object.entries(grouped).map(([stage, stageItems]) => (
             <div key={stage} className="mb-8">
-              <h2 className="text-lg font-bold text-sc-text mb-4 flex items-center gap-2">
-                <span className="w-8 h-8 rounded-full bg-sc-light-blue flex items-center justify-center text-sm">
+              <h2 className="text-lg font-bold text-[#212121] mb-4 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-full bg-[#ebf1f7] flex items-center justify-center text-sm">
                   {STAGE_LABELS[stage]?.[0] || '📋'}
                 </span>
                 {STAGE_LABELS[stage] || stage}
@@ -124,14 +124,14 @@ export default function LearningPage() {
                       <div className="p-4">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-sm">{TYPE_ICONS[item.content_type] || '📄'}</span>
-                          <span className="text-xs text-sc-text-light">
+                          <span className="text-xs text-[#5a5a6e]">
                             {item.content_type === 'video' ? 'סרטון' : 'מאמר'}
                             {item.duration_minutes ? ` · ${item.duration_minutes} דק'` : ''}
                           </span>
                         </div>
-                        <h3 className="font-bold text-sc-text text-base mb-1">{item.title}</h3>
+                        <h3 className="font-bold text-[#212121] text-base mb-1">{item.title}</h3>
                         {item.description && (
-                          <p className="text-sc-text-light text-sm mb-3 line-clamp-2">{item.description}</p>
+                          <p className="text-[#5a5a6e] text-sm mb-3 line-clamp-2">{item.description}</p>
                         )}
                         <div className="flex gap-2">
                           <a
@@ -146,13 +146,13 @@ export default function LearningPage() {
                             <button
                               onClick={() => markCompleted.mutate({ contentId: item.id })}
                               disabled={markCompleted.isPending}
-                              className="text-sm px-3 py-2 border border-green-400 text-sc-success rounded-lg hover:bg-sc-success/10 transition"
+                              className="text-sm px-3 py-2 border border-green-400 text-[#4a8c5c] rounded-lg hover:bg-[#4a8c5c]/10 transition"
                             >
                               ✓ סיימתי
                             </button>
                           )}
                           {isCompleted && (
-                            <span className="text-sm px-3 py-2 text-sc-success font-medium">
+                            <span className="text-sm px-3 py-2 text-[#4a8c5c] font-medium">
                               ✅ הושלם
                             </span>
                           )}
@@ -166,6 +166,6 @@ export default function LearningPage() {
           ))
         )}
       </div>
-    </div>
+    </PageLayout>
   )
 }

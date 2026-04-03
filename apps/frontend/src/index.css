@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -17,61 +17,66 @@
 }
 
 /* Silver Castle Figma Design System */
-body { background-color: #F8F9FA; }
+body { background-color: #f8f9fa; }
 
 @layer components {
   .sc-btn-primary {
-    @apply bg-gradient-to-br from-[#1E5F8A] to-[#2A7AB0] text-white px-8 py-3.5 rounded-lg font-semibold;
-    box-shadow: 0 4px 12px rgba(30,95,138,0.25);
+    @apply bg-[#3b6b9c] text-white px-6 py-3 rounded-[8px] font-semibold text-[13px];
+    box-shadow: 0 2px 8px rgba(59,107,156,0.2);
   }
   .sc-btn-primary:hover {
     @apply opacity-90;
   }
 
+  .sc-btn-gold {
+    @apply bg-[#8b6f47] text-white px-6 py-3 rounded-[8px] font-semibold text-[13px];
+    box-shadow: 0 2px 8px rgba(139,111,71,0.2);
+  }
+  .sc-btn-gold:hover {
+    @apply opacity-90;
+  }
+
   .sc-btn-secondary {
-    @apply border-2 border-[#1E5F8A] text-[#1E5F8A] px-7 py-3 rounded-lg font-semibold bg-transparent;
+    @apply border border-[#3b6b9c] text-[#3b6b9c] px-6 py-3 rounded-[8px] font-semibold text-[13px] bg-transparent;
   }
   .sc-btn-secondary:hover {
-    @apply bg-[#E8F4F8];
+    @apply bg-[#ebf1f7];
   }
 
   .sc-card {
-    @apply bg-white rounded-2xl p-8 border border-black/[0.04];
-    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    @apply bg-white rounded-[14px] border border-[#eeeeee];
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   }
 
   .sc-input {
-    @apply w-full bg-white border border-sc-border rounded-lg px-4 py-3.5 text-base text-sc-text outline-none transition-all;
+    @apply w-full bg-white border border-[#eeeeee] rounded-[10px] px-4 py-3 text-[12px] text-[#212121] outline-none transition-all;
   }
   .sc-input:focus {
-    @apply border-sc-primary ring-[3px] ring-sc-primary/10;
-  }
-
-  .sc-icon-container {
-    @apply w-14 h-14 rounded-xl bg-gradient-to-br from-[#E8F4F8] to-[#F0F9FA] flex items-center justify-center;
+    @apply border-[#3b6b9c] ring-[2px] ring-[#3b6b9c]/10;
   }
 
   .sc-badge {
-    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold;
+    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-semibold;
+  }
+  .sc-badge-warning {
+    @apply bg-[#fcf4e7] text-[#c4841d] text-[10px] rounded-full px-3 py-1 font-semibold;
+  }
+  .sc-badge-success {
+    @apply bg-[#edf5ef] text-[#4a8c5c] text-[10px] rounded-full px-3 py-1 font-semibold;
   }
 
   .sc-section-title {
-    @apply text-2xl font-bold text-sc-text text-right;
+    @apply text-[22px] font-extrabold text-[#212121] text-right;
   }
 
-  .sc-hero-title {
-    @apply text-5xl font-bold text-sc-text;
+  .sc-label {
+    @apply text-[12px] font-semibold text-[#5a5a6e] block mb-1.5;
   }
 
-  .sc-card-title {
-    @apply text-lg font-semibold text-sc-text;
+  .sc-tab-active {
+    @apply bg-[#3b6b9c] text-white rounded-[8px] px-4 py-2 text-[13px] font-semibold;
   }
-
-  .sc-body {
-    @apply text-base text-sc-text;
-  }
-
-  .sc-small {
-    @apply text-sm text-sc-text-light;
+  .sc-tab-inactive {
+    @apply bg-[#f8f9fa] text-[#8e8e9e] rounded-[8px] px-4 py-2 text-[13px] font-normal;
   }
 }
