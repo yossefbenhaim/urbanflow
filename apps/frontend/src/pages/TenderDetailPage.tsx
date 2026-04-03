@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import PageLayout, { PageTitle } from '../components/PageLayout'
+import ProposalComparison from '../components/ProposalComparison'
 import { useUser } from '../hooks/useUser'
 
 const TYPE_LABELS: Record<string, string> = {
@@ -20,119 +21,6 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   closed: { label: 'סגור', color: 'bg-red-500/15 text-red-500' },
   awarded: { label: 'נבחר זוכה', color: 'bg-[#ebf1f7] text-[#3b6b9c]' },
   cancelled: { label: 'בוטל', color: 'bg-gray-300 text-[#5a5a6e]' },
-}
-
-// ── Proposal Comparison Table (C2) ──────────────────────
-function ProposalComparison({
-  tenderId,
-  isRep,
-  onAward,
-}: {
-  tenderId: string
-  isRep: boolean
-  onAward: (winnerId: string) => void
-}) {
-  const { data: proposals } = trpc.tenders.getTenderProposals.useQuery({ tenderId })
-  const [sortKey, setSortKey] = useState<string>('price')
-  const [sortAsc, setSortAsc] = useState(true)
-
-  const handleSort = (key: string) => {
-    if (sortKey === key) setSortAsc(!sortAsc)
-    else { setSortKey(key); setSortAsc(true) }
-  }
-
-  const sorted = [...(proposals ?? [])].sort((a: any, b: any) => {
-    const av = a[sortKey] ?? 0
-    const bv = b[sortKey] ?? 0
-    return sortAsc ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1)
-  })
-
-  const SortHeader = ({ label, field }: { label: string; field: string }) => (
-    <th
-      className="px-3 py-2 text-right cursor-pointer hover:text-[#8b6f47] transition-colors select-none"
-      onClick={() => handleSort(field)}
-    >
-      {label} {sortKey === field ? (sortAsc ? '▲' : '▼') : ''}
-    </th>
-  )
-
-  if (!proposals?.length) {
-    return (
-      <div className="sc-card p-6 text-center">
-        <p className="text-[#5a5a6e]">📭 עדיין לא הוגשו הצעות</p>
-      </div>
-    )
-  }
-
-  return (
-    <div className="sc-card overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="bg-sc-text/5 text-[#212121] text-xs uppercase">
-          <tr>
-            <th className="px-3 py-2 text-right">מציע</th>
-            <SortHeader label="מחיר (₪)" field="price" />
-            <SortHeader label='לו"ז (חודשים)' field="timeline_months" />
-            <SortHeader label="שנות ניסיון" field="experience_years" />
-            <SortHeader label="פרויקטים" field="past_projects_count" />
-            <th className="px-3 py-2 text-right">ערבויות</th>
-            <th className="px-3 py-2 text-right">סטטוס</th>
-            {isRep && <th className="px-3 py-2 text-right">פעולות</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {sorted.map((p: any) => (
-            <tr
-              key={p.id}
-              className={`border-t transition-colors ${
-                p.status === 'winner'
-                  ? 'bg-[#4a8c5c]/10 border-sc-success/20'
-                  : 'hover:bg-[#f8f9fa]'
-              }`}
-            >
-              <td className="px-3 py-3 font-medium">
-                {p.status === 'winner' && '🏆 '}
-                {p.provider?.full_name ?? 'ספק'}
-              </td>
-              <td className="px-3 py-3">
-                {p.price ? `₪${Number(p.price).toLocaleString('he-IL')}` : '—'}
-              </td>
-              <td className="px-3 py-3">{p.timeline_months ?? '—'}</td>
-              <td className="px-3 py-3">{p.experience_years ?? '—'}</td>
-              <td className="px-3 py-3">{p.past_projects_count ?? '—'}</td>
-              <td className="px-3 py-3 text-xs">{p.warranty_details ?? '—'}</td>
-              <td className="px-3 py-3">
-                <span
-                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                    p.status === 'winner'
-                      ? 'bg-[#4a8c5c]/15 text-[#4a8c5c]'
-                      : p.status === 'rejected'
-                      ? 'bg-red-500/15 text-red-500'
-                      : p.status === 'shortlisted'
-                      ? 'bg-[#8b6f47]/15 text-[#8b6f47]'
-                      : 'bg-[#f8f9fa] text-[#5a5a6e]'
-                  }`}
-                >
-                  {p.status === 'winner' ? 'זוכה' : p.status === 'rejected' ? 'נדחה' : p.status === 'shortlisted' ? 'ברשימה מצומצמת' : 'הוגש'}
-                </span>
-              </td>
-              {isRep && (
-                <td className="px-3 py-3">
-                  {p.status === 'submitted' && (
-                    <button
-                      onClick={() => onAward(p.provider_id)}
-                      className="text-xs sc-btn-primary py-1 px-2"
-                    >
-                      🏆 בחר זוכה
-                    </button>
-                  )}
-                </td>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
 }
 
 // ── Negotiation Timeline (C3) ───────────────────────────
@@ -572,7 +460,7 @@ export default function TenderDetailPage() {
             <h3 className="text-lg font-bold text-[#212121] mb-3">📊 השוואת הצעות</h3>
             <ProposalComparison
               tenderId={tender.id}
-              isRep={!!isRep && tender.status === 'open'}
+              readOnly={!isRep || tender.status !== 'open'}
               onAward={winnerId => award.mutate({ tenderId: tender.id, winnerId })}
             />
           </div>

@@ -37,6 +37,9 @@ import TimelinePage from './pages/TimelinePage'
 import ValidationPage from './pages/ValidationPage'
 import LearningPage from './pages/LearningPage'
 import DocumentViewPage from './pages/DocumentViewPage'
+import TenantTenderView from './pages/TenantTenderView'
+import VotingPage from './pages/VotingPage'
+import AgreementHub from './pages/AgreementHub'
 
 function OAuthCallback() {
   const navigate = useNavigate()
@@ -97,6 +100,9 @@ export default function App() {
         <Route path="/timeline" element={<TimelinePage />} />
         <Route path="/validation" element={<ValidationPage />} />
         <Route path="/learn" element={<LearningPage />} />
+        <Route path="/tender-view" element={<TenantTenderView />} />
+        <Route path="/voting" element={<VotingPage />} />
+        <Route path="/agreements" element={<AgreementHub />} />
       </Routes>
       <FaqBot />
       <AccessibilityWidget />

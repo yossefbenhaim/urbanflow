@@ -608,6 +608,93 @@ export const tenantRouter = router({
       return { success: true, signedAt: new Date().toISOString() }
     }),
 
+  // ─── Steps 16-18: Status ──────────────────────────────
+  getStepsStatus: protectedProcedure.query(async ({ ctx }) => {
+    // Find user's project
+    const { data: tp } = await ctx.supabase
+      .from('tenant_profiles')
+      .select('unit:units(building:buildings(project_id))')
+      .eq('user_id', ctx.user.id)
+      .single()
+    const projectId = (tp?.unit as any)?.building?.project_id
+    if (!projectId) return { step16: false, step17: false, step18: false }
+
+    // Step 16: tenders exist for this project
+    const { count: tenderCount } = await ctx.supabase
+      .from('tenders')
+      .select('*', { count: 'exact', head: true })
+      .eq('project_id', projectId)
+    const step16 = (tenderCount ?? 0) > 0
+
+    // Step 17: apartment_votes exist for relevant polls
+    const { data: bgm } = await ctx.supabase
+      .from('building_group_members')
+      .select('group_id')
+      .eq('user_id', ctx.user.id)
+    const groupIds = (bgm ?? []).map((m: any) => m.group_id)
+    let step17 = false
+    if (groupIds.length > 0) {
+      const { data: polls } = await ctx.supabase
+        .from('polls')
+        .select('id')
+        .in('group_id', groupIds)
+      const pollIds = (polls ?? []).map((p: any) => p.id)
+      if (pollIds.length > 0) {
+        const { count: voteCount } = await ctx.supabase
+          .from('apartment_votes')
+          .select('*', { count: 'exact', head: true })
+          .in('poll_id', pollIds)
+        step17 = (voteCount ?? 0) > 0
+      }
+    }
+
+    // Step 18: signatures exist for all required agreement documents
+    const { data: docs } = await ctx.supabase
+      .from('documents')
+      .select('id, content_key, signatures(user_id)')
+      .eq('project_id', projectId)
+      .eq('type', 'SIGN_REQUIRED')
+      .in('content_key', ['agreement_principles', 'power_of_attorney_lawyer', 'disclosure_letter'])
+    const agreementDocs = docs ?? []
+    const step18 = agreementDocs.length > 0 && agreementDocs.every((d: any) =>
+      (d.signatures ?? []).some((s: any) => s.user_id === ctx.user.id)
+    )
+
+    return { step16, step17, step18 }
+  }),
+
+  getAgreementStatus: protectedProcedure.query(async ({ ctx }) => {
+    const { data: tp } = await ctx.supabase
+      .from('tenant_profiles')
+      .select('unit:units(building:buildings(project_id))')
+      .eq('user_id', ctx.user.id)
+      .single()
+    const projectId = (tp?.unit as any)?.building?.project_id
+    if (!projectId) return []
+
+    const { data: docs } = await ctx.supabase
+      .from('documents')
+      .select('id, title, content_key, type, signatures(signed_at, user_id, signature_image)')
+      .eq('project_id', projectId)
+      .in('content_key', ['agreement_principles', 'power_of_attorney_lawyer', 'disclosure_letter'])
+
+    return (docs ?? []).map((d: any) => {
+      const mySig = (d.signatures ?? []).find((s: any) => s.user_id === ctx.user.id)
+      let status: 'unsigned' | 'signed' | 'pdf_available' = 'unsigned'
+      if (mySig) {
+        status = mySig.signature_image ? 'pdf_available' : 'signed'
+      }
+      return {
+        docId: d.id,
+        title: d.title,
+        contentKey: d.content_key,
+        type: d.type,
+        status,
+        signedAt: mySig?.signed_at ?? null,
+      }
+    })
+  }),
+
   getNextStep: protectedProcedure.query(async ({ ctx }) => {
     // Check profile completion
     const { data: tp } = await ctx.supabase.from('tenant_profiles').select('is_onboarded, tabu_file_url').eq('user_id', ctx.user.id).single()
