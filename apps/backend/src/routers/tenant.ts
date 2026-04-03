@@ -565,6 +565,49 @@ export const tenantRouter = router({
   }),
 
   // ─── E3: Next Step ─────────────────────────────────────
+  getDocumentContent: protectedProcedure
+    .input(z.object({ docId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data: doc, error } = await ctx.supabase
+        .from('documents')
+        .select('*, signatures(signed_at, signature_image, full_name, id_number, user_id)')
+        .eq('id', input.docId)
+        .single()
+      if (error || !doc) throw new TRPCError({ code: 'NOT_FOUND', message: 'מסמך לא נמצא' })
+      // Check if current user already signed
+      const mySig = ((doc as any).signatures ?? []).find((s: any) => s.user_id === ctx.user.id)
+      return { ...doc, mySig: mySig ?? null }
+    }),
+
+  signDocumentWithSignature: protectedProcedure
+    .input(z.object({
+      docId: z.string().uuid(),
+      signatureImage: z.string(),
+      fullName: z.string(),
+      idNumber: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      // Check not already signed
+      const { data: existing } = await ctx.supabase
+        .from('signatures')
+        .select('id')
+        .eq('document_id', input.docId)
+        .eq('user_id', ctx.user.id)
+        .maybeSingle()
+      if (existing) throw new TRPCError({ code: 'BAD_REQUEST', message: 'כבר חתמת על מסמך זה' })
+
+      const { error } = await ctx.supabase.from('signatures').insert({
+        document_id: input.docId,
+        user_id: ctx.user.id,
+        verified_otp: true,
+        signature_image: input.signatureImage,
+        full_name: input.fullName,
+        id_number: input.idNumber,
+      })
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return { success: true, signedAt: new Date().toISOString() }
+    }),
+
   getNextStep: protectedProcedure.query(async ({ ctx }) => {
     // Check profile completion
     const { data: tp } = await ctx.supabase.from('tenant_profiles').select('is_onboarded, tabu_file_url').eq('user_id', ctx.user.id).single()

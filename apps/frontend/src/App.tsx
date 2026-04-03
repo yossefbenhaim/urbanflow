@@ -36,6 +36,7 @@ import ElderlyForm from './pages/ElderlyForm'
 import TimelinePage from './pages/TimelinePage'
 import ValidationPage from './pages/ValidationPage'
 import LearningPage from './pages/LearningPage'
+import DocumentViewPage from './pages/DocumentViewPage'
 
 function OAuthCallback() {
   const navigate = useNavigate()
@@ -71,6 +72,7 @@ export default function App() {
         <Route path="/onboarding" element={<TenantOnboarding />} />
         <Route path="/dashboard" element={<><OAuthCallback /><Dashboard /></>} />
         <Route path="/documents" element={<Documents />} />
+        <Route path="/documents/:docId" element={<DocumentViewPage />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/committee/*" element={<CommitteeDashboard />} />
         <Route path="/manager/*" element={<ManagerDashboard />} />
