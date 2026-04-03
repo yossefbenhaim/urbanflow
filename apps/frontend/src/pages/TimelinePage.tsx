@@ -213,7 +213,7 @@ export default function TimelinePage() {
       <div className="flex items-center justify-center h-[60vh]">
         <div className="animate-spin w-8 h-8 border-4 border-[#3b6b9c] border-t-transparent rounded-full" />
       </div>
-    </div>
+    </PageLayout>
   )
 
   if (!projectId) return (
@@ -224,7 +224,7 @@ export default function TimelinePage() {
         <h1 className="text-xl font-bold text-[#212121] mb-2">לוח זמנים</h1>
         <p className="text-[#5a5a6e]">טרם שויכת לפרויקט</p>
       </div>
-    </div>
+    </PageLayout>
   )
 
   return (
@@ -262,7 +262,7 @@ export default function TimelinePage() {
             >
               📝 שלח עדכון
             </button>
-          </PageLayout>
+          </div>
         )}
 
         {activeTab === 'update' && isProvider ? (
@@ -270,7 +270,7 @@ export default function TimelinePage() {
         ) : (
           <TimelineView projectId={projectId} />
         )}
-      </PageLayout>
+      </div>
     </PageLayout>
   )
 }

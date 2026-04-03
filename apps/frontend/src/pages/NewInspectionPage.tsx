@@ -259,7 +259,7 @@ export default function NewInspectionPage() {
           />
         )}
       </div>
-    </div>
+    </PageLayout>
   )
 }
 
@@ -400,7 +400,7 @@ function Field({ label, value, onChange, type = 'text', textarea = false, placeh
       ) : (
         <input type={type} value={value ?? ''} onChange={e => onChange(e.target.value)} placeholder={placeholder} className="sc-input" />
       )}
-    </PageLayout>
+    </div>
   )
 }
 
@@ -414,6 +414,6 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
       >
         <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform mx-0.5 ${value ? 'translate-x-6' : ''}`} />
       </button>
-    </PageLayout>
+    </div>
   )
 }
