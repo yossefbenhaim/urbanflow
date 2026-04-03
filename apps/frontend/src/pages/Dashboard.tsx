@@ -253,10 +253,10 @@ export default function Dashboard() {
               <p className="text-base font-bold text-[#1e3a5f]">{(nextStep as any).text}</p>
             </div>
             <a
-              href={(nextStep as any).link}
+              href="/my-steps"
               className="sc-btn-primary px-5 py-2.5 text-sm no-underline whitespace-nowrap flex-shrink-0"
             >
-              בצע עכשיו ←
+              צפה בצעדים ←
             </a>
           </div>
         )}

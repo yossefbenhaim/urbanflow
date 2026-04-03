@@ -608,6 +608,64 @@ export const tenantRouter = router({
       return { success: true, signedAt: new Date().toISOString() }
     }),
 
+  getStepsStatus: protectedProcedure.query(async ({ ctx }) => {
+    // Fetch all needed data in parallel
+    const [
+      { data: profile },
+      { data: tp },
+      { count: coOwnersCount },
+      { data: projectTenant },
+    ] = await Promise.all([
+      ctx.supabase.from('profiles').select('role, full_name, phone, id_number').eq('id', ctx.user.id).single(),
+      ctx.supabase.from('tenant_profiles').select('is_onboarded, address, apartment_sqm, tabu_file_url, building_id, floor, apartment_number').eq('user_id', ctx.user.id).single(),
+      ctx.supabase.from('apartment_owners').select('*', { count: 'exact', head: true }).eq('user_id', ctx.user.id),
+      ctx.supabase.from('project_tenants').select('project_id').eq('tenant_id', ctx.user.id).maybeSingle(),
+    ])
+
+    const p = profile as any
+    const t = tp as any
+
+    // Steps 1-7: Registration & Profile
+    const step1 = true // always done if logged in
+    const step2 = !!t?.is_onboarded
+    const step3 = !!(t?.address || (t?.floor != null && t?.apartment_number))
+    const step4 = !!t?.apartment_sqm
+    const step5 = !!t?.tabu_file_url
+    const step6 = !!p?.role
+    const step7 = (coOwnersCount ?? 0) > 1 || step2 // skipped if onboarded with no co-owners
+
+    // Steps 8-18: Placeholder — future phases
+    const hasProject = !!projectTenant?.project_id
+    const step8 = hasProject // joined project
+    const step9 = false  // signed initial agreement
+    const step10 = false // attended first meeting
+    const step11 = false // voted in building poll
+    const step12 = false // signed power of attorney
+    const step13 = false // committee formed
+    const step14 = false // provider selected
+    const step15 = false // feasibility complete
+    const step16 = false // planning approved
+    const step17 = false // contract signed
+    const step18 = false // project launched
+
+    const steps = [
+      step1, step2, step3, step4, step5, step6, step7,
+      step8, step9, step10, step11, step12, step13,
+      step14, step15, step16, step17, step18,
+    ]
+
+    // Calculate current step (first false)
+    const currentStep = steps.findIndex(s => !s)
+    const completedCount = steps.filter(Boolean).length
+
+    return {
+      steps: steps.map((done, i) => ({ stepNumber: i + 1, done })),
+      currentStep: currentStep === -1 ? 19 : currentStep + 1,
+      completedCount,
+      totalSteps: 18,
+    }
+  }),
+
   getNextStep: protectedProcedure.query(async ({ ctx }) => {
     // Check profile completion
     const { data: tp } = await ctx.supabase.from('tenant_profiles').select('is_onboarded, tabu_file_url').eq('user_id', ctx.user.id).single()

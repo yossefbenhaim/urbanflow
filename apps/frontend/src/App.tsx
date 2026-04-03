@@ -37,6 +37,7 @@ import TimelinePage from './pages/TimelinePage'
 import ValidationPage from './pages/ValidationPage'
 import LearningPage from './pages/LearningPage'
 import DocumentViewPage from './pages/DocumentViewPage'
+import TenantSteps from './pages/TenantSteps'
 
 function OAuthCallback() {
   const navigate = useNavigate()
@@ -97,6 +98,7 @@ export default function App() {
         <Route path="/timeline" element={<TimelinePage />} />
         <Route path="/validation" element={<ValidationPage />} />
         <Route path="/learn" element={<LearningPage />} />
+        <Route path="/my-steps" element={<TenantSteps />} />
       </Routes>
       <FaqBot />
       <AccessibilityWidget />

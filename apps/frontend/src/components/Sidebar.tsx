@@ -84,9 +84,10 @@ function getSidebarItems(role: string, isRepresentative: boolean): NavItem[] {
     case 'tenant':
       return [
         { to: '/dashboard', icon: '🏠', label: 'ראשי' },
+        { to: '/my-steps', icon: '📋', label: 'הצעדים שלי' },
         { to: '/documents', icon: '📄', label: 'מסמכים' },
         { to: '/chat', icon: '💬', label: 'צ\'אט' },
-        { to: '/directory', icon: '📋', label: 'ספריית מומחים' },
+        { to: '/directory', icon: '🔍', label: 'ספריית מומחים' },
         { to: '/profile', icon: '👤', label: 'פרופיל' },
       ]
     case 'manager':
@@ -141,6 +142,10 @@ export default function Sidebar({ overrideItems }: { overrideItems?: NavItem[] }
 
   const { data: myRole } = trpc.tenant.getMyRole.useQuery(undefined, {
     enabled: !!token && profile?.role === 'tenant',
+  })
+  const { data: stepsStatus } = trpc.tenant.getStepsStatus.useQuery(undefined, {
+    enabled: !!token && profile?.role === 'tenant',
+    staleTime: 30000,
   })
   const isRepresentative = (myRole as any)?.isRepresentative || false
 
@@ -199,7 +204,12 @@ export default function Sidebar({ overrideItems }: { overrideItems?: NavItem[] }
               }`}
             >
               <span className="text-lg w-[22px] text-center">{item.icon}</span>
-              <span>{item.label}</span>
+              <span className="flex-1">{item.label}</span>
+              {item.to === '/my-steps' && stepsStatus && (stepsStatus as any).currentStep <= 18 && (
+                <span className="bg-[#3b6b9c] text-white text-[9px] font-bold w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0">
+                  {(stepsStatus as any).currentStep}
+                </span>
+              )}
             </Link>
           )
         })}
