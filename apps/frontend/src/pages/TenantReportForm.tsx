@@ -33,52 +33,52 @@ export default function TenantReportForm() {
     <div className="min-h-screen bg-sc-bg" dir="rtl">
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-[22px] font-bold text-sc-dark mb-1">🚨 דיווח על דייר בעייתי</h1>
-        <p className="text-sc-gray text-sm mb-6">דווח על דייר שמפריע להתקדמות הפרויקט</p>
+        <h1 className="text-[22px] font-bold text-sc-text mb-1">🚨 דיווח על דייר בעייתי</h1>
+        <p className="text-sc-text-light text-sm mb-6">דווח על דייר שמפריע להתקדמות הפרויקט</p>
 
         <div className="sc-card p-6 mb-6">
-          <h3 className="text-[17px] font-bold text-sc-dark mb-4">טופס דיווח</h3>
+          <h3 className="text-[17px] font-bold text-sc-text mb-4">טופס דיווח</h3>
           <div className="flex flex-col gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-sc-dark mb-1">מזהה דירה *</label>
+              <label className="block text-[13px] font-semibold text-sc-text mb-1">מזהה דירה *</label>
               <input className="sc-input" placeholder="UUID הדירה" value={form.apartmentId}
                 onChange={e => setForm(f => ({ ...f, apartmentId: e.target.value }))} />
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-sc-dark mb-2">סוג הדיווח *</label>
+              <label className="block text-[13px] font-semibold text-sc-text mb-2">סוג הדיווח *</label>
               <div className="flex flex-col gap-2">
                 {REPORT_TYPES.map(t => (
                   <button key={t.value} type="button"
                     onClick={() => setForm(f => ({ ...f, reportType: t.value as any }))}
                     className={`p-3 rounded-xl border-2 text-right transition-all ${
                       form.reportType === t.value
-                        ? 'border-sc-blue bg-sc-blue-pale'
-                        : 'border-sc-gray-light bg-white'
+                        ? 'border-sc-primary bg-sc-light-blue'
+                        : 'border-sc-border bg-white'
                     }`}>
-                    <p className={`text-sm font-semibold ${form.reportType === t.value ? 'text-sc-blue' : 'text-sc-dark'}`}>{t.label}</p>
-                    <p className="text-xs text-sc-gray mt-0.5">{t.desc}</p>
+                    <p className={`text-sm font-semibold ${form.reportType === t.value ? 'text-sc-primary' : 'text-sc-text'}`}>{t.label}</p>
+                    <p className="text-xs text-sc-text-light mt-0.5">{t.desc}</p>
                   </button>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-sc-dark mb-1">תיאור *</label>
+              <label className="block text-[13px] font-semibold text-sc-text mb-1">תיאור *</label>
               <textarea className="sc-input resize-y" rows={4} placeholder="תאר את הבעיה בפירוט..."
                 value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-sc-dark mb-2">תדירות</label>
+              <label className="block text-[13px] font-semibold text-sc-text mb-2">תדירות</label>
               <div className="flex gap-3">
                 {FREQUENCY_OPTIONS.map(opt => (
                   <button key={opt.value} type="button"
                     onClick={() => setForm(f => ({ ...f, frequency: opt.value as any }))}
                     className={`flex-1 py-2.5 rounded-xl border-2 font-semibold text-sm cursor-pointer transition-colors ${
                       form.frequency === opt.value
-                        ? 'border-sc-blue bg-sc-blue-pale text-sc-blue'
-                        : 'border-sc-gray-light bg-white text-sc-gray'
+                        ? 'border-sc-primary bg-sc-light-blue text-sc-primary'
+                        : 'border-sc-border bg-white text-sc-text-light'
                     }`}>
                     {opt.label}
                   </button>
@@ -89,7 +89,7 @@ export default function TenantReportForm() {
             <div className="flex items-center gap-2">
               <input type="checkbox" id="blocksProject" checked={form.blocksProject}
                 onChange={e => setForm(f => ({ ...f, blocksProject: e.target.checked }))} />
-              <label htmlFor="blocksProject" className="text-[13px] text-sc-dark">חוסם את התקדמות הפרויקט</label>
+              <label htmlFor="blocksProject" className="text-[13px] text-sc-text">חוסם את התקדמות הפרויקט</label>
             </div>
 
             {form.blocksProject && (
@@ -125,16 +125,16 @@ export default function TenantReportForm() {
         {/* Existing Reports */}
         {reports && reports.length > 0 && (
           <div>
-            <h3 className="text-[15px] font-bold text-sc-dark mb-3">דיווחים קודמים</h3>
+            <h3 className="text-[15px] font-bold text-sc-text mb-3">דיווחים קודמים</h3>
             <div className="flex flex-col gap-2.5">
               {reports.map((r: any) => (
                 <div key={r.id} className="sc-card p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold text-sc-dark">
+                    <span className="text-sm font-semibold text-sc-text">
                       {REPORT_TYPES.find(t => t.value === r.report_type)?.label ?? r.report_type}
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="sc-badge text-xs bg-sc-gray-light text-sc-gray">
+                      <span className="sc-badge text-xs bg-sc-border text-sc-text-light">
                         {FREQUENCY_OPTIONS.find(f => f.value === r.frequency)?.label ?? r.frequency}
                       </span>
                       {r.blocks_project && (
@@ -142,8 +142,8 @@ export default function TenantReportForm() {
                       )}
                     </div>
                   </div>
-                  <p className="text-xs text-sc-gray">{r.description}</p>
-                  <p className="text-[11px] text-sc-gray mt-1">{new Date(r.created_at).toLocaleDateString('he-IL')}</p>
+                  <p className="text-xs text-sc-text-light">{r.description}</p>
+                  <p className="text-[11px] text-sc-text-light mt-1">{new Date(r.created_at).toLocaleDateString('he-IL')}</p>
                 </div>
               ))}
             </div>

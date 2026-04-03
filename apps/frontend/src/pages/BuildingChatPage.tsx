@@ -45,28 +45,28 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
   }
 
   return (
-    <div className={`sc-card p-4 my-1 border-t-4 ${isOpen ? 'border-t-sc-blue bg-sc-blue-pale/30' : 'border-t-sc-gray-light'}`}>
-      <div className="font-bold text-sm text-sc-dark mb-3">
+    <div className={`sc-card p-4 my-1 border-t-4 ${isOpen ? 'border-t-sc-primary bg-sc-light-blue/30' : 'border-t-sc-border'}`}>
+      <div className="font-bold text-sm text-sc-text mb-3">
         {isOpen ? '📊' : '✅'} {p.question}
       </div>
 
       {/* Progress bar */}
       <div className="mb-3">
-        <div className="flex justify-between text-xs text-sc-gray mb-1">
+        <div className="flex justify-between text-xs text-sc-text-light mb-1">
           <span>{p.voteCount} הצביעו מתוך {p.memberCount}</span>
           <span>{p.votePercent}%</span>
         </div>
-        <div className="h-1.5 bg-sc-gray-light rounded-full overflow-hidden">
-          <div className="h-full bg-sc-blue rounded-full transition-all duration-500" style={{ width: `${p.votePercent}%` }} />
+        <div className="h-1.5 bg-sc-border rounded-full overflow-hidden">
+          <div className="h-full bg-sc-primary rounded-full transition-all duration-500" style={{ width: `${p.votePercent}%` }} />
         </div>
-        <div className="flex justify-between items-center text-[11px] text-sc-gray mt-1.5 gap-2">
+        <div className="flex justify-between items-center text-[11px] text-sc-text-light mt-1.5 gap-2">
             <span>נדרש {p.threshold_pct}% להכרעה</span>
             {p.close_at && (() => {
               const ms = new Date(p.close_at).getTime() - now
               if (ms <= 0) return <span className="text-sc-error font-bold">⏰ פג תוקף</span>
               const days = Math.floor(ms / 86400000)
               const hours = Math.floor((ms % 86400000) / 3600000)
-              return <span className={`font-bold ${days < 1 ? 'text-sc-error' : days < 2 ? 'text-sc-warning' : 'text-sc-gray'}`}>
+              return <span className={`font-bold ${days < 1 ? 'text-sc-error' : days < 2 ? 'text-sc-gold-dark' : 'text-sc-text-light'}`}>
                 ⏱ {days > 0 ? `${days} ימים נותרו` : `${hours} שעות נותרו`}
               </span>
             })()}
@@ -98,8 +98,8 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
             <div className="flex flex-col gap-1.5 mb-2">
               {(p.candidates ?? []).map((c: any) => (
                 <button key={c.id} onClick={() => setSelectedValue(c.id)}
-                  className={`p-2 rounded-lg border-2 text-right text-[13px] text-sc-dark cursor-pointer transition-colors ${
-                    selectedValue === c.id ? 'border-sc-blue bg-sc-blue-pale' : 'border-sc-gray-light bg-white'
+                  className={`p-2 rounded-lg border-2 text-right text-[13px] text-sc-text cursor-pointer transition-colors ${
+                    selectedValue === c.id ? 'border-sc-primary bg-sc-light-blue' : 'border-sc-border bg-white'
                   }`}>
                   👤 {c.full_name}
                   {c.id === currentUserId && ' (אני)'}
@@ -111,11 +111,11 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
             <div className="flex flex-col gap-2 mb-2.5">
               {options.map((opt: string) => (
                 <button key={opt} onClick={() => setSelectedValue(opt)}
-                  className={`p-2.5 rounded-[10px] border-2 text-right text-sm text-sc-dark cursor-pointer flex items-center gap-2 transition-colors ${
-                    selectedValue === opt ? 'border-sc-blue bg-sc-blue-pale font-bold' : 'border-sc-gray-light bg-white'
+                  className={`p-2.5 rounded-[10px] border-2 text-right text-sm text-sc-text cursor-pointer flex items-center gap-2 transition-colors ${
+                    selectedValue === opt ? 'border-sc-primary bg-sc-light-blue font-bold' : 'border-sc-border bg-white'
                   }`}>
                   <span className={`w-[18px] h-[18px] rounded-full flex-shrink-0 border-2 inline-block ${
-                    selectedValue === opt ? 'border-sc-blue bg-sc-blue' : 'border-sc-gray-light bg-transparent'
+                    selectedValue === opt ? 'border-sc-primary bg-sc-primary' : 'border-sc-border bg-transparent'
                   }`} />
                   {opt}
                 </button>
@@ -147,8 +147,8 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
 
       {/* Already voted */}
       {(isOpen || isExpired) && hasVoted && !changing && (
-        <div className="flex items-center justify-between p-2.5 bg-sc-blue-pale rounded-lg">
-          <span className="text-[13px] text-sc-blue font-semibold">
+        <div className="flex items-center justify-between p-2.5 bg-sc-light-blue rounded-lg">
+          <span className="text-[13px] text-sc-primary font-semibold">
             ✓ הצבעת על: {isElection
               ? (p.candidates ?? []).find((c: any) => c.id === p.myVote)?.full_name ?? p.myVote
               : isApartmentCount ? `${p.myVote} דירות`
@@ -166,15 +166,15 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
           {isApartmentCount && (
             <div className="mb-2">
               <input type="number" min="2" placeholder="הזן מספר דירות" value={customNumber} onChange={e => setCustomNumber(e.target.value)}
-                className="sc-input border-sc-blue-light" />
+                className="sc-input border-sc-primary-light" />
             </div>
           )}
           {isElection && (
             <div className="flex flex-col gap-1.5 mb-2">
               {(p.candidates ?? []).map((c: any) => (
                 <button key={c.id} onClick={() => setSelectedValue(c.id)}
-                  className={`p-2 rounded-lg border-2 text-right text-[13px] text-sc-dark cursor-pointer ${
-                    selectedValue === c.id ? 'border-sc-blue bg-sc-blue-pale' : 'border-sc-gray-light bg-white'
+                  className={`p-2 rounded-lg border-2 text-right text-[13px] text-sc-text cursor-pointer ${
+                    selectedValue === c.id ? 'border-sc-primary bg-sc-light-blue' : 'border-sc-border bg-white'
                   }`}>
                   👤 {c.full_name}{c.id === currentUserId && ' (אני)'}
                 </button>
@@ -185,11 +185,11 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
             <div className="flex flex-col gap-2 mb-2.5">
               {options.map((opt: string) => (
                 <button key={opt} onClick={() => setSelectedValue(opt)}
-                  className={`p-2.5 rounded-[10px] border-2 text-right text-sm text-sc-dark cursor-pointer flex items-center gap-2 ${
-                    selectedValue === opt ? 'border-sc-blue bg-sc-blue-pale font-bold' : 'border-sc-gray-light bg-white'
+                  className={`p-2.5 rounded-[10px] border-2 text-right text-sm text-sc-text cursor-pointer flex items-center gap-2 ${
+                    selectedValue === opt ? 'border-sc-primary bg-sc-light-blue font-bold' : 'border-sc-border bg-white'
                   }`}>
                   <span className={`w-[18px] h-[18px] rounded-full flex-shrink-0 border-2 inline-block ${
-                    selectedValue === opt ? 'border-sc-blue bg-sc-blue' : 'border-sc-gray-light bg-transparent'
+                    selectedValue === opt ? 'border-sc-primary bg-sc-primary' : 'border-sc-border bg-transparent'
                   }`} />
                   {opt}
                 </button>
@@ -295,12 +295,12 @@ export default function BuildingChatPage() {
       <div className="max-w-[720px] mx-auto w-full flex-1 flex flex-col px-4 min-h-0">
 
         {/* Header */}
-        <div className="py-3.5 border-b border-sc-gray-light flex items-center gap-3 flex-shrink-0">
+        <div className="py-3.5 border-b border-sc-border flex items-center gap-3 flex-shrink-0">
           <button onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-1.5 bg-sc-bg border-none rounded-[10px] px-3.5 py-2 cursor-pointer text-sm text-sc-blue font-semibold flex-shrink-0">
+            className="flex items-center gap-1.5 bg-sc-bg border-none rounded-[10px] px-3.5 py-2 cursor-pointer text-sm text-sc-primary font-semibold flex-shrink-0">
             ‹ דף הבית
           </button>
-          <h1 className="m-0 text-[17px] font-bold text-sc-dark flex-1">🏢 קבוצת הבניין</h1>
+          <h1 className="m-0 text-[17px] font-bold text-sc-text flex-1">🏢 קבוצת הבניין</h1>
         </div>
 
         {/* Messages scroll area */}
@@ -318,20 +318,20 @@ export default function BuildingChatPage() {
                 className={`flex gap-2 ${isPoll ? 'flex-col items-stretch' : isMe ? 'flex-row-reverse' : 'flex-row'} ${!isPoll ? 'items-start' : ''}`}>
                 {!isPoll && (
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 ${
-                    isMe ? 'bg-sc-blue text-white' : 'bg-sc-gray-light text-sc-dark'
+                    isMe ? 'bg-sc-primary text-white' : 'bg-sc-border text-sc-text'
                   }`}>
                     {msg.sender?.full_name?.[0] ?? '?'}
                   </div>
                 )}
                 <div className={isPoll ? 'w-full' : 'max-w-[70%]'}>
-                  <div className={`text-[11px] text-sc-gray mb-1 ${isPoll ? 'text-right' : isMe ? 'text-left' : 'text-right'}`}>
+                  <div className={`text-[11px] text-sc-text-light mb-1 ${isPoll ? 'text-right' : isMe ? 'text-left' : 'text-right'}`}>
                     {isMe ? 'אני' : msg.sender?.full_name ?? 'דייר'} · {new Date(msg.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
                   </div>
                   {isPoll ? (
                     <PollCard pollId={msg.poll_id} currentUserId={currentUserId} onUnvoted={setUnvotedPollId} />
                   ) : (
                     <div className={`p-2.5 rounded-xl text-sm leading-relaxed shadow-sm ${
-                      isMe ? 'bg-sc-blue text-white' : 'bg-white text-sc-dark border border-sc-gray-light'
+                      isMe ? 'bg-sc-primary text-white' : 'bg-white text-sc-text border border-sc-border'
                     }`}>
                       {msg.content}
                     </div>
@@ -348,7 +348,7 @@ export default function BuildingChatPage() {
           <div className="relative h-0 overflow-visible">
             <button
               onClick={() => { scrollToPoll(unvotedPollId); setUnvotedPollId(null) }}
-              className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-sc-blue-deep text-white border-none rounded-full px-4.5 py-2 text-[13px] font-bold cursor-pointer shadow-lg z-10 whitespace-nowrap flex items-center gap-1.5">
+              className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-sc-navy text-white border-none rounded-full px-4.5 py-2 text-[13px] font-bold cursor-pointer shadow-lg z-10 whitespace-nowrap flex items-center gap-1.5">
               📊 יש סקר שממתין להצבעתך ↑
             </button>
           </div>
@@ -359,7 +359,7 @@ export default function BuildingChatPage() {
           <div className="relative h-0 overflow-visible">
             <button
               onClick={() => scrollToBottom(true)}
-              className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-sc-blue text-white border-none rounded-full px-4.5 py-2 text-[13px] font-bold cursor-pointer shadow-lg z-10 whitespace-nowrap flex items-center gap-1.5">
+              className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-sc-primary text-white border-none rounded-full px-4.5 py-2 text-[13px] font-bold cursor-pointer shadow-lg z-10 whitespace-nowrap flex items-center gap-1.5">
               ↓ {newMsgCount} הודעות חדשות
             </button>
           </div>

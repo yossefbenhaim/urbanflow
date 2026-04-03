@@ -35,7 +35,7 @@ function NotificationBell() {
     <div ref={ref} className="relative">
       <button
         onClick={handleOpen}
-        className={`relative w-11 h-11 rounded-[12px] border-none cursor-pointer flex items-center justify-center text-xl transition-colors ${open ? 'bg-sc-blue-pale' : 'bg-transparent hover:bg-gray-50'}`}
+        className={`relative w-11 h-11 rounded-[12px] border-none cursor-pointer flex items-center justify-center text-xl transition-colors ${open ? 'bg-sc-light-blue' : 'bg-transparent hover:bg-sc-bg'}`}
         title="התראות"
         style={{ WebkitTapHighlightColor: 'transparent' }}
       >
@@ -48,32 +48,32 @@ function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 w-80 bg-white rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.15)] border border-gray-200 z-[9999] overflow-hidden">
-          <div className="px-4 py-3.5 border-b border-gray-100 flex items-center justify-between">
-            <span className="font-bold text-[15px] text-sc-dark">🔔 התראות</span>
-            {unread > 0 && <span className="text-xs text-sc-gray">{unread} חדשות</span>}
+        <div className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 w-80 bg-white rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.15)] border border-sc-border z-[9999] overflow-hidden">
+          <div className="px-4 py-3.5 border-b border-sc-border/50 flex items-center justify-between">
+            <span className="font-bold text-[15px] text-sc-text">🔔 התראות</span>
+            {unread > 0 && <span className="text-xs text-sc-text-light">{unread} חדשות</span>}
           </div>
           <div className="max-h-[340px] overflow-y-auto">
             {(notifications as any[]).length === 0 ? (
-              <div className="py-6 px-4 text-center text-sc-gray">
+              <div className="py-6 px-4 text-center text-sc-text-light">
                 <div className="text-[28px] mb-2">🎉</div>
                 <p className="text-[13px] m-0">אין התראות חדשות</p>
               </div>
             ) : (
               (notifications as any[]).map((n: any) => (
-                <div key={n.id} className={`px-4 py-3 border-b border-gray-50 transition-colors ${n.is_read ? 'bg-white' : 'bg-sc-blue-pale'}`}>
+                <div key={n.id} className={`px-4 py-3 border-b border-sc-border/30 transition-colors ${n.is_read ? 'bg-white' : 'bg-sc-light-blue'}`}>
                   <div className="flex gap-2.5 items-start">
                     <span className="text-lg flex-shrink-0">
                       {n.type === 'message' ? '💬' : n.type === 'poll' ? '🗳️' : n.type === 'meeting' ? '📅' : n.type === 'document' ? '📄' : '🔔'}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className={`m-0 text-[13px] text-sc-dark ${n.is_read ? 'font-normal' : 'font-semibold'}`}>{n.title}</p>
-                      {n.message && <p className="m-0 mt-0.5 text-xs text-sc-gray">{n.message}</p>}
-                      <p className="m-0 mt-1 text-[11px] text-sc-gray">
+                      <p className={`m-0 text-[13px] text-sc-text ${n.is_read ? 'font-normal' : 'font-semibold'}`}>{n.title}</p>
+                      {n.message && <p className="m-0 mt-0.5 text-xs text-sc-text-light">{n.message}</p>}
+                      <p className="m-0 mt-1 text-[11px] text-sc-text-light">
                         {new Date(n.created_at).toLocaleString('he-IL', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
                       </p>
                     </div>
-                    {!n.is_read && <div className="w-2 h-2 rounded-full bg-sc-blue flex-shrink-0 mt-1" />}
+                    {!n.is_read && <div className="w-2 h-2 rounded-full bg-sc-primary flex-shrink-0 mt-1" />}
                   </div>
                 </div>
               ))
@@ -138,8 +138,8 @@ export default function Sidebar() {
         onClick={() => setMobileOpen(false)}
         className={`flex items-center gap-3 px-3.5 py-[11px] rounded-[10px] no-underline text-[15px] transition-all ${
           active
-            ? 'bg-sc-blue-pale text-sc-blue font-bold'
-            : 'bg-transparent text-sc-gray font-medium hover:bg-gray-50'
+            ? 'bg-sc-light-blue text-sc-primary font-bold'
+            : 'bg-transparent text-sc-text-light font-medium hover:bg-sc-bg'
         }`}
       >
         <span className="text-xl w-[26px] text-center">{item.icon}</span>
@@ -156,26 +156,26 @@ export default function Sidebar() {
         <div className="flex items-center gap-2.5">
           <img src="/logo.svg" alt="Silver Castle" className="w-9 h-9 rounded-[10px]" />
           <div>
-            <div className="text-[15px] font-extrabold text-sc-dark">Silver Castle</div>
-            <div className="text-[11px] text-sc-gray">טירת כסף</div>
+            <div className="text-[15px] font-extrabold text-sc-text">Silver Castle</div>
+            <div className="text-[11px] text-sc-text-light">טירת כסף</div>
           </div>
         </div>
         <NotificationBell />
       </div>
 
       {/* User card */}
-      <div className="bg-sc-blue-pale rounded-[14px] px-3.5 py-3 mb-5 border border-sc-blue-pale">
+      <div className="bg-sc-light-blue rounded-2xl px-3.5 py-3 mb-5 border border-sc-light-blue">
         <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-full bg-sc-blue text-white font-extrabold text-base flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-sc-primary text-white font-extrabold text-base flex items-center justify-center flex-shrink-0">
             {(profile.fullName || profile.email || '?')[0].toUpperCase()}
           </div>
           <div className="min-w-0">
-            <div className="font-bold text-sm text-sc-dark overflow-hidden text-ellipsis whitespace-nowrap">
+            <div className="font-bold text-sm text-sc-text overflow-hidden text-ellipsis whitespace-nowrap">
               {profile.fullName || profile.email}
             </div>
-            <div className="text-xs text-sc-gray mt-0.5">
+            <div className="text-xs text-sc-text-light mt-0.5">
               {roleInfo.icon} {roleInfo.label}
-              {isRepresentative && <span className="mr-1.5 text-sc-warning font-semibold">• ועד 🏛️</span>}
+              {isRepresentative && <span className="mr-1.5 text-sc-gold-dark font-semibold">• ועד 🏛️</span>}
             </div>
           </div>
         </div>
@@ -183,15 +183,15 @@ export default function Sidebar() {
 
       {/* Nav links */}
       <nav className="flex flex-col gap-1 flex-1">
-        <div className="text-[11px] font-semibold text-sc-gray px-3.5 mb-1 tracking-wider">ניווט</div>
+        <div className="text-[11px] font-semibold text-sc-text-light px-3.5 mb-1 tracking-wider">ניווט</div>
         {navItems.map(item => <NavLink key={item.to} item={item} />)}
       </nav>
 
       {/* Sign out */}
-      <div className="border-t border-sc-gray-light pt-3 mt-2">
+      <div className="border-t border-sc-border pt-3 mt-2">
         <button
           onClick={() => { signOut(); setMobileOpen(false) }}
-          className="w-full flex items-center gap-3 px-3.5 py-[11px] rounded-[12px] border-none bg-transparent cursor-pointer text-sc-error text-sm font-medium transition-colors hover:bg-red-50"
+          className="w-full flex items-center gap-3 px-3.5 py-[11px] rounded-[12px] border-none bg-transparent cursor-pointer text-sc-error text-sm font-medium transition-colors hover:bg-sc-error/10"
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           <span className="text-xl w-[26px] text-center">🚪</span>
@@ -204,20 +204,20 @@ export default function Sidebar() {
   return (
     <>
       {/* ── Desktop sidebar (fixed right) ─────────────────────────────────── */}
-      <div className="sidebar-desktop fixed top-0 right-0 bottom-0 w-[220px] bg-white border-l border-sc-gray-light z-[100] flex flex-col">
+      <div className="sidebar-desktop fixed top-0 right-0 bottom-0 w-[220px] bg-white border-l border-sc-border z-[100] flex flex-col">
         <SidebarContent />
       </div>
 
       {/* ── Mobile bottom bar ─────────────────────────────────────────────── */}
-      <div className="sidebar-mobile fixed bottom-0 left-0 right-0 bg-white border-t border-sc-gray-light py-2 px-1 pb-3 flex items-center justify-around z-[100] shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+      <div className="sidebar-mobile fixed bottom-0 left-0 right-0 bg-white border-t border-sc-border py-2 px-1 pb-3 flex items-center justify-around z-[100] shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
         {navItems.slice(0, 4).map(item => {
           const active = isActive(item.to)
           return (
             <Link key={item.to} to={item.to} className="no-underline flex flex-col items-center gap-[3px] flex-1">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${active ? 'bg-sc-blue-pale' : ''}`}>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${active ? 'bg-sc-light-blue' : ''}`}>
                 <span className="text-[22px]">{item.icon}</span>
               </div>
-              <span className={`text-[10px] ${active ? 'text-sc-blue font-bold' : 'text-sc-gray font-normal'}`}>
+              <span className={`text-[10px] ${active ? 'text-sc-primary font-bold' : 'text-sc-text-light font-normal'}`}>
                 {item.label.split(' ')[0]}
               </span>
             </Link>
@@ -226,7 +226,7 @@ export default function Sidebar() {
         {/* Bell in mobile bar */}
         <div className="flex-1 flex flex-col items-center gap-[3px]">
           <NotificationBell />
-          <span className="text-[10px] text-sc-gray">התראות</span>
+          <span className="text-[10px] text-sc-text-light">התראות</span>
         </div>
       </div>
 

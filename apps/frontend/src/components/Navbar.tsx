@@ -40,29 +40,29 @@ function NotificationBell() {
       </button>
 
       {open && (
-        <div className="fixed top-14 left-2 right-2 w-[300px] bg-white rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.15)] border border-gray-200 z-[9999]">
-          <div className="px-4 py-3 border-b border-gray-100 font-bold text-sm text-sc-dark">
-            🔔 התראות {unread > 0 && <span className="text-sc-gray font-normal text-xs">({unread} חדשות)</span>}
+        <div className="fixed top-14 left-2 right-2 w-[300px] bg-white rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.15)] border border-sc-border z-[9999]">
+          <div className="px-4 py-3 border-b border-sc-border/50 font-bold text-sm text-sc-text">
+            🔔 התראות {unread > 0 && <span className="text-sc-text-light font-normal text-xs">({unread} חדשות)</span>}
           </div>
           <div className="max-h-80 overflow-y-auto">
             {(notifications as any[]).length === 0 ? (
-              <div className="py-5 px-4 text-center text-sc-gray text-[13px]">
+              <div className="py-5 px-4 text-center text-sc-text-light text-[13px]">
                 🎉 אין התראות חדשות
               </div>
             ) : (
               (notifications as any[]).map((n: any) => (
                 <div key={n.id}
                   onClick={() => { if (n.action_url) { setOpen(false); navigate(n.action_url) } }}
-                  className={`px-3.5 py-2.5 border-b border-gray-50 ${n.is_read ? 'bg-white' : 'bg-sc-blue-pale'} ${n.action_url ? 'cursor-pointer' : 'cursor-default'}`}
+                  className={`px-3.5 py-2.5 border-b border-sc-border/30 ${n.is_read ? 'bg-white' : 'bg-sc-light-blue'} ${n.action_url ? 'cursor-pointer' : 'cursor-default'}`}
                 >
                   <div className="flex gap-2 items-start">
                     <span className="text-base flex-shrink-0">
                       {n.type === 'message' ? '💬' : n.type?.includes('meeting') ? '📅' : n.type?.includes('signature') ? '✍️' : '🔔'}
                     </span>
                     <div>
-                      <p className={`m-0 text-[13px] text-sc-dark ${n.is_read ? 'font-normal' : 'font-semibold'}`}>{n.title}</p>
-                      {n.message && <p className="m-0 mt-0.5 text-[11px] text-sc-gray">{n.message}</p>}
-                      <p className="m-0 mt-[3px] text-[10px] text-sc-gray">
+                      <p className={`m-0 text-[13px] text-sc-text ${n.is_read ? 'font-normal' : 'font-semibold'}`}>{n.title}</p>
+                      {n.message && <p className="m-0 mt-0.5 text-[11px] text-sc-text-light">{n.message}</p>}
+                      <p className="m-0 mt-[3px] text-[10px] text-sc-text-light">
                         {new Date(n.created_at).toLocaleString('he-IL', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
                       </p>
                     </div>
@@ -123,7 +123,7 @@ function RightDrawer({ open, onClose, profile, isRepresentative, signOut }: {
         dir="rtl"
       >
         {/* Header */}
-        <div className="px-4 pt-5 pb-4 bg-gradient-to-br from-sc-blue-deep to-sc-blue text-white">
+        <div className="px-4 pt-5 pb-4 bg-gradient-to-br from-sc-navy to-sc-primary text-white">
           <div className="flex items-center justify-between mb-3.5">
             <div className="flex items-center gap-2.5">
               <img src="/logo.svg" alt="logo" className="w-8 h-8 rounded-lg" />
@@ -151,7 +151,7 @@ function RightDrawer({ open, onClose, profile, isRepresentative, signOut }: {
 
         {/* Nav items */}
         <nav className="flex-1 p-3 overflow-y-auto">
-          <div className="text-[11px] font-semibold text-sc-gray px-2 mb-1.5 tracking-wider">תפריט</div>
+          <div className="text-[11px] font-semibold text-sc-text-light px-2 mb-1.5 tracking-wider">תפריט</div>
           {navItems.map(item => {
             const active = isActive(item.to)
             return (
@@ -161,8 +161,8 @@ function RightDrawer({ open, onClose, profile, isRepresentative, signOut }: {
                 onClick={onClose}
                 className={`flex items-center gap-3 px-3 py-3 rounded-[12px] no-underline mb-0.5 transition-colors border-r-[3px] ${
                   active
-                    ? 'bg-sc-blue-pale text-sc-blue font-bold border-r-sc-blue'
-                    : 'bg-transparent text-sc-dark font-medium border-r-transparent hover:bg-gray-50'
+                    ? 'bg-sc-light-blue text-sc-primary font-bold border-r-sc-primary'
+                    : 'bg-transparent text-sc-text font-medium border-r-transparent hover:bg-sc-bg'
                 }`}
                 style={{ fontSize: 15 }}
               >
@@ -174,10 +174,10 @@ function RightDrawer({ open, onClose, profile, isRepresentative, signOut }: {
         </nav>
 
         {/* Bottom actions */}
-        <div className="p-2.5 border-t border-sc-gray-light">
+        <div className="p-2.5 border-t border-sc-border">
           <button
             onClick={() => { window.dispatchEvent(new Event('open-faqbot')); onClose() }}
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-[12px] border-none mb-1.5 bg-green-50 cursor-pointer text-sc-success text-sm font-semibold"
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-[12px] border-none mb-1.5 bg-sc-success/10 cursor-pointer text-sc-success text-sm font-semibold"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             <span className="text-xl w-7 text-center">💬</span>
@@ -185,7 +185,7 @@ function RightDrawer({ open, onClose, profile, isRepresentative, signOut }: {
           </button>
           <button
             onClick={() => { window.dispatchEvent(new Event('open-accessibility')); onClose() }}
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-[12px] border-none mb-1.5 bg-yellow-50 cursor-pointer text-sc-warning text-sm font-semibold"
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-[12px] border-none mb-1.5 bg-sc-gold/10 cursor-pointer text-sc-gold-dark text-sm font-semibold"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             <span className="text-xl w-7 text-center">♿</span>
@@ -193,7 +193,7 @@ function RightDrawer({ open, onClose, profile, isRepresentative, signOut }: {
           </button>
           <button
             onClick={() => { signOut(); onClose() }}
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-[12px] border-none bg-red-50 cursor-pointer text-sc-error text-sm font-semibold"
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-[12px] border-none bg-sc-error/10 cursor-pointer text-sc-error text-sm font-semibold"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             <span className="text-xl w-7 text-center">🚪</span>
@@ -228,7 +228,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="bg-sc-blue-deep sticky top-0 z-50 shadow-[0_1px_8px_rgba(0,0,0,0.1)]" dir="rtl">
+      <nav className="bg-sc-navy sticky top-0 z-50 shadow-[0_1px_8px_rgba(0,0,0,0.1)]" dir="rtl">
         <div className="max-w-[960px] mx-auto px-4 h-[54px] flex items-center justify-between">
 
           {/* Right side: SC badge + text */}

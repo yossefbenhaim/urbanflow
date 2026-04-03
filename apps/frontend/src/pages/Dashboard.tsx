@@ -30,8 +30,8 @@ function JoinProjectScreen({ onJoined }: { onJoined: () => void }) {
     <div className="min-h-screen flex items-center justify-center bg-sc-bg" dir="rtl">
       <div className="sc-card p-8 w-full max-w-sm mx-4 text-center">
         <div className="text-5xl mb-4">🏢</div>
-        <h1 className="text-xl font-bold text-sc-dark mb-2">הצטרף לפרויקט</h1>
-        <p className="text-sc-gray text-sm mb-6">הזן את קוד ההצטרפות שקיבלת ממארגן הדיירים</p>
+        <h1 className="text-xl font-bold text-sc-text mb-2">הצטרף לפרויקט</h1>
+        <p className="text-sc-text-light text-sm mb-6">הזן את קוד ההצטרפות שקיבלת ממארגן הדיירים</p>
         <input
           type="text"
           value={code}
@@ -83,35 +83,35 @@ function ApartmentProfileWizard({ onComplete }: { onComplete: () => void }) {
     <div className="min-h-screen bg-sc-bg flex items-center justify-center" dir="rtl">
       <div className="sc-card p-8 w-full max-w-sm mx-4">
         <div className="text-4xl text-center mb-4">🏠</div>
-        <h1 className="text-xl font-bold text-sc-dark mb-1 text-center">פרטי הדירה</h1>
-        <p className="text-sc-gray text-sm mb-6 text-center">נא למלא את פרטי הדירה שלך</p>
+        <h1 className="text-xl font-bold text-sc-text mb-1 text-center">פרטי הדירה</h1>
+        <p className="text-sc-text-light text-sm mb-6 text-center">נא למלא את פרטי הדירה שלך</p>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-sc-dark mb-1">קומה</label>
+              <label className="block text-sm font-medium text-sc-text mb-1">קומה</label>
               <input type="number" value={form.floor} onChange={e => setForm(f => ({ ...f, floor: e.target.value }))}
                 className="sc-input" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-sc-dark mb-1">מס' דירה</label>
+              <label className="block text-sm font-medium text-sc-text mb-1">מס' דירה</label>
               <input type="text" value={form.apartmentNumber} onChange={e => setForm(f => ({ ...f, apartmentNumber: e.target.value }))}
                 className="sc-input" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-sc-dark mb-1">חדרים</label>
+              <label className="block text-sm font-medium text-sc-text mb-1">חדרים</label>
               <input type="number" value={form.rooms} onChange={e => setForm(f => ({ ...f, rooms: e.target.value }))}
                 className="sc-input" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-sc-dark mb-1">גודל (מ"ר)</label>
+              <label className="block text-sm font-medium text-sc-text mb-1">גודל (מ"ר)</label>
               <input type="number" value={form.apartmentSizeSqm} onChange={e => setForm(f => ({ ...f, apartmentSizeSqm: e.target.value }))}
                 className="sc-input" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-sc-dark mb-2">סוג החזקה</label>
+            <label className="block text-sm font-medium text-sc-text mb-2">סוג החזקה</label>
             <div className="flex gap-3">
               {(['owner', 'renter'] as const).map(type => (
                 <button
@@ -119,8 +119,8 @@ function ApartmentProfileWizard({ onComplete }: { onComplete: () => void }) {
                   onClick={() => setForm(f => ({ ...f, ownershipType: type }))}
                   className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
                     form.ownershipType === type
-                      ? 'bg-sc-blue text-white border-sc-blue'
-                      : 'bg-white text-sc-dark border-sc-gray-light hover:bg-sc-bg'
+                      ? 'bg-sc-primary text-white border-sc-primary'
+                      : 'bg-white text-sc-text border-sc-border hover:bg-sc-bg'
                   }`}
                 >
                   {type === 'owner' ? '🔑 בעלים' : '🏠 שוכר'}
@@ -170,23 +170,23 @@ function TaskItem({ task }: { task: { icon: string; text: string; link: string; 
   const [showInfo, setShowInfo] = useState(false)
   return (
     <div className="relative">
-      <a href={task.link} className="flex items-center gap-3 p-3 bg-white rounded-[10px] border border-sc-gray-light no-underline hover:bg-sc-blue-pale transition-colors">
+      <a href={task.link} className="flex items-center gap-3 p-3 bg-white rounded-[10px] border border-sc-border no-underline hover:bg-sc-light-blue transition-colors">
         <span className="text-lg">{task.icon}</span>
-        <span className="text-sm text-sc-dark font-medium flex-1">{task.text}</span>
+        <span className="text-sm text-sc-text font-medium flex-1">{task.text}</span>
         <button
           onPointerDown={e => { e.preventDefault(); e.stopPropagation(); setShowInfo(v => !v) }}
           className={`w-[22px] h-[22px] rounded-full border-none text-xs cursor-pointer flex-shrink-0 flex items-center justify-center font-bold ${
-            showInfo ? 'bg-sc-blue-deep text-white' : 'bg-sc-gray-light text-sc-gray'
+            showInfo ? 'bg-sc-navy text-white' : 'bg-sc-border text-sc-text-light'
           }`}>
           ?
         </button>
-        <span className="text-sc-blue text-base">←</span>
+        <span className="text-sc-primary text-base">←</span>
       </a>
       {showInfo && (
-        <div className="absolute top-full right-0 left-0 z-50 mt-1 bg-sc-blue-deep text-sc-blue-pale text-[13px] leading-relaxed rounded-xl p-3 shadow-lg">
+        <div className="absolute top-full right-0 left-0 z-50 mt-1 bg-sc-navy text-sc-light-blue text-[13px] leading-relaxed rounded-xl p-3 shadow-lg">
           <div className="flex justify-between items-start gap-2">
             <span>{task.info}</span>
-            <button onPointerDown={() => setShowInfo(false)} className="bg-transparent border-none text-sc-blue-light cursor-pointer text-base flex-shrink-0">✕</button>
+            <button onPointerDown={() => setShowInfo(false)} className="bg-transparent border-none text-sc-primary-light cursor-pointer text-base flex-shrink-0">✕</button>
           </div>
         </div>
       )}
@@ -224,8 +224,8 @@ export default function Dashboard() {
     <div className="min-h-screen bg-sc-bg" dir="rtl">
       {/* Banner: no project */}
       {myStatus && !myStatus.hasProject && (
-        <div className="bg-sc-warning/10 border-b border-sc-warning/30 px-6 py-3 flex items-center justify-between gap-4">
-          <span className="text-sc-warning text-sm font-medium">
+        <div className="bg-sc-gold-dark/10 border-b border-sc-gold-dark/30 px-6 py-3 flex items-center justify-between gap-4">
+          <span className="text-sc-gold-dark text-sm font-medium">
             ⚠️ טרם הצטרפת לפרויקט — הכנס קוד הצטרפות שקיבלת מהמארגן שלך
           </span>
           <JoinProjectInline onJoined={() => refetchStatus()} />
@@ -233,23 +233,23 @@ export default function Dashboard() {
       )}
       <Navbar />
       {(myRole as any)?.isRepresentative && (
-        <div className="bg-sc-blue-deep px-6 py-3 flex items-center gap-3">
+        <div className="bg-sc-navy px-6 py-3 flex items-center gap-3">
           <span className="text-xl">🏛️</span>
           <span className="text-white font-bold text-[15px]">נציג ועד הבניין</span>
-          <span className="mr-auto bg-white/15 text-sc-blue-pale text-xs px-3 py-1 rounded-full">הרשאות מורחבות פעילות</span>
+          <span className="mr-auto bg-white/15 text-sc-light-blue text-xs px-3 py-1 rounded-full">הרשאות מורחבות פעילות</span>
         </div>
       )}
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
 
         {/* E3: Next Step Banner */}
         {nextStep && (nextStep as any).action !== 'all_done' && (
-          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-sc-blue flex items-center justify-center text-2xl flex-shrink-0">
+          <div className="bg-sc-light-blue border border-sc-primary/20 rounded-2xl p-5 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-sc-primary flex items-center justify-center text-2xl flex-shrink-0">
               {(nextStep as any).icon}
             </div>
             <div className="flex-1">
-              <p className="text-xs text-blue-600 font-medium mb-0.5">הצעד הבא שלך</p>
-              <p className="text-base font-bold text-blue-900">{(nextStep as any).text}</p>
+              <p className="text-xs text-sc-primary font-medium mb-0.5">הצעד הבא שלך</p>
+              <p className="text-base font-bold text-sc-navy">{(nextStep as any).text}</p>
             </div>
             <a
               href={(nextStep as any).link}
@@ -260,20 +260,20 @@ export default function Dashboard() {
           </div>
         )}
         {nextStep && (nextStep as any).action === 'all_done' && (
-          <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center gap-3">
+          <div className="bg-sc-success/10 border border-sc-success/20 rounded-2xl p-4 flex items-center gap-3">
             <span className="text-2xl">✅</span>
-            <p className="text-sm font-medium text-green-800">{(nextStep as any).text}</p>
+            <p className="text-sm font-medium text-sc-success">{(nextStep as any).text}</p>
           </div>
         )}
 
         {/* Onboarding Tasks Card */}
         {myStatus && !myStatus.isOnboarded && (
-          <div className="sc-card p-6 border-t-4 border-t-sc-blue">
+          <div className="sc-card p-6 border-t-4 border-t-sc-primary">
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-11 h-11 rounded-xl bg-sc-blue flex items-center justify-center text-[22px]">📋</div>
+              <div className="w-11 h-11 rounded-xl bg-sc-primary flex items-center justify-center text-[22px]">📋</div>
               <div>
-                <h3 className="text-[17px] font-bold text-sc-dark m-0">השלם את הפרופיל שלך</h3>
-                <p className="text-[13px] text-sc-gray mt-0.5">מלא את הפרטים כדי להשתמש בכל הפיצ׳רים</p>
+                <h3 className="text-[17px] font-bold text-sc-text m-0">השלם את הפרופיל שלך</h3>
+                <p className="text-[13px] text-sc-text-light mt-0.5">מלא את הפרטים כדי להשתמש בכל הפיצ׳רים</p>
               </div>
               <a href="/onboarding" className="sc-btn-primary mr-auto px-5 py-2.5 text-sm no-underline whitespace-nowrap">
                 מלא פרטים ←
@@ -286,12 +286,12 @@ export default function Dashboard() {
                 { icon: '🏠', text: 'כתובת הדירה (עיר, רחוב, מספר)', done: !!myStatus.steps?.address },
                 { icon: '📐', text: 'פרטי הדירה (קומה, גודל, שנת כניסה)', done: !!myStatus.steps?.apartment },
               ].map((step, i) => (
-                <div key={i} className="flex items-center gap-3 p-2.5 bg-white rounded-[10px] border border-sc-gray-light">
+                <div key={i} className="flex items-center gap-3 p-2.5 bg-white rounded-[10px] border border-sc-border">
                   <span className="text-lg">{step.icon}</span>
-                  <span className={`text-sm flex-1 ${step.done ? 'text-sc-success line-through' : 'text-sc-dark'}`}>{step.text}</span>
+                  <span className={`text-sm flex-1 ${step.done ? 'text-sc-success line-through' : 'text-sc-text'}`}>{step.text}</span>
                   {step.done
                     ? <span className="w-5 h-5 rounded-full bg-sc-success inline-flex items-center justify-center text-white text-xs font-bold">✓</span>
-                    : <span className="w-5 h-5 rounded-full border-2 border-sc-gray-light inline-block" />
+                    : <span className="w-5 h-5 rounded-full border-2 border-sc-border inline-block" />
                   }
                 </div>
               ))}
@@ -306,9 +306,9 @@ export default function Dashboard() {
             href={'/building-chat/' + (buildingGroup as any).id}
             className="no-underline block"
           >
-            <div className="bg-sc-blue-deep rounded-[20px] p-5 shadow-lg cursor-pointer transition-transform hover:scale-[1.01]">
+            <div className="bg-sc-navy rounded-[20px] p-5 shadow-lg cursor-pointer transition-transform hover:scale-[1.01]">
               <div className="flex items-center gap-3.5">
-                <div className="w-[50px] h-[50px] rounded-[14px] bg-white/20 flex items-center justify-center text-[26px] flex-shrink-0">💬</div>
+                <div className="w-[50px] h-[50px] rounded-2xl bg-white/20 flex items-center justify-center text-[26px] flex-shrink-0">💬</div>
                 <div className="flex-1">
                   <h3 className="m-0 text-[17px] font-extrabold text-white">קבוצת הבניין שלי</h3>
                   <p className="mt-1 text-[13px] text-white/80">לחץ לכניסה לצ׳אט עם הדיירים, סקרים ועוד</p>
@@ -321,12 +321,12 @@ export default function Dashboard() {
 
         {/* Representative Tasks */}
         {(myRole as any)?.isRepresentative && (
-          <div className="sc-card p-6 border-t-4 border-t-sc-blue">
+          <div className="sc-card p-6 border-t-4 border-t-sc-primary">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-11 h-11 rounded-xl bg-sc-blue flex items-center justify-center text-[22px]">🏛️</div>
+              <div className="w-11 h-11 rounded-xl bg-sc-primary flex items-center justify-center text-[22px]">🏛️</div>
               <div className="flex-1">
-                <h3 className="m-0 text-[17px] font-bold text-sc-dark">משימות הועד</h3>
-                <p className="mt-0.5 text-[13px] text-sc-gray">פעולות נדרשות בשם הבניין</p>
+                <h3 className="m-0 text-[17px] font-bold text-sc-text">משימות הועד</h3>
+                <p className="mt-0.5 text-[13px] text-sc-text-light">פעולות נדרשות בשם הבניין</p>
               </div>
               <button
                 onClick={() => window.dispatchEvent(new Event('open-faqbot-committee'))}
@@ -354,45 +354,45 @@ export default function Dashboard() {
 
         {/* Elderly Form + Timeline Quick Links */}
         <div className="grid grid-cols-2 gap-3">
-          <a href="/elderly-form" className="no-underline sc-card p-4 flex items-center gap-3 hover:bg-sc-blue-pale transition-colors">
+          <a href="/elderly-form" className="no-underline sc-card p-4 flex items-center gap-3 hover:bg-sc-light-blue transition-colors">
             <span className="text-2xl">👴</span>
             <div>
-              <p className="text-sm font-bold text-sc-dark">טופס קשיש / מוגבלות</p>
-              <p className="text-xs text-sc-gray">זכויות מיוחדות בפרויקט</p>
+              <p className="text-sm font-bold text-sc-text">טופס קשיש / מוגבלות</p>
+              <p className="text-xs text-sc-text-light">זכויות מיוחדות בפרויקט</p>
             </div>
           </a>
-          <a href="/timeline" className="no-underline sc-card p-4 flex items-center gap-3 hover:bg-sc-blue-pale transition-colors">
+          <a href="/timeline" className="no-underline sc-card p-4 flex items-center gap-3 hover:bg-sc-light-blue transition-colors">
             <span className="text-2xl">📅</span>
             <div>
-              <p className="text-sm font-bold text-sc-dark">לוח זמנים</p>
-              <p className="text-xs text-sc-gray">עדכונים שבועיים מספקים</p>
+              <p className="text-sm font-bold text-sc-text">לוח זמנים</p>
+              <p className="text-xs text-sc-text-light">עדכונים שבועיים מספקים</p>
             </div>
           </a>
         </div>
 
         {/* Project Status Card */}
         {project ? (
-          <div className="sc-card p-6 border-t-4 border-t-sc-blue">
+          <div className="sc-card p-6 border-t-4 border-t-sc-primary">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="font-semibold text-sc-dark text-lg">{project.name}</h3>
-                <span className="sc-badge mt-1 bg-sc-blue-pale text-sc-blue">
+                <h3 className="font-semibold text-sc-text text-lg">{project.name}</h3>
+                <span className="sc-badge mt-1 bg-sc-light-blue text-sc-primary">
                   {project.type?.replace('_', ' ')}
                 </span>
               </div>
-              <span className="sc-badge bg-sc-warning/15 text-sc-warning">
+              <span className="sc-badge bg-sc-gold-dark/15 text-sc-gold-dark">
                 {STATUS_LABELS[project.status] ?? project.status}
               </span>
             </div>
 
             {total > 0 && (
               <div className="mb-4">
-                <div className="flex justify-between text-sm text-sc-gray mb-2">
+                <div className="flex justify-between text-sm text-sc-text-light mb-2">
                   <span>חתימות שנאספו</span>
                   <span className="font-medium">{signed} / {total} ({pct}%)</span>
                 </div>
-                <div className="w-full bg-sc-gray-light rounded-full h-2">
-                  <div className="bg-sc-blue h-2 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                <div className="w-full bg-sc-border rounded-full h-2">
+                  <div className="bg-sc-primary h-2 rounded-full transition-all" style={{ width: `${pct}%` }} />
                 </div>
               </div>
             )}
@@ -401,14 +401,14 @@ export default function Dashboard() {
               {STAGES.map((s, i) => (
                 <span key={i} className={`text-xs px-2 py-1 rounded-full ${
                   i < currentStage ? 'bg-sc-success/15 text-sc-success' :
-                  i === currentStage ? 'bg-sc-blue text-white font-medium' :
-                  'bg-sc-gray-light text-sc-gray'
+                  i === currentStage ? 'bg-sc-primary text-white font-medium' :
+                  'bg-sc-border text-sc-text-light'
                 }`}>{s}</span>
               ))}
             </div>
           </div>
         ) : (
-          <div className="sc-card p-6 text-center text-sc-gray">
+          <div className="sc-card p-6 text-center text-sc-text-light">
             <div className="text-4xl mb-2">🏗️</div>
             <p>טרם שויכת לפרויקט. פנה למארגן הדיירים.</p>
           </div>
@@ -425,9 +425,9 @@ export default function Dashboard() {
                 <div key={p.label} className="flex items-center gap-3 p-3 bg-sc-bg rounded-xl">
                   <span className="text-xl">{p.icon}</span>
                   <div>
-                    <p className="text-xs text-sc-gray">{p.label}</p>
-                    <p className="text-sm font-medium text-sc-dark">{p.name}</p>
-                    {p.phone && <p className="text-xs text-sc-blue">{p.phone}</p>}
+                    <p className="text-xs text-sc-text-light">{p.label}</p>
+                    <p className="text-sm font-medium text-sc-text">{p.name}</p>
+                    {p.phone && <p className="text-xs text-sc-primary">{p.phone}</p>}
                   </div>
                 </div>
               ))}
@@ -445,11 +445,11 @@ export default function Dashboard() {
                 return (
                   <div key={doc.id} className={`flex items-center justify-between p-3 rounded-xl border ${
                     isSigned ? 'border-sc-success/30 bg-sc-success/5' :
-                    doc.type === 'SIGN_REQUIRED' ? 'border-sc-error/30 bg-sc-error/5' : 'border-sc-gray-light bg-sc-bg'
+                    doc.type === 'SIGN_REQUIRED' ? 'border-sc-error/30 bg-sc-error/5' : 'border-sc-border bg-sc-bg'
                   }`}>
                     <div>
-                      <p className="text-sm font-medium text-sc-dark">{doc.title}</p>
-                      {doc.due_date && <p className="text-xs text-sc-gray">עד {doc.due_date}</p>}
+                      <p className="text-sm font-medium text-sc-text">{doc.title}</p>
+                      {doc.due_date && <p className="text-xs text-sc-text-light">עד {doc.due_date}</p>}
                     </div>
                     {isSigned ? (
                       <span className="text-sc-success text-sm font-medium">✅ חתום</span>

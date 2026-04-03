@@ -25,11 +25,11 @@ export default function ProviderDashboard() {
     <div className="min-h-screen page-content bg-sc-bg" dir="rtl">
       <Navbar />
 
-      <div className="bg-white border-b border-sc-gray-light sticky top-14 z-10">
+      <div className="bg-white border-b border-sc-border sticky top-14 z-10">
         <div className="max-w-lg mx-auto flex">
           {([['jobs','משרות פתוחות'],['applications','המועמדויות שלי'],['profile','הפרופיל שלי']] as [Tab,string][]).map(([v,l]) => (
             <button key={v} onClick={() => setTab(v)}
-              className={`flex-1 py-3 text-xs font-medium border-b-2 transition-colors ${tab === v ? 'border-sc-blue text-sc-blue' : 'border-transparent text-sc-gray'}`}>
+              className={`flex-1 py-3 text-xs font-medium border-b-2 transition-colors ${tab === v ? 'border-sc-primary text-sc-primary' : 'border-transparent text-sc-text-light'}`}>
               {l}
             </button>
           ))}
@@ -42,7 +42,7 @@ export default function ProviderDashboard() {
             {applying && (
               <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
                 <div className="sc-card rounded-t-2xl rounded-b-none w-full p-6 space-y-4">
-                  <h3 className="font-bold text-sc-dark">הגשת מועמדות</h3>
+                  <h3 className="font-bold text-sc-text">הגשת מועמדות</h3>
                   <textarea value={coverLetter} onChange={e => setCoverLetter(e.target.value)}
                     rows={6} placeholder="מכתב מקדים — תאר את הניסיון שלך בפרויקטי התחדשות עירונית..."
                     className="sc-input resize-none" />
@@ -57,20 +57,20 @@ export default function ProviderDashboard() {
             {mockJobs.map(job => (
               <div key={job.id} className="sc-card p-5">
                 <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold text-sc-dark">{job.title}</h3>
-                  <span className="text-xs text-sc-gray">{job.published}</span>
+                  <h3 className="font-semibold text-sc-text">{job.title}</h3>
+                  <span className="text-xs text-sc-text-light">{job.published}</span>
                 </div>
-                <p className="text-sm text-sc-blue mb-3">{job.project}</p>
+                <p className="text-sm text-sc-primary mb-3">{job.project}</p>
                 <div className="flex flex-wrap gap-2 mb-4">
                   {[job.type, job.location, job.engagement].map(tag => (
-                    <span key={tag} className="sc-badge bg-sc-blue-pale text-sc-blue">{tag}</span>
+                    <span key={tag} className="sc-badge bg-sc-light-blue text-sc-primary">{tag}</span>
                   ))}
                 </div>
                 {applied.has(job.id) ? (
                   <div className="text-center py-2 bg-sc-success/10 rounded-xl text-sm text-sc-success font-medium">✅ מועמדות הוגשה</div>
                 ) : (
                   <button onClick={() => setApplying(job.id)}
-                    className="w-full bg-sc-brown text-white py-2.5 rounded-xl text-sm font-medium hover:bg-sc-brown-light transition-colors">
+                    className="w-full bg-sc-gold-dark text-white py-2.5 rounded-xl text-sm font-medium hover:bg-sc-gold transition-colors">
                     הגש מועמדות →
                   </button>
                 )}
@@ -82,10 +82,10 @@ export default function ProviderDashboard() {
         {tab === 'applications' && (
           <div className="space-y-3">
             {applied.size === 0 ? (
-              <div className="text-center py-16 text-sc-gray">
+              <div className="text-center py-16 text-sc-text-light">
                 <div className="text-5xl mb-3">📋</div>
                 <p>לא הגשת מועמדויות עדיין</p>
-                <button onClick={() => setTab('jobs')} className="mt-4 text-sc-blue text-sm">עיין במשרות</button>
+                <button onClick={() => setTab('jobs')} className="mt-4 text-sc-primary text-sm">עיין במשרות</button>
               </div>
             ) : (
               [...applied].map(id => {
@@ -94,10 +94,10 @@ export default function ProviderDashboard() {
                   <div key={id} className="sc-card p-4">
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-medium text-sc-dark text-sm">{job.title}</p>
-                        <p className="text-xs text-sc-gray mt-0.5">{job.project}</p>
+                        <p className="font-medium text-sc-text text-sm">{job.title}</p>
+                        <p className="text-xs text-sc-text-light mt-0.5">{job.project}</p>
                       </div>
-                      <span className="sc-badge bg-sc-warning/10 text-sc-warning">ממתין</span>
+                      <span className="sc-badge bg-sc-gold-dark/10 text-sc-gold-dark">ממתין</span>
                     </div>
                   </div>
                 )
@@ -109,10 +109,10 @@ export default function ProviderDashboard() {
         {tab === 'profile' && (
           <div className="sc-card p-6 space-y-4">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-sc-blue-deep rounded-full flex items-center justify-center text-white text-xl font-bold">ד</div>
+              <div className="w-16 h-16 bg-sc-navy rounded-full flex items-center justify-center text-white text-xl font-bold">ד</div>
               <div>
-                <p className="font-bold text-sc-dark">עו"ד דנה כהן</p>
-                <p className="text-sm text-sc-gray">כהן ושות' — משרד עורכי דין</p>
+                <p className="font-bold text-sc-text">עו"ד דנה כהן</p>
+                <p className="text-sm text-sc-text-light">כהן ושות' — משרד עורכי דין</p>
               </div>
             </div>
             <div className="space-y-3 pt-2">
@@ -122,9 +122,9 @@ export default function ProviderDashboard() {
                 { label: 'מספר רישיון', value: '12345' },
                 { label: 'ניסיון', value: '15 שנות ניסיון בפרויקטי פינוי-בינוי' },
               ].map(f => (
-                <div key={f.label} className="border-b border-sc-gray-light/50 pb-3">
-                  <p className="text-xs text-sc-gray">{f.label}</p>
-                  <p className="text-sm text-sc-dark mt-0.5">{f.value}</p>
+                <div key={f.label} className="border-b border-sc-border/50 pb-3">
+                  <p className="text-xs text-sc-text-light">{f.label}</p>
+                  <p className="text-sm text-sc-text mt-0.5">{f.value}</p>
                 </div>
               ))}
             </div>

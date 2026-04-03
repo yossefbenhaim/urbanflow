@@ -28,9 +28,9 @@ const mockDocs = [
 ]
 
 const statusMap = {
-  PENDING: { label: 'ממתין לחתימה', cls: 'bg-sc-warning/15 text-sc-warning' },
+  PENDING: { label: 'ממתין לחתימה', cls: 'bg-sc-gold-dark/15 text-sc-gold-dark' },
   SIGNED:  { label: 'נחתם',         cls: 'bg-sc-success/15 text-sc-success'  },
-  INFO:    { label: 'לעיון',         cls: 'bg-sc-gray-light text-sc-gray'    },
+  INFO:    { label: 'לעיון',         cls: 'bg-sc-border text-sc-text-light'    },
 }
 
 type Filter = 'ALL' | 'PENDING' | 'SIGNED'
@@ -45,31 +45,31 @@ function DocCard({ doc }: { doc: typeof mockDocs[0] }) {
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1">
-            <h3 className="font-semibold text-sc-dark text-base">{doc.title}</h3>
-            <p className="text-xs text-sc-gray mt-1">{doc.date}</p>
+            <h3 className="font-semibold text-sc-text text-base">{doc.title}</h3>
+            <p className="text-xs text-sc-text-light mt-1">{doc.date}</p>
             {doc.status === 'PENDING' && (
-              <p className="text-xs text-sc-warning mt-1">⏰ יש לחתום עד {(doc as any).dueDate}</p>
+              <p className="text-xs text-sc-gold-dark mt-1">⏰ יש לחתום עד {(doc as any).dueDate}</p>
             )}
           </div>
           <span className={`sc-badge flex-shrink-0 ${st.cls}`}>{st.label}</span>
         </div>
 
         {/* Summary + expand toggle */}
-        <div className="mt-3 bg-sc-blue-pale rounded-xl px-3 py-2.5">
+        <div className="mt-3 bg-sc-light-blue rounded-xl px-3 py-2.5">
           <div className="flex items-start justify-between gap-2">
-            <p className="text-xs text-sc-blue leading-relaxed flex-1">
+            <p className="text-xs text-sc-primary leading-relaxed flex-1">
               💡 {info.summary}
             </p>
             <button
               onClick={() => setExpanded(v => !v)}
-              className="text-sc-blue text-xs font-semibold flex-shrink-0 flex items-center gap-1"
+              className="text-sc-primary text-xs font-semibold flex-shrink-0 flex items-center gap-1"
             >
               {expanded ? 'פחות ▲' : 'עוד ▼'}
             </button>
           </div>
 
           {expanded && (
-            <p className="text-xs text-sc-blue mt-2 leading-relaxed border-t border-sc-blue-light/30 pt-2">
+            <p className="text-xs text-sc-primary mt-2 leading-relaxed border-t border-sc-primary-light/30 pt-2">
               {info.full}
             </p>
           )}
@@ -102,7 +102,7 @@ export default function Documents() {
           {([['ALL','הכל'],['PENDING','ממתינים'],['SIGNED','נחתמו']] as [Filter,string][]).map(([v, label]) => (
             <button key={v} onClick={() => setFilter(v)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                filter === v ? 'bg-sc-blue text-white' : 'bg-sc-bg border border-sc-gray-light text-sc-gray'
+                filter === v ? 'bg-sc-primary text-white' : 'bg-sc-bg border border-sc-border text-sc-text-light'
               }`}>
               {label}
             </button>

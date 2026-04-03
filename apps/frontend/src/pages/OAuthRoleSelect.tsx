@@ -47,13 +47,13 @@ export default function OAuthRoleSelect() {
 
   return (
     <div dir="rtl" className="min-h-screen bg-sc-bg flex items-center justify-center font-heebo p-6">
-      <div className="bg-white border border-sc-gray-light rounded-3xl shadow-sm p-10 sm:p-12 max-w-[520px] w-full">
+      <div className="bg-white border border-sc-border rounded-3xl shadow-sm p-10 sm:p-12 max-w-[520px] w-full">
         <div className="text-center mb-10">
           <div className="text-5xl mb-3">👋</div>
-          <h1 className="text-sc-dark text-2xl font-extrabold mb-2">
+          <h1 className="text-sc-text text-2xl font-extrabold mb-2">
             {isLoading ? '...' : googleName ? `שלום, ${googleName.split(' ')[0]}!` : 'ברוך הבא!'}
           </h1>
-          <p className="text-sc-gray text-sm">
+          <p className="text-sc-text-light text-sm">
             רק שלב אחד לפני שמתחילים — מה התפקיד שלך?
           </p>
         </div>
@@ -61,7 +61,7 @@ export default function OAuthRoleSelect() {
         {/* Name field if Google didn't provide one */}
         {needsName && (
           <div className="mb-6">
-            <label className="text-sc-gray text-sm block mb-2">
+            <label className="text-sc-text-light text-sm block mb-2">
               שמך המלא
             </label>
             <input
@@ -77,15 +77,15 @@ export default function OAuthRoleSelect() {
         <div className="flex flex-col gap-3 mb-8">
           {roles.map((r) => (
             <button key={r.key} onClick={() => setSelectedRole(r.key)}
-              className={`flex items-center gap-4 p-4 rounded-[14px] border-2 text-right w-full transition-all
-                ${selectedRole === r.key ? 'border-sc-blue bg-sc-blue-pale' : 'border-sc-gray-light bg-white hover:bg-sc-bg'}`}
+              className={`flex items-center gap-4 p-4 rounded-2xl border-2 text-right w-full transition-all
+                ${selectedRole === r.key ? 'border-sc-primary bg-sc-light-blue' : 'border-sc-border bg-white hover:bg-sc-bg'}`}
             >
               <span className="text-3xl">{r.icon}</span>
               <div className="flex-1">
-                <div className="text-sc-dark font-semibold">{r.title}</div>
-                <div className="text-sc-gray text-sm mt-0.5">{r.subtitle}</div>
+                <div className="text-sc-text font-semibold">{r.title}</div>
+                <div className="text-sc-text-light text-sm mt-0.5">{r.subtitle}</div>
               </div>
-              {selectedRole === r.key && <span className="text-sc-blue text-xl">✓</span>}
+              {selectedRole === r.key && <span className="text-sc-primary text-xl">✓</span>}
             </button>
           ))}
         </div>

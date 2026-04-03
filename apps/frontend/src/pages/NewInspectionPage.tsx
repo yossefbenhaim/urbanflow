@@ -84,8 +84,8 @@ export default function NewInspectionPage() {
         <Navbar />
         <div className="max-w-lg mx-auto p-8 text-center">
           <div className="text-5xl mb-4">🔒</div>
-          <h2 className="text-xl font-bold text-sc-dark mb-2">הבדיקה מלאה</h2>
-          <p className="text-sc-gray mb-6">כבר הוגשו 3 בדיקות מסוג זה לפרויקט זה</p>
+          <h2 className="text-xl font-bold text-sc-text mb-2">הבדיקה מלאה</h2>
+          <p className="text-sc-text-light mb-6">כבר הוגשו 3 בדיקות מסוג זה לפרויקט זה</p>
           <button onClick={() => navigate(-1)} className="sc-btn-primary">חזרה</button>
         </div>
       </div>
@@ -99,14 +99,14 @@ export default function NewInspectionPage() {
 
         {/* Header */}
         <div className="mb-6">
-          <button onClick={() => navigate(-1)} className="text-sc-gray text-sm mb-3 flex items-center gap-1">
+          <button onClick={() => navigate(-1)} className="text-sc-text-light text-sm mb-3 flex items-center gap-1">
             ← חזרה
           </button>
           <div className="flex items-center gap-3">
             <span className="text-3xl">{meta?.icon}</span>
             <div>
               <h1 className="sc-section-title text-xl">{meta?.title}</h1>
-              <p className="text-sm text-sc-gray">
+              <p className="text-sm text-sc-text-light">
                 מיקום {(slotData?.count ?? 0) + 1} מתוך 3
                 {(slotData?.count ?? 0) === 0 && ' — ראשון מקבל ניקוד בונוס! 🏆'}
               </p>
@@ -115,11 +115,11 @@ export default function NewInspectionPage() {
 
           {/* Step indicator */}
           <div className="flex items-center gap-2 mt-4">
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${step === 'form' ? 'bg-sc-blue text-white' : 'bg-sc-gray-light text-sc-gray'}`}>
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${step === 'form' ? 'bg-sc-primary text-white' : 'bg-sc-border text-sc-text-light'}`}>
               <span>1</span> פרטים
             </div>
-            <div className="w-8 h-px bg-sc-gray-light" />
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${step === 'files' ? 'bg-sc-blue text-white' : 'bg-sc-gray-light text-sc-gray'}`}>
+            <div className="w-8 h-px bg-sc-border" />
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${step === 'files' ? 'bg-sc-primary text-white' : 'bg-sc-border text-sc-text-light'}`}>
               <span>2</span> קבצים
             </div>
           </div>
@@ -228,7 +228,7 @@ export default function NewInspectionPage() {
                     key={c.value}
                     onClick={() => set('conclusion', c.value)}
                     className={`p-3 rounded-xl border-2 text-sm font-medium transition-all text-right
-                      ${form.conclusion === c.value ? 'border-sc-blue bg-sc-blue-pale text-sc-blue' : 'border-sc-gray-light text-sc-gray'}`}
+                      ${form.conclusion === c.value ? 'border-sc-primary bg-sc-light-blue text-sc-primary' : 'border-sc-border text-sc-text-light'}`}
                   >
                     {c.label}
                   </button>
@@ -328,30 +328,30 @@ function FilesStep({ inspectionId, inspectionType, isArchitect, onSubmit, isSubm
 
   return (
     <div className="space-y-4">
-      <div className="bg-sc-blue-pale rounded-2xl p-4">
-        <h3 className="font-bold text-sc-blue-deep mb-1">העלאת קבצים</h3>
-        <p className="text-xs text-sc-blue">
+      <div className="bg-sc-light-blue rounded-2xl p-4">
+        <h3 className="font-bold text-sc-navy mb-1">העלאת קבצים</h3>
+        <p className="text-xs text-sc-primary">
           {uploadedRequired}/{requiredCount} קבצים חובה הועלו
         </p>
       </div>
 
       {fileTypes.map(ft => (
-        <div key={ft.key} className={`sc-card p-4 ${ft.required && !uploaded.has(ft.key) ? 'border-sc-warning' : ''}`}>
+        <div key={ft.key} className={`sc-card p-4 ${ft.required && !uploaded.has(ft.key) ? 'border-sc-gold-dark' : ''}`}>
           <div className="flex items-center justify-between mb-2">
-            <span className="font-medium text-sm text-sc-dark">
-              {ft.label} {ft.required && <span className="text-sc-warning">*</span>}
+            <span className="font-medium text-sm text-sc-text">
+              {ft.label} {ft.required && <span className="text-sc-gold-dark">*</span>}
             </span>
             {uploaded.has(ft.key) && <span className="text-sc-success text-sm">✅ הועלה</span>}
           </div>
           <label className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed cursor-pointer transition-all
-            ${uploaded.has(ft.key) ? 'border-sc-success/30 bg-sc-success/5' : 'border-sc-gray-light hover:border-sc-blue hover:bg-sc-blue-pale'}`}>
+            ${uploaded.has(ft.key) ? 'border-sc-success/30 bg-sc-success/5' : 'border-sc-border hover:border-sc-primary hover:bg-sc-light-blue'}`}>
             <input
               type="file"
               className="hidden"
               accept=".pdf,.jpg,.jpeg,.png,.dwg,.xlsx,.csv"
               onChange={e => { if (e.target.files?.[0]) handleUpload(ft.key, e.target.files[0]) }}
             />
-            <span className="text-sm text-sc-gray">{uploaded.has(ft.key) ? 'החלף קובץ' : '📎 לחץ להעלאה'}</span>
+            <span className="text-sm text-sc-text-light">{uploaded.has(ft.key) ? 'החלף קובץ' : '📎 לחץ להעלאה'}</span>
           </label>
         </div>
       ))}
@@ -362,13 +362,13 @@ function FilesStep({ inspectionId, inspectionType, isArchitect, onSubmit, isSubm
         onClick={onSubmit}
         disabled={!canSubmit || isSubmitting}
         className={`w-full py-4 rounded-2xl font-bold text-lg transition-colors
-          ${canSubmit ? 'bg-sc-success text-white hover:bg-sc-success/90' : 'bg-sc-gray-light text-sc-gray cursor-not-allowed'}`}
+          ${canSubmit ? 'bg-sc-success text-white hover:bg-sc-success/90' : 'bg-sc-border text-sc-text-light cursor-not-allowed'}`}
       >
         {isSubmitting ? 'מגיש...' : '✅ הגש בדיקה'}
       </button>
 
       {!canSubmit && (
-        <p className="text-center text-xs text-sc-gray">יש להעלות את כל הקבצים החובה לפני הגשה</p>
+        <p className="text-center text-xs text-sc-text-light">יש להעלות את כל הקבצים החובה לפני הגשה</p>
       )}
     </div>
   )
@@ -378,7 +378,7 @@ function FilesStep({ inspectionId, inspectionType, isArchitect, onSubmit, isSubm
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="sc-card p-4">
-      <h3 className="font-semibold text-sc-dark text-sm mb-3">{title}</h3>
+      <h3 className="font-semibold text-sc-text text-sm mb-3">{title}</h3>
       <div className="space-y-3">{children}</div>
     </div>
   )
@@ -394,7 +394,7 @@ function Field({ label, value, onChange, type = 'text', textarea = false, placeh
 }) {
   return (
     <div>
-      <label className="block text-xs text-sc-gray mb-1">{label}</label>
+      <label className="block text-xs text-sc-text-light mb-1">{label}</label>
       {textarea ? (
         <textarea value={value ?? ''} onChange={e => onChange(e.target.value)} rows={3} placeholder={placeholder} className="sc-input resize-none" />
       ) : (
@@ -407,10 +407,10 @@ function Field({ label, value, onChange, type = 'text', textarea = false, placeh
 function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-sm text-sc-dark">{label}</span>
+      <span className="text-sm text-sc-text">{label}</span>
       <button
         onClick={() => onChange(!value)}
-        className={`w-12 h-6 rounded-full transition-colors ${value ? 'bg-sc-blue' : 'bg-sc-gray-light'}`}
+        className={`w-12 h-6 rounded-full transition-colors ${value ? 'bg-sc-primary' : 'bg-sc-border'}`}
       >
         <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform mx-0.5 ${value ? 'translate-x-6' : ''}`} />
       </button>

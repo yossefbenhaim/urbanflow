@@ -100,13 +100,13 @@ export default function RegisterTenant() {
       <div className="w-full max-w-lg">
         {/* Header */}
         <div className="text-center mb-6">
-          <Link to="/register" className="inline-flex items-center gap-1 text-sm text-sc-gray hover:text-sc-dark mb-4">
+          <Link to="/register" className="inline-flex items-center gap-1 text-sm text-sc-text-light hover:text-sc-text mb-4">
             ← חזרה לבחירת תפקיד
           </Link>
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-sc-blue rounded-2xl mb-3 shadow-lg">
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-sc-primary rounded-2xl mb-3 shadow-lg">
             <span className="text-2xl">🏠</span>
           </div>
-          <h1 className="text-xl font-bold text-sc-dark">הרשמה כדייר</h1>
+          <h1 className="text-xl font-bold text-sc-text">הרשמה כדייר</h1>
         </div>
 
         {/* Step indicator */}
@@ -115,16 +115,16 @@ export default function RegisterTenant() {
             <div key={i} className="flex items-center gap-2">
               <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                 step === i + 1
-                  ? 'bg-sc-blue text-white'
+                  ? 'bg-sc-primary text-white'
                   : step > i + 1
                   ? 'bg-sc-success/15 text-sc-success'
-                  : 'bg-sc-gray-light text-sc-gray'
+                  : 'bg-sc-border text-sc-text-light'
               }`}>
                 <span>{step > i + 1 ? '✓' : i + 1}</span>
                 <span>{title}</span>
               </div>
               {i < stepTitles.length - 1 && (
-                <div className={`w-6 h-px ${step > i + 1 ? 'bg-sc-success' : 'bg-sc-gray-light'}`} />
+                <div className={`w-6 h-px ${step > i + 1 ? 'bg-sc-success' : 'bg-sc-border'}`} />
               )}
             </div>
           ))}
@@ -135,7 +135,7 @@ export default function RegisterTenant() {
           {/* Step 1: Personal Info */}
           {step === 1 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-sc-dark mb-4">פרטים אישיים</h2>
+              <h2 className="text-lg font-semibold text-sc-text mb-4">פרטים אישיים</h2>
 
               <Field label="שם מלא *">
                 <input type="text" placeholder="ישראל ישראלי" value={form.fullName}
@@ -172,10 +172,10 @@ export default function RegisterTenant() {
           {/* Step 2: Apartment Info */}
           {step === 2 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-sc-dark mb-4">פרטי הדירה</h2>
+              <h2 className="text-lg font-semibold text-sc-text mb-4">פרטי הדירה</h2>
 
               <div>
-                <label className="block text-sm font-semibold text-sc-dark mb-2">כתובת הדירה *</label>
+                <label className="block text-sm font-semibold text-sc-text mb-2">כתובת הדירה *</label>
                 <AddressPicker
                   value={address}
                   onChange={(v) => {
@@ -209,8 +209,8 @@ export default function RegisterTenant() {
                     <label key={String(opt.value)} className="flex items-center gap-2 cursor-pointer">
                       <input type="radio" checked={form.isOwner === opt.value}
                         onChange={() => update('isOwner', opt.value)}
-                        className="text-sc-blue" />
-                      <span className="text-sm text-sc-dark">{opt.label}</span>
+                        className="text-sc-primary" />
+                      <span className="text-sm text-sc-text">{opt.label}</span>
                     </label>
                   ))}
                 </div>
@@ -226,7 +226,7 @@ export default function RegisterTenant() {
               <Field label="קוד הזמנה מפרויקט (אם קיבלת)">
                 <input type="text" placeholder="ABC-1234" value={form.inviteCode}
                   onChange={e => update('inviteCode', e.target.value.toUpperCase())} className="sc-input" />
-                <p className="text-xs text-sc-gray mt-1">לא חובה — ניתן לחבר לפרויקט מאוחר יותר</p>
+                <p className="text-xs text-sc-text-light mt-1">לא חובה — ניתן לחבר לפרויקט מאוחר יותר</p>
               </Field>
             </div>
           )}
@@ -234,7 +234,7 @@ export default function RegisterTenant() {
           {/* Step 3: Summary */}
           {step === 3 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-sc-dark mb-4">סיכום ואישור</h2>
+              <h2 className="text-lg font-semibold text-sc-text mb-4">סיכום ואישור</h2>
               <div className="bg-sc-bg rounded-xl p-4 space-y-2 text-sm">
                 <SummaryRow label="שם" value={form.fullName} />
                 <SummaryRow label="ת.ז" value={form.idNumber} />
@@ -246,7 +246,7 @@ export default function RegisterTenant() {
                 <SummaryRow label="סוג מחזיק" value={form.isOwner ? 'בעלים' : 'שוכר'} />
                 {form.inviteCode && <SummaryRow label="קוד הזמנה" value={form.inviteCode} />}
               </div>
-              <p className="text-xs text-sc-gray text-center">
+              <p className="text-xs text-sc-text-light text-center">
                 בלחיצה על "הרשמה" אתה מאשר את תנאי השימוש ומדיניות הפרטיות
               </p>
             </div>
@@ -289,7 +289,7 @@ export default function RegisterTenant() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-sc-dark mb-1">{label}</label>
+      <label className="block text-sm font-medium text-sc-text mb-1">{label}</label>
       {children}
     </div>
   )
@@ -298,8 +298,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between">
-      <span className="text-sc-gray">{label}:</span>
-      <span className="font-medium text-sc-dark">{value}</span>
+      <span className="text-sc-text-light">{label}:</span>
+      <span className="font-medium text-sc-text">{value}</span>
     </div>
   )
 }

@@ -5,11 +5,11 @@ import Navbar from '../components/Navbar'
 import BuildingLoader from '../components/BuildingLoader'
 
 const STATUS_CONFIG: Record<string, { icon: string; label: string; color: string; bg: string }> = {
-  voted:       { icon: '✅', label: 'הצביעה',              color: 'text-green-600',  bg: 'bg-green-50' },
-  pending:     { icon: '⏳', label: 'ממתינה לבעלים נוספים', color: 'text-amber-600',  bg: 'bg-amber-50' },
-  blocked:     { icon: '🔒', label: 'חסומה (סכסוך)',       color: 'text-red-600',    bg: 'bg-red-50' },
-  proxy:       { icon: '📜', label: 'מיופה כוח הצביע',     color: 'text-purple-600', bg: 'bg-purple-50' },
-  not_started: { icon: '⬜', label: 'לא הצביעה',           color: 'text-gray-500',   bg: 'bg-gray-50' },
+  voted:       { icon: '✅', label: 'הצביעה',              color: 'text-sc-success',  bg: 'bg-sc-success/10' },
+  pending:     { icon: '⏳', label: 'ממתינה לבעלים נוספים', color: 'text-sc-gold-dark',  bg: 'bg-sc-gold/10' },
+  blocked:     { icon: '🔒', label: 'חסומה (סכסוך)',       color: 'text-sc-error',    bg: 'bg-sc-error/10' },
+  proxy:       { icon: '📜', label: 'מיופה כוח הצביע',     color: 'text-sc-teal', bg: 'bg-sc-teal/10' },
+  not_started: { icon: '⬜', label: 'לא הצביעה',           color: 'text-sc-text-light',   bg: 'bg-sc-bg' },
 }
 
 export default function VotesTracker() {
@@ -39,17 +39,17 @@ export default function VotesTracker() {
       <div className="max-w-[680px] mx-auto px-4 py-6">
         <div className="flex items-center gap-3 mb-6">
           <button onClick={() => navigate('/committee-actions')}
-            className="bg-sc-bg border-none rounded-[10px] px-3.5 py-2 cursor-pointer text-sc-blue font-semibold text-sm">
+            className="bg-sc-bg border-none rounded-[10px] px-3.5 py-2 cursor-pointer text-sc-primary font-semibold text-sm">
             ‹ חזרה
           </button>
           <div>
             <h1 className="sc-section-title text-xl m-0">📊 מעקב הצבעות לפי דירות</h1>
-            <p className="mt-0.5 text-[13px] text-sc-gray">דירה = קול אחד · מעקב בזמן אמת</p>
+            <p className="mt-0.5 text-[13px] text-sc-text-light">דירה = קול אחד · מעקב בזמן אמת</p>
           </div>
         </div>
 
         {polls.length === 0 ? (
-          <div className="text-center py-16 text-sc-gray">
+          <div className="text-center py-16 text-sc-text-light">
             <div className="text-5xl mb-3">📊</div>
             <p className="text-[15px]">אין סקרים עדיין בקבוצת הבניין</p>
           </div>
@@ -89,37 +89,37 @@ function ApartmentPollCard({ pollId, isActive, onToggle }: {
   const pct = totalApt > 0 ? Math.round((votedApt / totalApt) * 100) : 0
 
   return (
-    <div className="sc-card overflow-hidden border-t-4 border-t-sc-blue">
+    <div className="sc-card overflow-hidden border-t-4 border-t-sc-primary">
       {/* Header */}
       <button onClick={onToggle} className="w-full p-4 flex items-center gap-3 bg-transparent border-none cursor-pointer text-right">
         <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center text-xl flex-shrink-0 ${
-          p.status === 'open' ? 'bg-sc-blue-pale' : 'bg-green-100'
+          p.status === 'open' ? 'bg-sc-light-blue' : 'bg-sc-success/15'
         }`}>
           {p.status === 'open' ? '📊' : '✅'}
         </div>
         <div className="flex-1 text-right">
-          <div className="text-sm font-bold text-sc-dark">{p.question}</div>
-          <div className="text-xs text-sc-gray mt-0.5">
+          <div className="text-sm font-bold text-sc-text">{p.question}</div>
+          <div className="text-xs text-sc-text-light mt-0.5">
             {votedApt}/{totalApt} דירות הצביעו · {p.status === 'open' ? '🟢 פתוח' : '🔴 סגור'}
           </div>
         </div>
         <div className="flex flex-col items-center gap-1 flex-shrink-0">
-          <div className={`text-base font-extrabold ${pct >= (p.threshold_pct ?? 60) ? 'text-green-600' : 'text-sc-blue'}`}>
+          <div className={`text-base font-extrabold ${pct >= (p.threshold_pct ?? 60) ? 'text-sc-success' : 'text-sc-primary'}`}>
             {pct}%
           </div>
-          <span className="text-[11px] text-sc-gray">{isActive ? '▲' : '▼'}</span>
+          <span className="text-[11px] text-sc-text-light">{isActive ? '▲' : '▼'}</span>
         </div>
       </button>
 
       {/* Progress bar */}
-      <div className="h-1.5 bg-gray-100 relative">
+      <div className="h-1.5 bg-sc-bg relative">
         <div
-          className="h-full bg-sc-blue transition-all duration-500 rounded-r"
+          className="h-full bg-sc-primary transition-all duration-500 rounded-r"
           style={{ width: `${pct}%` }}
         />
         {p.threshold_pct && (
           <div
-            className="absolute top-0 bottom-0 w-0.5 bg-red-400"
+            className="absolute top-0 bottom-0 w-0.5 bg-sc-error"
             style={{ left: `${p.threshold_pct}%` }}
             title={`סף: ${p.threshold_pct}%`}
           />
@@ -147,7 +147,7 @@ function ApartmentPollCard({ pollId, isActive, onToggle }: {
           </div>
 
           {/* Apartment grid */}
-          <div className="text-xs font-bold text-sc-blue mb-2.5 uppercase tracking-wider">
+          <div className="text-xs font-bold text-sc-primary mb-2.5 uppercase tracking-wider">
             רשימת דירות
           </div>
           <div className="space-y-1.5">
@@ -157,16 +157,16 @@ function ApartmentPollCard({ pollId, isActive, onToggle }: {
                 <div key={apt.apartmentId} className={`flex items-center gap-3 p-3 rounded-xl ${cfg.bg} transition-colors`}>
                   <span className="text-lg flex-shrink-0">{cfg.icon}</span>
                   <div className="flex-1">
-                    <div className="text-[13px] font-semibold text-sc-dark">
+                    <div className="text-[13px] font-semibold text-sc-text">
                       דירה {apt.unitNumber} · קומה {apt.floor}
                     </div>
                     <div className={`text-[11px] ${cfg.color}`}>
                       {cfg.label}
                       {apt.voteValue && apt.status !== 'blocked' && (
-                        <span className="mr-1 text-gray-500">· {apt.voteValue}</span>
+                        <span className="mr-1 text-sc-text-light">· {apt.voteValue}</span>
                       )}
                       {apt.decidedBy && apt.status === 'voted' && apt.decidedBy !== 'unanimous' && (
-                        <span className="mr-1 text-gray-400">({apt.decidedBy === 'majority' ? 'רוב' : apt.decidedBy})</span>
+                        <span className="mr-1 text-sc-text-light">({apt.decidedBy === 'majority' ? 'רוב' : apt.decidedBy})</span>
                       )}
                     </div>
                   </div>

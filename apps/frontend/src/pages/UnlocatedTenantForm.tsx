@@ -21,20 +21,20 @@ export default function UnlocatedTenantForm() {
     <div className="min-h-screen bg-sc-bg" dir="rtl">
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-[22px] font-bold text-sc-dark mb-1">🔍 דיווח על דייר לא מאותר</h1>
-        <p className="text-sc-gray text-sm mb-6">דווח על דייר שלא ניתן ליצור עימו קשר</p>
+        <h1 className="text-[22px] font-bold text-sc-text mb-1">🔍 דיווח על דייר לא מאותר</h1>
+        <p className="text-sc-text-light text-sm mb-6">דווח על דייר שלא ניתן ליצור עימו קשר</p>
 
         <div className="sc-card p-6 mb-6">
-          <h3 className="text-[17px] font-bold text-sc-dark mb-4">טופס דיווח</h3>
+          <h3 className="text-[17px] font-bold text-sc-text mb-4">טופס דיווח</h3>
           <div className="flex flex-col gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-sc-dark mb-1">מזהה דירה *</label>
+              <label className="block text-[13px] font-semibold text-sc-text mb-1">מזהה דירה *</label>
               <input className="sc-input" placeholder="UUID הדירה" value={form.apartmentId}
                 onChange={e => setForm(f => ({ ...f, apartmentId: e.target.value }))} />
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-sc-dark mb-2">ניסיונות איתור שבוצעו</label>
+              <label className="block text-[13px] font-semibold text-sc-text mb-2">ניסיונות איתור שבוצעו</label>
               <div className="flex flex-col gap-2">
                 {[
                   { key: 'attemptedPhone', label: '📞 ניסיון טלפוני', icon: '📞' },
@@ -43,20 +43,20 @@ export default function UnlocatedTenantForm() {
                 ].map(opt => (
                   <label key={opt.key} className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
                     (form as any)[opt.key]
-                      ? 'border-sc-blue bg-sc-blue-pale'
-                      : 'border-sc-gray-light bg-white'
+                      ? 'border-sc-primary bg-sc-light-blue'
+                      : 'border-sc-border bg-white'
                   }`}>
                     <input type="checkbox" checked={(form as any)[opt.key]}
                       onChange={e => setForm(f => ({ ...f, [opt.key]: e.target.checked }))}
                       className="w-4 h-4" />
-                    <span className="text-sm text-sc-dark">{opt.label}</span>
+                    <span className="text-sm text-sc-text">{opt.label}</span>
                   </label>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-sc-dark mb-1">הערות</label>
+              <label className="block text-[13px] font-semibold text-sc-text mb-1">הערות</label>
               <textarea className="sc-input resize-y" rows={3} placeholder="פירוט על ניסיונות האיתור..."
                 value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
             </div>
@@ -86,22 +86,22 @@ export default function UnlocatedTenantForm() {
         {/* Existing Reports */}
         {reports && reports.length > 0 && (
           <div>
-            <h3 className="text-[15px] font-bold text-sc-dark mb-3">דיווחים קודמים</h3>
+            <h3 className="text-[15px] font-bold text-sc-text mb-3">דיווחים קודמים</h3>
             <div className="flex flex-col gap-2.5">
               {reports.map((r: any) => (
                 <div key={r.id} className="sc-card p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-sc-gray">{new Date(r.created_at).toLocaleDateString('he-IL')}</span>
-                    <span className={`sc-badge text-xs ${r.status === 'open' ? 'bg-sc-warning/15 text-sc-warning' : 'bg-sc-success/15 text-sc-success'}`}>
+                    <span className="text-xs text-sc-text-light">{new Date(r.created_at).toLocaleDateString('he-IL')}</span>
+                    <span className={`sc-badge text-xs ${r.status === 'open' ? 'bg-sc-gold-dark/15 text-sc-gold-dark' : 'bg-sc-success/15 text-sc-success'}`}>
                       {r.status === 'open' ? '⏳ פתוח' : '✅ טופל'}
                     </span>
                   </div>
-                  <div className="flex gap-3 text-xs text-sc-gray">
+                  <div className="flex gap-3 text-xs text-sc-text-light">
                     {r.attempted_phone && <span>📞 טלפון</span>}
                     {r.attempted_email && <span>📧 מייל</span>}
                     {r.attempted_visit && <span>🚪 ביקור</span>}
                   </div>
-                  {r.notes && <p className="text-xs text-sc-dark mt-2">{r.notes}</p>}
+                  {r.notes && <p className="text-xs text-sc-text mt-2">{r.notes}</p>}
                 </div>
               ))}
             </div>

@@ -29,51 +29,51 @@ export default function OwnershipDisputeForm() {
     <div className="min-h-screen bg-sc-bg" dir="rtl">
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-[22px] font-bold text-sc-dark mb-1">⚖️ דיווח סכסוך בעלות</h1>
-        <p className="text-sc-gray text-sm mb-6">דווח על סכסוך בעלות בדירה — הדירה תיחסם מהצבעה עד לפתרון</p>
+        <h1 className="text-[22px] font-bold text-sc-text mb-1">⚖️ דיווח סכסוך בעלות</h1>
+        <p className="text-sc-text-light text-sm mb-6">דווח על סכסוך בעלות בדירה — הדירה תיחסם מהצבעה עד לפתרון</p>
 
         <div className="sc-card p-6 mb-6">
-          <h3 className="text-[17px] font-bold text-sc-dark mb-4">טופס דיווח</h3>
+          <h3 className="text-[17px] font-bold text-sc-text mb-4">טופס דיווח</h3>
           <div className="flex flex-col gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-sc-dark mb-1">מזהה דירה *</label>
+              <label className="block text-[13px] font-semibold text-sc-text mb-1">מזהה דירה *</label>
               <input className="sc-input" placeholder="UUID הדירה" value={form.apartmentId}
                 onChange={e => setForm(f => ({ ...f, apartmentId: e.target.value }))} />
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-sc-dark mb-2">סוג הסכסוך *</label>
+              <label className="block text-[13px] font-semibold text-sc-text mb-2">סוג הסכסוך *</label>
               <div className="flex flex-col gap-2">
                 {DISPUTE_TYPES.map(t => (
                   <button key={t.value} type="button"
                     onClick={() => setForm(f => ({ ...f, disputeType: t.value as any }))}
                     className={`p-3 rounded-xl border-2 text-right transition-all ${
                       form.disputeType === t.value
-                        ? 'border-sc-blue bg-sc-blue-pale'
-                        : 'border-sc-gray-light bg-white'
+                        ? 'border-sc-primary bg-sc-light-blue'
+                        : 'border-sc-border bg-white'
                     }`}>
-                    <p className={`text-sm font-semibold ${form.disputeType === t.value ? 'text-sc-blue' : 'text-sc-dark'}`}>{t.label}</p>
-                    <p className="text-xs text-sc-gray mt-0.5">{t.desc}</p>
+                    <p className={`text-sm font-semibold ${form.disputeType === t.value ? 'text-sc-primary' : 'text-sc-text'}`}>{t.label}</p>
+                    <p className="text-xs text-sc-text-light mt-0.5">{t.desc}</p>
                   </button>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-sc-dark mb-1">צדדים מעורבים</label>
+              <label className="block text-[13px] font-semibold text-sc-text mb-1">צדדים מעורבים</label>
               <input className="sc-input" placeholder="שמות הצדדים (מופרדים בפסיקים)" value={form.parties}
                 onChange={e => setForm(f => ({ ...f, parties: e.target.value }))} />
-              <p className="text-[11px] text-sc-gray mt-1">לדוג׳: יוסי כהן, רחל לוי</p>
+              <p className="text-[11px] text-sc-text-light mt-1">לדוג׳: יוסי כהן, רחל לוי</p>
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-sc-dark mb-1">תיאור הסכסוך *</label>
+              <label className="block text-[13px] font-semibold text-sc-text mb-1">תיאור הסכסוך *</label>
               <textarea className="sc-input resize-y" rows={4} placeholder="תאר את הסכסוך בפירוט..."
                 value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-sc-dark mb-1">מסמכים תומכים</label>
+              <label className="block text-[13px] font-semibold text-sc-text mb-1">מסמכים תומכים</label>
               <div className="flex gap-2">
                 <input className="sc-input flex-1" placeholder="URL של מסמך" value={form.newDocUrl}
                   onChange={e => setForm(f => ({ ...f, newDocUrl: e.target.value }))} />
@@ -89,7 +89,7 @@ export default function OwnershipDisputeForm() {
               {form.documents.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
                   {form.documents.map((doc, i) => (
-                    <span key={i} className="bg-sc-blue-pale text-sc-blue text-xs px-2 py-1 rounded-lg flex items-center gap-1">
+                    <span key={i} className="bg-sc-light-blue text-sc-primary text-xs px-2 py-1 rounded-lg flex items-center gap-1">
                       📎 מסמך {i + 1}
                       <button onClick={() => setForm(f => ({ ...f, documents: f.documents.filter((_, j) => j !== i) }))}
                         className="bg-transparent border-none text-sc-error cursor-pointer text-xs">✕</button>
@@ -130,21 +130,21 @@ export default function OwnershipDisputeForm() {
         {/* Existing Disputes */}
         {disputes && disputes.length > 0 && (
           <div>
-            <h3 className="text-[15px] font-bold text-sc-dark mb-3">סכסוכים קיימים</h3>
+            <h3 className="text-[15px] font-bold text-sc-text mb-3">סכסוכים קיימים</h3>
             <div className="flex flex-col gap-2.5">
               {disputes.map((d: any) => (
                 <div key={d.id} className="sc-card p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold text-sc-dark">
+                    <span className="text-sm font-semibold text-sc-text">
                       {DISPUTE_TYPES.find(t => t.value === d.dispute_type)?.label ?? d.dispute_type}
                     </span>
                     <span className={`sc-badge text-xs ${d.status === 'open' ? 'bg-sc-error/15 text-sc-error' : 'bg-sc-success/15 text-sc-success'}`}>
                       {d.status === 'open' ? '🔴 פתוח' : '✅ נפתר'}
                     </span>
                   </div>
-                  <p className="text-xs text-sc-gray">{d.description}</p>
+                  <p className="text-xs text-sc-text-light">{d.description}</p>
                   {d.parties?.length > 0 && (
-                    <p className="text-xs text-sc-gray mt-1">צדדים: {d.parties.join(', ')}</p>
+                    <p className="text-xs text-sc-text-light mt-1">צדדים: {d.parties.join(', ')}</p>
                   )}
                 </div>
               ))}

@@ -15,11 +15,11 @@ const TENDER_TYPES: { key: string; label: string; icon: string }[] = [
 ]
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  draft: { label: 'טיוטה', color: 'bg-gray-200 text-gray-700' },
-  open: { label: 'פתוח', color: 'bg-green-100 text-green-700' },
-  closed: { label: 'סגור', color: 'bg-red-100 text-red-700' },
-  awarded: { label: 'נבחר זוכה', color: 'bg-blue-100 text-blue-700' },
-  cancelled: { label: 'בוטל', color: 'bg-gray-300 text-gray-600' },
+  draft: { label: 'טיוטה', color: 'bg-sc-border text-sc-text' },
+  open: { label: 'פתוח', color: 'bg-sc-success/15 text-sc-success' },
+  closed: { label: 'סגור', color: 'bg-sc-error/15 text-sc-error' },
+  awarded: { label: 'נבחר זוכה', color: 'bg-sc-light-blue text-sc-primary' },
+  cancelled: { label: 'בוטל', color: 'bg-gray-300 text-sc-text-light' },
 }
 
 // ── Create Tender Modal ──────────────────────────────────
@@ -45,10 +45,10 @@ function CreateTenderModal({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" dir="rtl">
       <div className="sc-card p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold text-sc-dark mb-4">📋 פתיחת מכרז חדש</h2>
+        <h2 className="text-xl font-bold text-sc-text mb-4">📋 פתיחת מכרז חדש</h2>
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium text-sc-dark">כותרת המכרז *</label>
+            <label className="text-sm font-medium text-sc-text">כותרת המכרז *</label>
             <input
               value={title}
               onChange={e => setTitle(e.target.value)}
@@ -57,7 +57,7 @@ function CreateTenderModal({
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-sc-dark">סוג המכרז *</label>
+            <label className="text-sm font-medium text-sc-text">סוג המכרז *</label>
             <div className="grid grid-cols-2 gap-2 mt-1">
               {TENDER_TYPES.map(t => (
                 <button
@@ -66,7 +66,7 @@ function CreateTenderModal({
                   className={`p-2 rounded-lg border text-sm text-right transition-all ${
                     tenderType === t.key
                       ? 'border-sc-gold bg-sc-gold/10 font-bold'
-                      : 'border-gray-200 hover:border-sc-gold/50'
+                      : 'border-sc-border hover:border-sc-gold/50'
                   }`}
                 >
                   {t.icon} {t.label}
@@ -75,7 +75,7 @@ function CreateTenderModal({
             </div>
           </div>
           <div>
-            <label className="text-sm font-medium text-sc-dark">תיאור</label>
+            <label className="text-sm font-medium text-sc-text">תיאור</label>
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
@@ -85,7 +85,7 @@ function CreateTenderModal({
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-sc-dark">דרישות</label>
+            <label className="text-sm font-medium text-sc-text">דרישות</label>
             <textarea
               value={requirements}
               onChange={e => setRequirements(e.target.value)}
@@ -95,7 +95,7 @@ function CreateTenderModal({
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-sc-dark">מועד אחרון להגשה</label>
+            <label className="text-sm font-medium text-sc-text">מועד אחרון להגשה</label>
             <input
               type="datetime-local"
               value={deadline}
@@ -124,7 +124,7 @@ function CreateTenderModal({
           <button onClick={onClose} className="sc-btn-secondary flex-1">ביטול</button>
         </div>
         {create.error && (
-          <p className="text-red-500 text-sm mt-2">{create.error.message}</p>
+          <p className="text-sc-error text-sm mt-2">{create.error.message}</p>
         )}
       </div>
     </div>
@@ -158,11 +158,11 @@ function SubmitProposalModal({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" dir="rtl">
       <div className="sc-card p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold text-sc-dark mb-1">📝 הגשת הצעה</h2>
-        <p className="text-sm text-gray-500 mb-4">{tenderTitle}</p>
+        <h2 className="text-xl font-bold text-sc-text mb-1">📝 הגשת הצעה</h2>
+        <p className="text-sm text-sc-text-light mb-4">{tenderTitle}</p>
         <div className="space-y-3">
           <div>
-            <label className="text-sm font-medium text-sc-dark">תיאור ההצעה *</label>
+            <label className="text-sm font-medium text-sc-text">תיאור ההצעה *</label>
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
@@ -173,7 +173,7 @@ function SubmitProposalModal({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium text-sc-dark">מחיר (₪)</label>
+              <label className="text-sm font-medium text-sc-text">מחיר (₪)</label>
               <input
                 type="number"
                 value={price}
@@ -183,7 +183,7 @@ function SubmitProposalModal({
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-sc-dark">לו"ז (חודשים)</label>
+              <label className="text-sm font-medium text-sc-text">לו"ז (חודשים)</label>
               <input
                 type="number"
                 value={timeline}
@@ -195,7 +195,7 @@ function SubmitProposalModal({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium text-sc-dark">שנות ניסיון</label>
+              <label className="text-sm font-medium text-sc-text">שנות ניסיון</label>
               <input
                 type="number"
                 value={experience}
@@ -204,7 +204,7 @@ function SubmitProposalModal({
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-sc-dark">פרויקטים קודמים</label>
+              <label className="text-sm font-medium text-sc-text">פרויקטים קודמים</label>
               <input
                 type="number"
                 value={pastProjects}
@@ -214,7 +214,7 @@ function SubmitProposalModal({
             </div>
           </div>
           <div>
-            <label className="text-sm font-medium text-sc-dark">יתרונות (מופרדים בפסיקים)</label>
+            <label className="text-sm font-medium text-sc-text">יתרונות (מופרדים בפסיקים)</label>
             <input
               value={benefits}
               onChange={e => setBenefits(e.target.value)}
@@ -223,7 +223,7 @@ function SubmitProposalModal({
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-sc-dark">פרטי ערבויות</label>
+            <label className="text-sm font-medium text-sc-text">פרטי ערבויות</label>
             <input
               value={warranty}
               onChange={e => setWarranty(e.target.value)}
@@ -254,7 +254,7 @@ function SubmitProposalModal({
           <button onClick={onClose} className="sc-btn-secondary flex-1">ביטול</button>
         </div>
         {submit.error && (
-          <p className="text-red-500 text-sm mt-2">{submit.error.message}</p>
+          <p className="text-sc-error text-sm mt-2">{submit.error.message}</p>
         )}
       </div>
     </div>
@@ -288,7 +288,7 @@ export default function TendersPage() {
       <Navbar />
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-sc-dark">📋 מכרזים</h1>
+          <h1 className="text-2xl font-bold text-sc-text">📋 מכרזים</h1>
           {isRep && projectId && (
             <button onClick={() => setShowCreate(true)} className="sc-btn-primary">
               ➕ פתח מכרז חדש
@@ -298,14 +298,14 @@ export default function TendersPage() {
 
         {!projectId && (
           <div className="sc-card p-8 text-center">
-            <p className="text-gray-500">יש להצטרף לפרויקט כדי לצפות במכרזים</p>
+            <p className="text-sc-text-light">יש להצטרף לפרויקט כדי לצפות במכרזים</p>
           </div>
         )}
 
         {projectId && displayTenders.length === 0 && (
           <div className="sc-card p-8 text-center">
             <p className="text-6xl mb-3">📭</p>
-            <p className="text-gray-500">
+            <p className="text-sc-text-light">
               {isProvider ? 'אין מכרזים פתוחים כרגע' : 'לא נפתחו מכרזים עדיין'}
             </p>
           </div>
@@ -326,15 +326,15 @@ export default function TendersPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xl">{typeInfo?.icon ?? '📦'}</span>
-                      <h3 className="text-lg font-bold text-sc-dark">{tender.title}</h3>
+                      <h3 className="text-lg font-bold text-sc-text">{tender.title}</h3>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusInfo.color}`}>
                         {statusInfo.label}
                       </span>
                     </div>
                     {tender.description && (
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">{tender.description}</p>
+                      <p className="text-sm text-sc-text-light mt-1 line-clamp-2">{tender.description}</p>
                     )}
-                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
+                    <div className="flex items-center gap-4 mt-2 text-xs text-sc-text-light">
                       <span>📅 {new Date(tender.created_at).toLocaleDateString('he-IL')}</span>
                       {tender.deadline && (
                         <span>⏰ עד {new Date(tender.deadline).toLocaleDateString('he-IL')}</span>

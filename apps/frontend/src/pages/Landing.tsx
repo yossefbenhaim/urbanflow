@@ -11,16 +11,16 @@ const STATS = [
 ]
 
 const STEPS = [
-  { num: '01', title: 'הצטרף לבניין שלך', desc: 'הזן כתובת, אמת את הפרטים שלך ותקבל גישה מיידית לתיק הבניין.', gradient: 'from-blue-500 to-cyan-400' },
-  { num: '02', title: 'הצביע ועקוב', desc: 'השתתף בהצבעות, עקוב אחר התקדמות הפרויקט ותקשר עם כל הגורמים.', gradient: 'from-violet-500 to-purple-400' },
-  { num: '03', title: 'קבל את הדירה החדשה', desc: 'מהתכנון ועד טופס 4 — Silver Castle מלווה אותך בכל שלב.', gradient: 'from-amber-500 to-orange-400' },
+  { num: '01', title: 'הצטרף לבניין שלך', desc: 'הזן כתובת, אמת את הפרטים שלך ותקבל גישה מיידית לתיק הבניין.', gradient: 'from-sc-primary to-sc-primary-light' },
+  { num: '02', title: 'הצביע ועקוב', desc: 'השתתף בהצבעות, עקוב אחר התקדמות הפרויקט ותקשר עם כל הגורמים.', gradient: 'from-sc-navy to-sc-primary' },
+  { num: '03', title: 'קבל את הדירה החדשה', desc: 'מהתכנון ועד טופס 4 — Silver Castle מלווה אותך בכל שלב.', gradient: 'from-sc-gold to-sc-gold-dark' },
 ]
 
 const ROLES = [
-  { title: 'דייר', desc: 'עקוב אחרי תהליך ההתחדשות, הצביע בהחלטות חשובות ותקשר עם כל הגורמים במקום אחד.', gradient: 'from-blue-500 to-blue-600', iconPath: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
-  { title: 'גורם מלווה', desc: 'נהל פרויקטים, תאם בין גורמים מקצועיים ופתח מכרזים בצורה שקופה ומסודרת.', gradient: 'from-violet-500 to-purple-600', iconPath: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
-  { title: 'נותן שירות', desc: 'הגש הצעות מחיר, עדכן סטטוס ובנה מוניטין מקצועי מול אלפי דיירים ופרויקטים.', gradient: 'from-emerald-500 to-green-600', iconPath: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
-  { title: 'יזם', desc: 'נהל פרויקטי התחדשות, חוזים, ספקי שירות ולוחות זמנים — הכל בפלטפורמה אחת.', gradient: 'from-amber-500 to-yellow-500', iconPath: 'M13 10V3L4 14h7v7l9-11h-7z' },
+  { title: 'דייר', desc: 'עקוב אחרי תהליך ההתחדשות, הצביע בהחלטות חשובות ותקשר עם כל הגורמים במקום אחד.', gradient: 'from-sc-primary to-sc-navy', iconPath: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
+  { title: 'גורם מלווה', desc: 'נהל פרויקטים, תאם בין גורמים מקצועיים ופתח מכרזים בצורה שקופה ומסודרת.', gradient: 'from-sc-teal to-sc-primary', iconPath: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
+  { title: 'נותן שירות', desc: 'הגש הצעות מחיר, עדכן סטטוס ובנה מוניטין מקצועי מול אלפי דיירים ופרויקטים.', gradient: 'from-sc-success to-sc-teal', iconPath: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
+  { title: 'יזם', desc: 'נהל פרויקטי התחדשות, חוזים, ספקי שירות ולוחות זמנים — הכל בפלטפורמה אחת.', gradient: 'from-sc-gold to-sc-gold-dark', iconPath: 'M13 10V3L4 14h7v7l9-11h-7z' },
 ]
 
 const FEATURES = [
@@ -159,16 +159,16 @@ export default function Landing() {
   }, [])
 
   return (
-    <div dir="rtl" className="min-h-screen bg-sc-blue-deep text-white overflow-x-hidden font-heebo">
+    <div dir="rtl" className="min-h-screen bg-sc-navy text-white overflow-x-hidden font-heebo">
 
       {/* ── SCROLL PROGRESS ── */}
       <ScrollProgress />
 
       {/* ── NAVBAR ── */}
-      <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${scrolled ? 'bg-sc-blue-deep/80 backdrop-blur-2xl border-b border-white/[0.06] shadow-2xl shadow-black/20' : 'bg-transparent'}`}>
+      <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${scrolled ? 'bg-sc-navy/80 backdrop-blur-2xl border-b border-white/[0.06] shadow-2xl shadow-black/20' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto flex items-center justify-between px-5 md:px-8 h-16">
           <Link to="/" className="flex items-center gap-2.5 text-white font-extrabold text-lg tracking-tight no-underline">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sc-blue to-sc-blue-deep flex items-center justify-center text-xs font-black shadow-lg shadow-sc-blue/25">SC</div>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sc-primary to-sc-navy flex items-center justify-center text-xs font-black shadow-lg shadow-sc-primary/25">SC</div>
             <span className="hidden sm:inline">Silver Castle</span>
           </Link>
           <div className="hidden md:flex items-center gap-1">
@@ -178,7 +178,7 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-3">
             <Link to="/login" className="hidden md:block px-5 py-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors no-underline">כניסה</Link>
-            <Link to="/register" className="px-5 py-2.5 text-sm font-bold rounded-xl bg-gradient-to-r from-sc-blue to-sc-blue-deep hover:from-sc-blue-light hover:to-sc-blue text-white no-underline shadow-lg shadow-sc-blue/25 transition-all hover:shadow-sc-blue/40 hover:-translate-y-0.5">הרשמה חינם</Link>
+            <Link to="/register" className="px-5 py-2.5 text-sm font-bold rounded-xl bg-gradient-to-r from-sc-primary to-sc-navy hover:from-sc-primary-light hover:to-sc-primary text-white no-underline shadow-lg shadow-sc-primary/25 transition-all hover:shadow-sc-primary/40 hover:-translate-y-0.5">הרשמה חינם</Link>
             <button onClick={() => setMenuOpen(o => !o)} className="md:hidden p-2 text-white">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 {menuOpen
@@ -191,7 +191,7 @@ export default function Landing() {
         </div>
         {/* Mobile menu */}
         <div className={`md:hidden overflow-hidden transition-all duration-300 ${menuOpen ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'}`}>
-          <div className="px-5 py-4 bg-sc-blue-deep/95 backdrop-blur-2xl border-t border-white/[0.06] space-y-1">
+          <div className="px-5 py-4 bg-sc-navy/95 backdrop-blur-2xl border-t border-white/[0.06] space-y-1">
             {[['#how', 'איך זה עובד'], ['#features', 'יכולות'], ['#roles', 'למי מתאים'], ['#testimonials', 'ממליצים']].map(([href, label]) => (
               <a key={href} href={href} onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-base font-semibold text-slate-300 hover:text-white rounded-lg hover:bg-white/[0.04] transition-colors">{label}</a>
             ))}
@@ -204,13 +204,13 @@ export default function Landing() {
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
         <HeroBackground />
         {/* Radial top gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-sc-blue-deep" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-sc-navy" />
 
         <div className="relative z-10 text-center w-full max-w-4xl px-5 md:px-8">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-sc-blue/10 border border-sc-blue/20 rounded-full px-5 py-2 mb-8 animate-[fadeDown_0.8s_ease_both]">
-            <span className="w-2 h-2 rounded-full bg-sc-blue shadow-[0_0_8px_theme(colors.sc-blue)] animate-pulse" />
-            <span className="text-xs font-semibold text-sc-blue-light tracking-wide">פלטפורמת ההתחדשות העירונית #1 בישראל</span>
+          <div className="inline-flex items-center gap-2 bg-sc-primary/10 border border-sc-primary/20 rounded-full px-5 py-2 mb-8 animate-[fadeDown_0.8s_ease_both]">
+            <span className="w-2 h-2 rounded-full bg-sc-primary shadow-[0_0_8px_theme(colors.sc-primary)] animate-pulse" />
+            <span className="text-xs font-semibold text-sc-primary-light tracking-wide">פלטפורמת ההתחדשות העירונית #1 בישראל</span>
           </div>
 
           {/* Headline */}
@@ -223,7 +223,7 @@ export default function Landing() {
           {/* Rotating text */}
           <div className="h-16 md:h-20 flex items-center justify-center mb-6">
             <span
-              className="text-[clamp(1.4rem,4.5vw,3rem)] font-black bg-gradient-to-r from-amber-400 via-rose-400 to-violet-400 bg-clip-text text-transparent transition-all duration-350"
+              className="text-[clamp(1.4rem,4.5vw,3rem)] font-black bg-gradient-to-r from-sc-gold via-sc-teal to-sc-primary-light bg-clip-text text-transparent transition-all duration-350"
               style={{ opacity: fade ? 1 : 0, transform: fade ? 'translateY(0)' : 'translateY(12px)' }}
             >
               {HERO_LINES[textIdx]}
@@ -239,7 +239,7 @@ export default function Landing() {
           <div className="flex gap-4 justify-center flex-wrap animate-[fadeUp_1s_0.3s_ease_both]">
             <Link
               to="/register"
-              className="group px-8 py-4 rounded-2xl bg-gradient-to-r from-sc-blue to-sc-blue-deep text-white font-extrabold text-base md:text-lg no-underline shadow-[0_8px_32px_rgba(59,107,156,0.35)] hover:shadow-[0_12px_40px_rgba(59,107,156,0.5)] transition-all duration-300 hover:-translate-y-1"
+              className="group px-8 py-4 rounded-2xl bg-gradient-to-r from-sc-primary to-sc-navy text-white font-extrabold text-base md:text-lg no-underline shadow-[0_8px_32px_rgba(59,107,156,0.35)] hover:shadow-[0_12px_40px_rgba(59,107,156,0.5)] transition-all duration-300 hover:-translate-y-1"
             >
               <span className="flex items-center gap-2">
                 התחל עכשיו בחינם
@@ -272,7 +272,7 @@ export default function Landing() {
           <div className="mt-16 flex flex-col items-center gap-2 animate-[fadeUp_1s_0.6s_ease_both]">
             <span className="text-slate-600 text-xs">גלול למטה</span>
             <div className="w-6 h-10 border-2 border-white/10 rounded-full flex justify-center pt-2">
-              <div className="w-1 h-2 bg-sc-blue rounded-full animate-[scrollDot_1.8s_infinite]" />
+              <div className="w-1 h-2 bg-sc-primary rounded-full animate-[scrollDot_1.8s_infinite]" />
             </div>
           </div>
         </div>
@@ -285,10 +285,10 @@ export default function Landing() {
             {STATS.map((s, i) => (
               <Reveal key={s.label} delay={i * 0.08}>
                 <div className="group relative rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 md:p-8 text-center hover:bg-white/[0.04] hover:border-white/[0.12] transition-all duration-500">
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-sc-blue/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-sc-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   <div className="relative">
-                    <div className="w-12 h-12 rounded-xl bg-sc-blue/10 flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-6 h-6 text-sc-blue-light" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <div className="w-12 h-12 rounded-xl bg-sc-primary/10 flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-6 h-6 text-sc-primary-light" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d={s.icon} />
                       </svg>
                     </div>
@@ -307,7 +307,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-5 md:px-8">
           <Reveal>
             <div className="text-center mb-16">
-              <span className="inline-block bg-violet-500/10 border border-violet-500/20 rounded-full px-5 py-1.5 text-xs font-bold text-violet-300 tracking-widest uppercase mb-5">תהליך</span>
+              <span className="inline-block bg-sc-teal/10 border border-sc-teal/20 rounded-full px-5 py-1.5 text-xs font-bold text-sc-teal tracking-widest uppercase mb-5">תהליך</span>
               <h2 className="text-[clamp(1.8rem,5vw,3rem)] font-black tracking-tight">שלושה שלבים פשוטים</h2>
               <p className="text-slate-500 mt-3 max-w-md mx-auto text-sm md:text-base">מההרשמה ועד קבלת המפתח — הכל שקוף, מסודר ודיגיטלי.</p>
             </div>
@@ -341,12 +341,12 @@ export default function Landing() {
       {/* ── FEATURES ── */}
       <section id="features" className="relative py-20 md:py-28">
         {/* Background glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-sc-blue/[0.06] rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-sc-primary/[0.06] rounded-full blur-[120px] pointer-events-none" />
 
         <div className="max-w-6xl mx-auto px-5 md:px-8 relative">
           <Reveal>
             <div className="text-center mb-16">
-              <span className="inline-block bg-sc-blue/10 border border-sc-blue/20 rounded-full px-5 py-1.5 text-xs font-bold text-sc-blue-light tracking-widest uppercase mb-5">יכולות</span>
+              <span className="inline-block bg-sc-primary/10 border border-sc-primary/20 rounded-full px-5 py-1.5 text-xs font-bold text-sc-primary-light tracking-widest uppercase mb-5">יכולות</span>
               <h2 className="text-[clamp(1.8rem,5vw,3rem)] font-black tracking-tight">כל מה שצריך — במקום אחד</h2>
               <p className="text-slate-500 mt-3 max-w-md mx-auto text-sm md:text-base">כלים מתקדמים לניהול תהליך ההתחדשות העירונית.</p>
             </div>
@@ -356,8 +356,8 @@ export default function Landing() {
             {FEATURES.map((f, i) => (
               <Reveal key={f.title} delay={i * 0.06}>
                 <div className="group relative rounded-2xl border border-white/[0.06] bg-white/[0.015] p-6 hover:bg-white/[0.04] hover:border-white/[0.1] transition-all duration-400 h-full">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-sc-blue/15 to-sc-blue-deep/15 border border-white/[0.06] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-400">
-                    <SvgIcon path={f.icon} className="w-5 h-5 text-sc-blue-light" />
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-sc-primary/15 to-sc-navy/15 border border-white/[0.06] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-400">
+                    <SvgIcon path={f.icon} className="w-5 h-5 text-sc-primary-light" />
                   </div>
                   <h3 className="text-base font-bold mb-2">{f.title}</h3>
                   <p className="text-slate-500 text-sm leading-relaxed">{f.desc}</p>
@@ -373,7 +373,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-5 md:px-8">
           <Reveal>
             <div className="text-center mb-16">
-              <span className="inline-block bg-emerald-500/10 border border-emerald-500/20 rounded-full px-5 py-1.5 text-xs font-bold text-emerald-300 tracking-widest uppercase mb-5">משתמשים</span>
+              <span className="inline-block bg-sc-success/10 border border-sc-success/20 rounded-full px-5 py-1.5 text-xs font-bold text-sc-success tracking-widest uppercase mb-5">משתמשים</span>
               <h2 className="text-[clamp(1.8rem,5vw,3rem)] font-black tracking-tight">למי זה מתאים?</h2>
               <p className="text-slate-500 mt-3 max-w-md mx-auto text-sm md:text-base">כל בעל תפקיד בתהליך ההתחדשות מקבל ממשק מותאם.</p>
             </div>
@@ -404,7 +404,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-5 md:px-8">
           <Reveal>
             <div className="text-center mb-16">
-              <span className="inline-block bg-amber-500/10 border border-amber-500/20 rounded-full px-5 py-1.5 text-xs font-bold text-amber-300 tracking-widest uppercase mb-5">המלצות</span>
+              <span className="inline-block bg-sc-gold/100/10 border border-sc-gold/20 rounded-full px-5 py-1.5 text-xs font-bold text-sc-gold tracking-widest uppercase mb-5">המלצות</span>
               <h2 className="text-[clamp(1.8rem,5vw,3rem)] font-black tracking-tight">מה אומרים עלינו</h2>
             </div>
           </Reveal>
@@ -414,10 +414,10 @@ export default function Landing() {
               <Reveal key={t.name} delay={i * 0.1}>
                 <div className="relative rounded-2xl border border-white/[0.06] bg-white/[0.02] p-7 h-full">
                   {/* Quote mark */}
-                  <div className="text-4xl font-serif text-sc-blue/20 leading-none mb-3">"</div>
+                  <div className="text-4xl font-serif text-sc-primary/20 leading-none mb-3">"</div>
                   <p className="text-slate-300 text-sm leading-relaxed mb-6">{t.text}</p>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sc-blue to-sc-blue-deep flex items-center justify-center text-sm font-bold">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sc-primary to-sc-navy flex items-center justify-center text-sm font-bold">
                       {t.name.charAt(0)}
                     </div>
                     <div>
@@ -435,8 +435,8 @@ export default function Landing() {
       {/* ── FINAL CTA ── */}
       <section id="cta" className="relative py-24 md:py-32 overflow-hidden">
         {/* Background effects */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-sc-blue/[0.08] rounded-full blur-[150px] pointer-events-none" />
-        <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-sc-blue-deep/[0.06] rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-sc-primary/[0.08] rounded-full blur-[150px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-sc-navy/[0.06] rounded-full blur-[120px] pointer-events-none" />
 
         <Reveal>
           <div className="relative max-w-2xl mx-auto text-center px-5">
@@ -449,7 +449,7 @@ export default function Landing() {
               </p>
               <Link
                 to="/register"
-                className="group inline-flex items-center gap-2 px-10 py-4 rounded-2xl bg-gradient-to-r from-sc-blue to-sc-blue-deep text-white font-extrabold text-lg no-underline shadow-[0_10px_40px_rgba(59,107,156,0.4)] hover:shadow-[0_14px_48px_rgba(59,107,156,0.55)] transition-all duration-300 hover:-translate-y-1"
+                className="group inline-flex items-center gap-2 px-10 py-4 rounded-2xl bg-gradient-to-r from-sc-primary to-sc-navy text-white font-extrabold text-lg no-underline shadow-[0_10px_40px_rgba(59,107,156,0.4)] hover:shadow-[0_14px_48px_rgba(59,107,156,0.55)] transition-all duration-300 hover:-translate-y-1"
               >
                 הרשמה חינם עכשיו
                 <svg className="w-5 h-5 rotate-180 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
@@ -465,7 +465,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-5 md:px-8 py-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-sc-blue to-sc-blue-deep flex items-center justify-center text-[10px] font-black">SC</div>
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-sc-primary to-sc-navy flex items-center justify-center text-[10px] font-black">SC</div>
               <span className="font-bold text-sm">Silver Castle</span>
               <span className="text-slate-600 text-xs mr-3">מתחדשים יחד</span>
             </div>
@@ -503,7 +503,7 @@ function ScrollProgress() {
   return (
     <div className="fixed top-0 inset-x-0 h-[3px] z-[200] bg-white/[0.05]">
       <div
-        className="h-full bg-gradient-to-l from-sc-blue via-sc-blue-light to-sc-brown rounded-l-full"
+        className="h-full bg-gradient-to-l from-sc-primary via-sc-primary-light to-sc-gold-dark rounded-l-full"
         style={{ width: `${pct}%`, transition: 'width 0.1s linear' }}
       />
     </div>

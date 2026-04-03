@@ -12,8 +12,8 @@ const YEARS = Array.from({ length: 60 }, (_, i) => String(CURRENT_YEAR - i))
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="sc-card overflow-hidden">
-      <div className="px-5 py-3.5 border-b border-sc-gray-light bg-sc-bg">
-        <h3 className="m-0 text-sm font-bold text-sc-dark">{title}</h3>
+      <div className="px-5 py-3.5 border-b border-sc-border bg-sc-bg">
+        <h3 className="m-0 text-sm font-bold text-sc-text">{title}</h3>
       </div>
       <div className="p-5 flex flex-col gap-4">
         {children}
@@ -25,7 +25,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-sc-gray mb-1">{label}</label>
+      <label className="block text-xs font-semibold text-sc-text-light mb-1">{label}</label>
       {children}
     </div>
   )
@@ -127,10 +127,10 @@ export default function Profile() {
               <div className="sc-card px-5 py-4 flex items-center gap-3">
                 <span className="text-[28px]">{roleInfo.icon}</span>
                 <div>
-                  <p className="m-0 text-[11px] text-sc-gray">תפקיד במערכת</p>
-                  <p className="m-0 font-bold text-sc-dark">{roleInfo.label}</p>
+                  <p className="m-0 text-[11px] text-sc-text-light">תפקיד במערכת</p>
+                  <p className="m-0 font-bold text-sc-text">{roleInfo.label}</p>
                 </div>
-                <div className="mr-auto text-xs text-sc-gray">{profile?.email}</div>
+                <div className="mr-auto text-xs text-sc-text-light">{profile?.email}</div>
               </div>
             )}
 
@@ -181,8 +181,8 @@ export default function Profile() {
                       <button key={String(v)} onClick={() => update('isOwner', v)}
                         className={`flex-1 py-2.5 rounded-[10px] border-2 font-semibold text-sm cursor-pointer transition-colors ${
                           form.isOwner === v
-                            ? 'border-sc-blue bg-sc-blue-pale text-sc-blue'
-                            : 'border-sc-gray-light bg-white text-sc-gray'
+                            ? 'border-sc-primary bg-sc-light-blue text-sc-primary'
+                            : 'border-sc-border bg-white text-sc-text-light'
                         }`}>
                         {v ? '🏠 בעל דירה' : '🔑 שוכר'}
                       </button>

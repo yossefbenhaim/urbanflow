@@ -56,7 +56,7 @@ export default function InspectionsPage() {
       <Navbar />
 
       {/* Plan Banner */}
-      <div className={`${isPro ? 'bg-gradient-to-l from-amber-500 to-yellow-400' : 'bg-sc-blue-deep'} text-white py-3 px-4`}>
+      <div className={`${isPro ? 'bg-gradient-to-l from-sc-gold to-sc-gold-dark' : 'bg-sc-navy'} text-white py-3 px-4`}>
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-2xl">{isPro ? '⭐' : '🔒'}</span>
@@ -75,7 +75,7 @@ export default function InspectionsPage() {
             <button
               onClick={() => upgradeToPro.mutate()}
               disabled={upgradeToPro.isPending}
-              className="bg-sc-warning text-white px-4 py-1.5 rounded-xl text-sm font-bold hover:bg-sc-warning/90 transition-colors"
+              className="bg-sc-gold-dark text-white px-4 py-1.5 rounded-xl text-sm font-bold hover:bg-sc-gold-dark/90 transition-colors"
             >
               {upgradeToPro.isPending ? '...' : 'שדרג ל-Pro'}
             </button>
@@ -84,7 +84,7 @@ export default function InspectionsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white border-b border-sc-gray-light sticky top-14 z-10">
+      <div className="bg-white border-b border-sc-border sticky top-14 z-10">
         <div className="max-w-2xl mx-auto flex">
           {([
             ['projects', 'פרויקטים פתוחים', '🏗️'],
@@ -93,7 +93,7 @@ export default function InspectionsPage() {
           ] as [string, string, string][]).map(([v, l, icon]) => (
             <button key={v} onClick={() => setActiveTab(v as any)}
               className={`flex-1 py-3 text-xs font-medium border-b-2 transition-colors flex items-center justify-center gap-1
-                ${activeTab === v ? 'border-sc-blue text-sc-blue' : 'border-transparent text-sc-gray'}`}>
+                ${activeTab === v ? 'border-sc-primary text-sc-primary' : 'border-transparent text-sc-text-light'}`}>
               <span>{icon}</span> {l}
             </button>
           ))}
@@ -108,11 +108,11 @@ export default function InspectionsPage() {
             {!isPro ? (
               <div className="text-center py-16">
                 <div className="text-6xl mb-4">🔒</div>
-                <h3 className="text-xl font-bold text-sc-dark mb-2">גישה ל-Pro בלבד</h3>
-                <p className="text-sc-gray text-sm mb-6">שדרג ל-Pro כדי לראות פרויקטים פתוחים ולהגיש בדיקות</p>
+                <h3 className="text-xl font-bold text-sc-text mb-2">גישה ל-Pro בלבד</h3>
+                <p className="text-sc-text-light text-sm mb-6">שדרג ל-Pro כדי לראות פרויקטים פתוחים ולהגיש בדיקות</p>
                 <button
                   onClick={() => upgradeToPro.mutate()}
-                  className="bg-sc-warning text-white px-8 py-3 rounded-2xl font-bold hover:bg-sc-warning/90"
+                  className="bg-sc-gold-dark text-white px-8 py-3 rounded-2xl font-bold hover:bg-sc-gold-dark/90"
                 >⭐ שדרג ל-Pro</button>
               </div>
             ) : isLoading ? (
@@ -120,7 +120,7 @@ export default function InspectionsPage() {
             ) : (
               <div className="space-y-4">
                 {(projectsData?.projects ?? []).length === 0 ? (
-                  <div className="text-center py-16 text-sc-gray">
+                  <div className="text-center py-16 text-sc-text-light">
                     <div className="text-4xl mb-2">🏗️</div>
                     <p>אין פרויקטים פתוחים כרגע</p>
                   </div>
@@ -140,7 +140,7 @@ export default function InspectionsPage() {
         {activeTab === 'my-inspections' && (
           <div className="space-y-3">
             {(myInspections ?? []).length === 0 ? (
-              <div className="text-center py-16 text-sc-gray">
+              <div className="text-center py-16 text-sc-text-light">
                 <div className="text-4xl mb-2">📄</div>
                 <p>עדיין לא הגשת בדיקות</p>
               </div>
@@ -148,18 +148,18 @@ export default function InspectionsPage() {
               <div key={insp.id} className="sc-card p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div>
-                    <p className="font-semibold text-sc-dark text-sm">
+                    <p className="font-semibold text-sc-text text-sm">
                       {ARCHITECT_TYPES.concat(APPRAISER_TYPES).find(t => t.key === insp.inspection_type)?.label ?? insp.inspection_type}
                     </p>
-                    <p className="text-xs text-sc-gray">{insp.project?.city} {insp.project?.street}</p>
+                    <p className="text-xs text-sc-text-light">{insp.project?.city} {insp.project?.street}</p>
                   </div>
                   <StatusBadge status={insp.status} />
                 </div>
                 {insp.conclusion && (
-                  <p className="text-xs text-sc-gray mb-2">{CONCLUSION_LABELS[insp.conclusion]}</p>
+                  <p className="text-xs text-sc-text-light mb-2">{CONCLUSION_LABELS[insp.conclusion]}</p>
                 )}
                 <div className="flex items-center justify-between">
-                  <p className="text-xs text-sc-gray">
+                  <p className="text-xs text-sc-text-light">
                     {insp.files?.length ?? 0} קבצים | מיקום {insp.slot_number} מתוך 3
                   </p>
                   {insp.is_useful && (
@@ -175,7 +175,7 @@ export default function InspectionsPage() {
         {activeTab === 'notifications' && (
           <div className="space-y-3">
             {(notifications ?? []).length === 0 ? (
-              <div className="text-center py-16 text-sc-gray">
+              <div className="text-center py-16 text-sc-text-light">
                 <div className="text-4xl mb-2">🔔</div>
                 <p>אין התראות</p>
               </div>
@@ -184,7 +184,7 @@ export default function InspectionsPage() {
                 key={notif.id}
                 onClick={() => { markRead.mutate(notif.id); if (notif.action_url) navigate(notif.action_url) }}
                 className={`sc-card p-4 cursor-pointer transition-all
-                  ${notif.is_read ? 'opacity-70' : 'border-sc-blue bg-sc-blue-pale'}`}
+                  ${notif.is_read ? 'opacity-70' : 'border-sc-primary bg-sc-light-blue'}`}
               >
                 <div className="flex items-start gap-3">
                   <span className="text-xl">
@@ -193,13 +193,13 @@ export default function InspectionsPage() {
                      notif.notification_type === 'appraiser_inspection_needed' ? '💰' : '📍'}
                   </span>
                   <div className="flex-1">
-                    <p className="font-semibold text-sm text-sc-dark">{notif.title}</p>
-                    <p className="text-xs text-sc-gray mt-0.5 whitespace-pre-line">{notif.body}</p>
-                    <p className="text-xs text-sc-gray mt-1">
+                    <p className="font-semibold text-sm text-sc-text">{notif.title}</p>
+                    <p className="text-xs text-sc-text-light mt-0.5 whitespace-pre-line">{notif.body}</p>
+                    <p className="text-xs text-sc-text-light mt-1">
                       {new Date(notif.created_at).toLocaleDateString('he-IL')}
                     </p>
                   </div>
-                  {!notif.is_read && <div className="w-2 h-2 bg-sc-blue rounded-full mt-1 flex-shrink-0" />}
+                  {!notif.is_read && <div className="w-2 h-2 bg-sc-primary rounded-full mt-1 flex-shrink-0" />}
                 </div>
               </div>
             ))}
@@ -222,20 +222,20 @@ function ProjectCard({ project, onStartInspection }: { project: any; onStartInsp
       <div className="p-4 cursor-pointer" onClick={() => setExpanded(!expanded)}>
         <div className="flex items-start justify-between mb-2">
           <div>
-            <h3 className="font-bold text-sc-dark">{project.street} {project.building_number}</h3>
-            <p className="text-sm text-sc-gray">{project.city}</p>
+            <h3 className="font-bold text-sc-text">{project.street} {project.building_number}</h3>
+            <p className="text-sm text-sc-text-light">{project.city}</p>
           </div>
           <span className="sc-badge bg-sc-success/10 text-sc-success">פתוח לבדיקות</span>
         </div>
-        <div className="flex gap-3 text-xs text-sc-gray">
+        <div className="flex gap-3 text-xs text-sc-text-light">
           <span>🏠 {project.apartment_count ?? '?'} דירות</span>
           <span>📊 {availableTypes.length} בדיקות פנויות</span>
         </div>
       </div>
 
       {expanded && (
-        <div className="border-t border-sc-gray-light p-4">
-          <p className="text-xs font-semibold text-sc-dark mb-3">בחר סוג בדיקה להגשה:</p>
+        <div className="border-t border-sc-border p-4">
+          <p className="text-xs font-semibold text-sc-text mb-3">בחר סוג בדיקה להגשה:</p>
           <div className="space-y-2">
             {allTypes.map(type => {
               const slotCount = project.availableSlots?.[type.key] ?? 0
@@ -247,12 +247,12 @@ function ProjectCard({ project, onStartInspection }: { project: any; onStartInsp
                   disabled={isFull}
                   className={`w-full flex items-center justify-between p-3 rounded-xl border text-sm transition-all
                     ${isFull
-                      ? 'border-sc-gray-light bg-sc-bg text-sc-gray cursor-not-allowed'
-                      : 'border-sc-blue-pale bg-sc-blue-pale text-sc-blue hover:bg-sc-blue-pale/70 cursor-pointer'
+                      ? 'border-sc-border bg-sc-bg text-sc-text-light cursor-not-allowed'
+                      : 'border-sc-light-blue bg-sc-light-blue text-sc-primary hover:bg-sc-light-blue/70 cursor-pointer'
                     }`}
                 >
                   <span>{type.icon} {type.label}</span>
-                  <span className={`text-xs font-medium ${isFull ? 'text-sc-error' : 'text-sc-blue'}`}>
+                  <span className={`text-xs font-medium ${isFull ? 'text-sc-error' : 'text-sc-primary'}`}>
                     {isFull ? 'מלא' : `מיקום ${slotCount + 1}/3`}
                   </span>
                 </button>
@@ -268,8 +268,8 @@ function ProjectCard({ project, onStartInspection }: { project: any; onStartInsp
 // ── Status Badge ──────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; class: string }> = {
-    draft: { label: 'טיוטה', class: 'bg-sc-gray-light text-sc-gray' },
-    submitted: { label: 'הוגש', class: 'bg-sc-blue-pale text-sc-blue' },
+    draft: { label: 'טיוטה', class: 'bg-sc-border text-sc-text-light' },
+    submitted: { label: 'הוגש', class: 'bg-sc-light-blue text-sc-primary' },
     approved: { label: '✅ אושר', class: 'bg-sc-success/10 text-sc-success' },
     rejected: { label: '❌ נדחה', class: 'bg-sc-error/10 text-sc-error' },
   }

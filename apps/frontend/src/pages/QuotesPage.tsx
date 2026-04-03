@@ -19,10 +19,10 @@ function RespondModal({ quoteRequestId, senderName, onClose, onSuccess }: Respon
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" dir="rtl">
       <div className="sc-card p-6 w-full max-w-md shadow-xl">
-        <h2 className="text-lg font-bold text-sc-dark mb-4">תגובה להצעת מחיר — {senderName}</h2>
+        <h2 className="text-lg font-bold text-sc-text mb-4">תגובה להצעת מחיר — {senderName}</h2>
         <div className="space-y-3">
           <div>
-            <label className="text-sm font-medium text-sc-dark">תוכן התגובה *</label>
+            <label className="text-sm font-medium text-sc-text">תוכן התגובה *</label>
             <textarea
               value={content}
               onChange={e => setContent(e.target.value)}
@@ -32,7 +32,7 @@ function RespondModal({ quoteRequestId, senderName, onClose, onSuccess }: Respon
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-sc-dark">הצעת מחיר</label>
+            <label className="text-sm font-medium text-sc-text">הצעת מחיר</label>
             <input
               value={price}
               onChange={e => setPrice(e.target.value)}
@@ -76,7 +76,7 @@ export default function QuotesPage() {
         {requests.length === 0 ? (
           <div className="sc-card p-12 text-center">
             <p className="text-4xl mb-3">📭</p>
-            <p className="text-sc-gray">אין בקשות להצעות מחיר עדיין</p>
+            <p className="text-sc-text-light">אין בקשות להצעות מחיר עדיין</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -85,34 +85,34 @@ export default function QuotesPage() {
               return (
                 <div
                   key={req.id}
-                  className={`sc-card p-5 border-2 ${responded ? 'border-sc-success/30' : 'border-sc-gray-light'}`}
+                  className={`sc-card p-5 border-2 ${responded ? 'border-sc-success/30' : 'border-sc-border'}`}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="font-semibold text-sc-dark">{req.sender?.full_name || 'משתמש'}</p>
-                        <span className={`sc-badge ${responded ? 'bg-sc-success/10 text-sc-success' : 'bg-sc-warning/10 text-sc-warning'}`}>
+                        <p className="font-semibold text-sc-text">{req.sender?.full_name || 'משתמש'}</p>
+                        <span className={`sc-badge ${responded ? 'bg-sc-success/10 text-sc-success' : 'bg-sc-gold-dark/10 text-sc-gold-dark'}`}>
                           {statusLabel[req.status] || req.status}
                         </span>
                       </div>
-                      <p className="text-xs text-sc-gray mt-0.5">
+                      <p className="text-xs text-sc-text-light mt-0.5">
                         {new Date(req.created_at).toLocaleDateString('he-IL')}
                       </p>
                     </div>
                   </div>
 
-                  <p className="text-sm text-sc-dark mb-3 bg-sc-bg rounded-lg p-3">{req.project_description}</p>
+                  <p className="text-sm text-sc-text mb-3 bg-sc-bg rounded-lg p-3">{req.project_description}</p>
 
-                  <div className="flex gap-4 text-xs text-sc-gray">
+                  <div className="flex gap-4 text-xs text-sc-text-light">
                     {req.budget_range && <span>💰 {req.budget_range}</span>}
                     {req.timeline && <span>📅 {req.timeline}</span>}
                   </div>
 
                   {req.quote_responses?.length > 0 && (
-                    <div className="mt-3 border-t border-sc-gray-light pt-3">
-                      <p className="text-xs font-medium text-sc-gray mb-2">התגובות שלך:</p>
+                    <div className="mt-3 border-t border-sc-border pt-3">
+                      <p className="text-xs font-medium text-sc-text-light mb-2">התגובות שלך:</p>
                       {req.quote_responses.map((r: any) => (
-                        <div key={r.id} className="bg-sc-blue-pale rounded-lg p-2 text-xs text-sc-blue mb-1">
+                        <div key={r.id} className="bg-sc-light-blue rounded-lg p-2 text-xs text-sc-primary mb-1">
                           {r.content}{r.price_offer && ` — ${r.price_offer}`}
                         </div>
                       ))}

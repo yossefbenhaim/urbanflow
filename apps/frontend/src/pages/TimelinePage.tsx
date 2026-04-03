@@ -18,18 +18,18 @@ function WeeklyUpdateForm({ projectId }: { projectId: string }) {
   })
 
   return (
-    <div className="sc-card p-6 border-t-4 border-t-sc-blue">
+    <div className="sc-card p-6 border-t-4 border-t-sc-primary">
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-xl bg-sc-blue flex items-center justify-center text-xl">📝</div>
+        <div className="w-10 h-10 rounded-xl bg-sc-primary flex items-center justify-center text-xl">📝</div>
         <div>
-          <h3 className="text-base font-bold text-sc-dark">עדכון שבועי</h3>
-          <p className="text-xs text-sc-gray">עדכן את סטטוס העבודה השבועי</p>
+          <h3 className="text-base font-bold text-sc-text">עדכון שבועי</h3>
+          <p className="text-xs text-sc-text-light">עדכן את סטטוס העבודה השבועי</p>
         </div>
       </div>
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-sc-dark mb-1">סטטוס עדכני *</label>
+          <label className="block text-sm font-medium text-sc-text mb-1">סטטוס עדכני *</label>
           <textarea
             value={form.statusUpdate}
             onChange={e => setForm(f => ({ ...f, statusUpdate: e.target.value }))}
@@ -40,16 +40,16 @@ function WeeklyUpdateForm({ projectId }: { projectId: string }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-sc-dark mb-1">אחוז התקדמות: {form.progressPct}%</label>
+          <label className="block text-sm font-medium text-sc-text mb-1">אחוז התקדמות: {form.progressPct}%</label>
           <input
             type="range"
             min={0}
             max={100}
             value={form.progressPct}
             onChange={e => setForm(f => ({ ...f, progressPct: parseInt(e.target.value) }))}
-            className="w-full accent-sc-blue"
+            className="w-full accent-sc-primary"
           />
-          <div className="flex justify-between text-xs text-sc-gray">
+          <div className="flex justify-between text-xs text-sc-text-light">
             <span>0%</span>
             <span>50%</span>
             <span>100%</span>
@@ -57,7 +57,7 @@ function WeeklyUpdateForm({ projectId }: { projectId: string }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-sc-dark mb-1">חסמים</label>
+          <label className="block text-sm font-medium text-sc-text mb-1">חסמים</label>
           <textarea
             value={form.blockers}
             onChange={e => setForm(f => ({ ...f, blockers: e.target.value }))}
@@ -68,7 +68,7 @@ function WeeklyUpdateForm({ projectId }: { projectId: string }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-sc-dark mb-1">צעדים הבאים</label>
+          <label className="block text-sm font-medium text-sc-text mb-1">צעדים הבאים</label>
           <textarea
             value={form.nextSteps}
             onChange={e => setForm(f => ({ ...f, nextSteps: e.target.value }))}
@@ -103,14 +103,14 @@ function TimelineView({ projectId }: { projectId: string }) {
 
   if (isLoading) return (
     <div className="flex items-center justify-center py-12">
-      <div className="animate-spin w-8 h-8 border-4 border-sc-blue border-t-transparent rounded-full" />
+      <div className="animate-spin w-8 h-8 border-4 border-sc-primary border-t-transparent rounded-full" />
     </div>
   )
 
   if (!timeline || timeline.length === 0) return (
     <div className="sc-card p-8 text-center">
       <div className="text-4xl mb-3">📅</div>
-      <p className="text-sc-gray text-sm">אין עדכונים עדיין</p>
+      <p className="text-sc-text-light text-sm">אין עדכונים עדיין</p>
     </div>
   )
 
@@ -138,16 +138,16 @@ function TimelineView({ projectId }: { projectId: string }) {
           <div key={providerName} className="sc-card p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-sc-blue/10 flex items-center justify-center text-lg">👷</div>
+                <div className="w-10 h-10 rounded-full bg-sc-primary/10 flex items-center justify-center text-lg">👷</div>
                 <div>
-                  <h3 className="text-base font-bold text-sc-dark">{providerName}</h3>
-                  <p className="text-xs text-sc-gray">
+                  <h3 className="text-base font-bold text-sc-text">{providerName}</h3>
+                  <p className="text-xs text-sc-text-light">
                     עדכון אחרון: {new Date((latest as any).updated_at).toLocaleDateString('he-IL')}
                   </p>
                 </div>
               </div>
               {!isCurrentWeek && (
-                <span className="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                <span className="bg-sc-gold/15 text-sc-gold-dark text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
                   ⚠️ לא עודכן השבוע
                 </span>
               )}
@@ -156,13 +156,13 @@ function TimelineView({ projectId }: { projectId: string }) {
             {/* Progress Bar */}
             <div className="mb-4">
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-sc-gray">התקדמות כללית</span>
-                <span className="font-bold text-sc-dark">{progress}%</span>
+                <span className="text-sc-text-light">התקדמות כללית</span>
+                <span className="font-bold text-sc-text">{progress}%</span>
               </div>
-              <div className="w-full bg-sc-gray-light rounded-full h-3">
+              <div className="w-full bg-sc-border rounded-full h-3">
                 <div
                   className={`h-3 rounded-full transition-all ${
-                    progress >= 75 ? 'bg-green-500' : progress >= 40 ? 'bg-sc-blue' : 'bg-orange-400'
+                    progress >= 75 ? 'bg-sc-success/100' : progress >= 40 ? 'bg-sc-primary' : 'bg-sc-gold-dark'
                   }`}
                   style={{ width: `${progress}%` }}
                 />
@@ -170,23 +170,23 @@ function TimelineView({ projectId }: { projectId: string }) {
             </div>
 
             {/* Timeline entries */}
-            <div className="space-y-3 border-r-2 border-sc-blue/20 pr-4 mr-2">
+            <div className="space-y-3 border-r-2 border-sc-primary/20 pr-4 mr-2">
               {entries.slice(0, 5).map((entry: any, i: number) => (
                 <div key={entry.id} className="relative">
-                  <div className="absolute -right-[1.35rem] top-1.5 w-3 h-3 rounded-full bg-sc-blue border-2 border-white" />
+                  <div className="absolute -right-[1.35rem] top-1.5 w-3 h-3 rounded-full bg-sc-primary border-2 border-white" />
                   <div className="bg-sc-bg rounded-xl p-3">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs font-medium text-sc-blue">
+                      <span className="text-xs font-medium text-sc-primary">
                         שבוע {new Date(entry.week_start).toLocaleDateString('he-IL')}
                       </span>
-                      <span className="text-xs text-sc-gray">{entry.progress_pct}%</span>
+                      <span className="text-xs text-sc-text-light">{entry.progress_pct}%</span>
                     </div>
-                    <p className="text-sm text-sc-dark">{entry.status_update}</p>
+                    <p className="text-sm text-sc-text">{entry.status_update}</p>
                     {entry.blockers && (
-                      <p className="text-xs text-orange-600 mt-1">🚧 {entry.blockers}</p>
+                      <p className="text-xs text-sc-gold-dark mt-1">🚧 {entry.blockers}</p>
                     )}
                     {entry.next_steps && (
-                      <p className="text-xs text-sc-blue mt-1">📋 {entry.next_steps}</p>
+                      <p className="text-xs text-sc-primary mt-1">📋 {entry.next_steps}</p>
                     )}
                   </div>
                 </div>
@@ -211,7 +211,7 @@ export default function TimelinePage() {
     <div className="min-h-screen bg-sc-bg" dir="rtl">
       <Navbar />
       <div className="flex items-center justify-center h-[60vh]">
-        <div className="animate-spin w-8 h-8 border-4 border-sc-blue border-t-transparent rounded-full" />
+        <div className="animate-spin w-8 h-8 border-4 border-sc-primary border-t-transparent rounded-full" />
       </div>
     </div>
   )
@@ -221,8 +221,8 @@ export default function TimelinePage() {
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-12 text-center">
         <div className="text-5xl mb-4">📅</div>
-        <h1 className="text-xl font-bold text-sc-dark mb-2">לוח זמנים</h1>
-        <p className="text-sc-gray">טרם שויכת לפרויקט</p>
+        <h1 className="text-xl font-bold text-sc-text mb-2">לוח זמנים</h1>
+        <p className="text-sc-text-light">טרם שויכת לפרויקט</p>
       </div>
     </div>
   )
@@ -232,10 +232,10 @@ export default function TimelinePage() {
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-xl bg-sc-blue flex items-center justify-center text-2xl">📅</div>
+          <div className="w-12 h-12 rounded-xl bg-sc-primary flex items-center justify-center text-2xl">📅</div>
           <div>
-            <h1 className="text-xl font-bold text-sc-dark">לוח זמנים — עדכונים שבועיים</h1>
-            <p className="text-sm text-sc-gray">מעקב אחר התקדמות נותני השירות בפרויקט</p>
+            <h1 className="text-xl font-bold text-sc-text">לוח זמנים — עדכונים שבועיים</h1>
+            <p className="text-sm text-sc-text-light">מעקב אחר התקדמות נותני השירות בפרויקט</p>
           </div>
         </div>
 
@@ -246,8 +246,8 @@ export default function TimelinePage() {
               onClick={() => setActiveTab('view')}
               className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                 activeTab === 'view'
-                  ? 'bg-sc-blue text-white'
-                  : 'bg-white text-sc-dark border border-sc-gray-light'
+                  ? 'bg-sc-primary text-white'
+                  : 'bg-white text-sc-text border border-sc-border'
               }`}
             >
               📊 צפה בעדכונים
@@ -256,8 +256,8 @@ export default function TimelinePage() {
               onClick={() => setActiveTab('update')}
               className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                 activeTab === 'update'
-                  ? 'bg-sc-blue text-white'
-                  : 'bg-white text-sc-dark border border-sc-gray-light'
+                  ? 'bg-sc-primary text-white'
+                  : 'bg-white text-sc-text border border-sc-border'
               }`}
             >
               📝 שלח עדכון

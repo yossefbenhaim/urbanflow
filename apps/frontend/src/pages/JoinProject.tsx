@@ -39,13 +39,13 @@ export default function JoinProject() {
         {status === 'checking' || status === 'joining' ? (
           <>
             <BuildingLoader size="lg" />
-            <p className="text-sc-gray">מצטרף לפרויקט...</p>
+            <p className="text-sc-text-light">מצטרף לפרויקט...</p>
           </>
         ) : status === 'done' ? (
           <>
             <div className="text-4xl mb-4">✅</div>
             <p className="text-sc-success font-semibold text-lg">{message}</p>
-            <p className="text-sc-gray text-sm mt-2">מועבר לדשבורד...</p>
+            <p className="text-sc-text-light text-sm mt-2">מועבר לדשבורד...</p>
           </>
         ) : (
           <>

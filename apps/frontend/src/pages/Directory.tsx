@@ -15,26 +15,26 @@ function QuoteModal({ recipientId, recipientName, onClose }: { recipientId: stri
   })
   return (
     <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" dir="rtl">
-      <div className="sc-card rounded-t-3xl sm:rounded-[14px] p-6 w-full sm:max-w-md shadow-2xl">
+      <div className="sc-card rounded-t-3xl sm:rounded-2xl p-6 w-full sm:max-w-md shadow-2xl">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-bold text-sc-dark">📋 הצעת מחיר — {recipientName}</h2>
-          <button onClick={onClose} className="text-sc-gray text-xl leading-none">✕</button>
+          <h2 className="text-base font-bold text-sc-text">📋 הצעת מחיר — {recipientName}</h2>
+          <button onClick={onClose} className="text-sc-text-light text-xl leading-none">✕</button>
         </div>
         <div className="space-y-3">
           <div>
-            <label className="text-sm font-medium text-sc-dark">תיאור הפרויקט *</label>
+            <label className="text-sm font-medium text-sc-text">תיאור הפרויקט *</label>
             <textarea value={desc} onChange={e => setDesc(e.target.value)} rows={3}
               placeholder="תאר את הפרויקט בפירוט..."
               className="sc-input mt-1 resize-none"/>
           </div>
           <div>
-            <label className="text-sm font-medium text-sc-dark">טווח תקציב</label>
+            <label className="text-sm font-medium text-sc-text">טווח תקציב</label>
             <input value={budget} onChange={e => setBudget(e.target.value)}
               placeholder="לדוגמה: 500,000–800,000 ₪"
               className="sc-input mt-1"/>
           </div>
           <div>
-            <label className="text-sm font-medium text-sc-dark">ציר זמן</label>
+            <label className="text-sm font-medium text-sc-text">ציר זמן</label>
             <input value={timeline} onChange={e => setTimeline(e.target.value)}
               placeholder="לדוגמה: 12–18 חודשים"
               className="sc-input mt-1"/>
@@ -82,8 +82,8 @@ export default function Directory() {
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="text-center">
             <div className="text-5xl mb-4">🔒</div>
-            <h2 className="text-xl font-bold text-sc-dark mb-2">גישה לנציגי ועד בלבד</h2>
-            <p className="text-sc-gray mb-6 text-sm">רק נציגי ועד הבניין יכולים לגשת לספריית השירותים</p>
+            <h2 className="text-xl font-bold text-sc-text mb-2">גישה לנציגי ועד בלבד</h2>
+            <p className="text-sc-text-light mb-6 text-sm">רק נציגי ועד הבניין יכולים לגשת לספריית השירותים</p>
             <button onClick={() => navigate('/dashboard')}
               className="sc-btn-primary active:scale-95">
               חזרה לדשבורד
@@ -127,36 +127,36 @@ export default function Directory() {
             className="w-full flex items-center justify-between px-4 py-3.5 text-right active:bg-sc-bg transition-colors"
           >
             <div className="flex items-center gap-2">
-              <span className="text-base font-semibold text-sc-dark">💬 השיחות שלי</span>
+              <span className="text-base font-semibold text-sc-text">💬 השיחות שלי</span>
               {conversations.length > 0 && (
-                <span className="sc-badge bg-sc-blue text-white">
+                <span className="sc-badge bg-sc-primary text-white">
                   {conversations.length}
                 </span>
               )}
             </div>
-            <span className={`text-sc-gray text-lg transition-transform duration-200 ${convsOpen ? 'rotate-180' : ''}`}>
+            <span className={`text-sc-text-light text-lg transition-transform duration-200 ${convsOpen ? 'rotate-180' : ''}`}>
               ⌄
             </span>
           </button>
 
           {convsOpen && (
-            <div className="border-t border-sc-gray-light">
+            <div className="border-t border-sc-border">
               {conversations.length === 0 ? (
-                <p className="text-sc-gray text-sm text-center py-6">אין שיחות עדיין</p>
+                <p className="text-sc-text-light text-sm text-center py-6">אין שיחות עדיין</p>
               ) : (
                 conversations.map((conv: any) => {
                   const other = conv.participant_a === meId ? conv.pb : conv.pa
                   return (
                     <button key={conv.id} onClick={() => navigate(`/chat/${conv.id}`)}
-                      className="w-full text-right px-4 py-3 hover:bg-sc-bg active:bg-sc-gray-light border-b border-sc-gray-light/50 last:border-0 transition-colors flex items-center gap-3">
-                      <div className="w-9 h-9 bg-sc-blue rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                      className="w-full text-right px-4 py-3 hover:bg-sc-bg active:bg-sc-border border-b border-sc-border/50 last:border-0 transition-colors flex items-center gap-3">
+                      <div className="w-9 h-9 bg-sc-primary rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
                         {other?.full_name?.[0]?.toUpperCase() ?? '?'}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-sc-dark truncate">{other?.full_name || 'משתמש'}</p>
-                        <p className="text-xs text-sc-gray truncate">{conv.last_message || 'אין הודעות'}</p>
+                        <p className="text-sm font-medium text-sc-text truncate">{other?.full_name || 'משתמש'}</p>
+                        <p className="text-xs text-sc-text-light truncate">{conv.last_message || 'אין הודעות'}</p>
                       </div>
-                      <span className="text-sc-gray-light text-lg flex-shrink-0">›</span>
+                      <span className="text-sc-border text-lg flex-shrink-0">›</span>
                     </button>
                   )
                 })
@@ -174,7 +174,7 @@ export default function Directory() {
             {filterBtns.map(btn => (
               <button key={btn.key} onClick={() => setFilter(btn.key)}
                 className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-colors active:scale-95 ${
-                  filter === btn.key ? 'bg-sc-blue text-white shadow-sm' : 'bg-sc-bg border border-sc-gray-light text-sc-gray'
+                  filter === btn.key ? 'bg-sc-primary text-white shadow-sm' : 'bg-sc-bg border border-sc-border text-sc-text-light'
                 }`}>
                 {btn.label}
               </button>
@@ -195,47 +195,47 @@ export default function Directory() {
 
             return (
               <div key={p.id} className={`sc-card p-5 border-2 transition-shadow active:scale-[0.99] ${
-                isDev ? 'border-sc-warning' : 'border-sc-gray-light'
+                isDev ? 'border-sc-gold-dark' : 'border-sc-border'
               }`}>
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2.5">
                     <div className={`w-11 h-11 rounded-full flex items-center justify-center text-xl flex-shrink-0 ${
-                      isDev ? 'bg-sc-warning/10' : 'bg-sc-blue-pale'
+                      isDev ? 'bg-sc-gold-dark/10' : 'bg-sc-light-blue'
                     }`}>
                       {isDev ? '🏗️' : '🔧'}
                     </div>
                     <div>
-                      <p className="font-semibold text-sc-dark text-sm">{p.full_name}</p>
-                      {company && <p className="text-xs text-sc-gray">{company}</p>}
+                      <p className="font-semibold text-sc-text text-sm">{p.full_name}</p>
+                      {company && <p className="text-xs text-sc-text-light">{company}</p>}
                     </div>
                   </div>
                   {isDev && (
-                    <span className="sc-badge bg-sc-warning/10 text-sc-warning">
+                    <span className="sc-badge bg-sc-gold-dark/10 text-sc-gold-dark">
                       👑 יזם
                     </span>
                   )}
                 </div>
 
                 {bio
-                  ? <p className="text-sm text-sc-gray mb-3 leading-relaxed line-clamp-2">{bio}</p>
-                  : <p className="text-xs text-sc-gray mb-3 italic">לא הוזן תיאור</p>
+                  ? <p className="text-sm text-sc-text-light mb-3 leading-relaxed line-clamp-2">{bio}</p>
+                  : <p className="text-xs text-sc-text-light mb-3 italic">לא הוזן תיאור</p>
                 }
 
                 {serviceTypes && serviceTypes.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-2">
                     {serviceTypes.slice(0, 3).map((s: string) => (
-                      <span key={s} className="sc-badge bg-sc-blue-pale text-sc-blue">{s}</span>
+                      <span key={s} className="sc-badge bg-sc-light-blue text-sc-primary">{s}</span>
                     ))}
                   </div>
                 )}
                 {regions && regions.length > 0 && (
-                  <p className="text-xs text-sc-gray mb-3">📍 {regions.slice(0, 2).join(', ')}</p>
+                  <p className="text-xs text-sc-text-light mb-3">📍 {regions.slice(0, 2).join(', ')}</p>
                 )}
 
                 <div className="flex gap-2 mt-3">
                   <button
                     onClick={() => startConversation.mutate({ recipientId: p.id })}
-                    className="flex-1 flex items-center justify-center gap-1.5 bg-sc-blue-pale text-sc-blue rounded-xl py-2.5 text-sm font-medium hover:bg-sc-blue-pale/70 active:scale-95 transition-all">
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-sc-light-blue text-sc-primary rounded-xl py-2.5 text-sm font-medium hover:bg-sc-light-blue/70 active:scale-95 transition-all">
                     💬 הודעה
                   </button>
                   <button
@@ -250,7 +250,7 @@ export default function Directory() {
           {filtered.length === 0 && (
             <div className="col-span-2 text-center py-12">
               <p className="text-3xl mb-2">🔍</p>
-              <p className="text-sc-gray text-sm">לא נמצאו תוצאות</p>
+              <p className="text-sc-text-light text-sm">לא נמצאו תוצאות</p>
             </div>
           )}
         </div>

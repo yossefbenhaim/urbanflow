@@ -53,13 +53,13 @@ export default function Login() {
       {/* LEFT SIDE — Login Form */}
       <div className="flex-1 flex items-center justify-center bg-white px-6 py-12">
         <div className="w-full max-w-[400px]">
-          <h2 className="text-2xl font-bold text-sc-dark mb-1">ברוכים השבים</h2>
-          <p className="text-sc-gray text-sm mb-8">התחברו לחשבון שלכם</p>
+          <h2 className="text-2xl font-bold text-sc-text mb-1">ברוכים השבים</h2>
+          <p className="text-sc-text-light text-sm mb-8">התחברו לחשבון שלכם</p>
 
           {/* Form */}
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             <div>
-              <label className="block text-sc-dark text-sm font-medium mb-1.5">אימייל</label>
+              <label className="block text-sc-text text-sm font-medium mb-1.5">אימייל</label>
               <input
                 type="email"
                 value={email}
@@ -71,7 +71,7 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="block text-sc-dark text-sm font-medium mb-1.5">סיסמה</label>
+              <label className="block text-sc-text text-sm font-medium mb-1.5">סיסמה</label>
               <div className="relative">
                 <input
                   type={showPass ? 'text' : 'password'}
@@ -84,7 +84,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPass(s => !s)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 bg-transparent border-none text-sc-gray cursor-pointer text-base p-0"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 bg-transparent border-none text-sc-text-light cursor-pointer text-base p-0"
                 >
                   {showPass ? '🙈' : '👁️'}
                 </button>
@@ -92,7 +92,7 @@ export default function Login() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-sc-error/30 rounded-[10px] px-4 py-3 text-sc-error text-sm">
+              <div className="bg-sc-error/10 border border-sc-error/30 rounded-[10px] px-4 py-3 text-sc-error text-sm">
                 {error}
               </div>
             )}
@@ -108,15 +108,15 @@ export default function Login() {
 
           {/* Divider */}
           <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px bg-sc-gray-light" />
-            <span className="text-sc-gray text-sm">או</span>
-            <div className="flex-1 h-px bg-sc-gray-light" />
+            <div className="flex-1 h-px bg-sc-border" />
+            <span className="text-sc-text-light text-sm">או</span>
+            <div className="flex-1 h-px bg-sc-border" />
           </div>
 
           {/* Google */}
           <button
             onClick={handleGoogle}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white border border-sc-gray-light rounded-lg hover:bg-sc-bg transition-colors text-sm font-medium text-sc-dark cursor-pointer"
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white border border-sc-border rounded-lg hover:bg-sc-bg transition-colors text-sm font-medium text-sc-text cursor-pointer"
           >
             <svg width="18" height="18" viewBox="0 0 18 18">
               <path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/>
@@ -128,9 +128,9 @@ export default function Login() {
           </button>
 
           {/* Footer */}
-          <p className="text-center text-sm text-sc-gray mt-8">
+          <p className="text-center text-sm text-sc-text-light mt-8">
             אין לך חשבון?{' '}
-            <Link to="/register" className="text-sc-blue font-semibold hover:underline">
+            <Link to="/register" className="text-sc-primary font-semibold hover:underline">
               הירשם עכשיו
             </Link>
           </p>
@@ -138,12 +138,12 @@ export default function Login() {
       </div>
 
       {/* RIGHT SIDE — Branding Panel */}
-      <div className="hidden lg:flex flex-col items-center justify-center w-[480px] bg-sc-blue-deep text-white px-10 py-12 relative">
+      <div className="hidden lg:flex flex-col items-center justify-center w-[480px] bg-sc-navy text-white px-10 py-12 relative">
         {/* Logo + Badge */}
         <div className="flex items-center gap-3 mb-10">
           <img src="/logo.svg" alt="SC" className="h-10" />
           <span className="text-xl font-bold tracking-tight">
-            Silver <span className="text-amber-400">Castle</span>
+            Silver <span className="text-sc-gold">Castle</span>
           </span>
         </div>
 

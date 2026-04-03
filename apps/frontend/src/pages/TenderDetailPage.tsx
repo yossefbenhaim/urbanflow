@@ -15,11 +15,11 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  draft: { label: 'טיוטה', color: 'bg-gray-200 text-gray-700' },
-  open: { label: 'פתוח', color: 'bg-green-100 text-green-700' },
-  closed: { label: 'סגור', color: 'bg-red-100 text-red-700' },
-  awarded: { label: 'נבחר זוכה', color: 'bg-blue-100 text-blue-700' },
-  cancelled: { label: 'בוטל', color: 'bg-gray-300 text-gray-600' },
+  draft: { label: 'טיוטה', color: 'bg-sc-border text-sc-text' },
+  open: { label: 'פתוח', color: 'bg-sc-success/15 text-sc-success' },
+  closed: { label: 'סגור', color: 'bg-sc-error/15 text-sc-error' },
+  awarded: { label: 'נבחר זוכה', color: 'bg-sc-light-blue text-sc-primary' },
+  cancelled: { label: 'בוטל', color: 'bg-gray-300 text-sc-text-light' },
 }
 
 // ── Proposal Comparison Table (C2) ──────────────────────
@@ -59,7 +59,7 @@ function ProposalComparison({
   if (!proposals?.length) {
     return (
       <div className="sc-card p-6 text-center">
-        <p className="text-gray-400">📭 עדיין לא הוגשו הצעות</p>
+        <p className="text-sc-text-light">📭 עדיין לא הוגשו הצעות</p>
       </div>
     )
   }
@@ -67,7 +67,7 @@ function ProposalComparison({
   return (
     <div className="sc-card overflow-x-auto">
       <table className="w-full text-sm">
-        <thead className="bg-sc-dark/5 text-sc-dark text-xs uppercase">
+        <thead className="bg-sc-text/5 text-sc-text text-xs uppercase">
           <tr>
             <th className="px-3 py-2 text-right">מציע</th>
             <SortHeader label="מחיר (₪)" field="price" />
@@ -85,8 +85,8 @@ function ProposalComparison({
               key={p.id}
               className={`border-t transition-colors ${
                 p.status === 'winner'
-                  ? 'bg-green-50 border-green-200'
-                  : 'hover:bg-gray-50'
+                  ? 'bg-sc-success/10 border-sc-success/20'
+                  : 'hover:bg-sc-bg'
               }`}
             >
               <td className="px-3 py-3 font-medium">
@@ -104,12 +104,12 @@ function ProposalComparison({
                 <span
                   className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                     p.status === 'winner'
-                      ? 'bg-green-100 text-green-700'
+                      ? 'bg-sc-success/15 text-sc-success'
                       : p.status === 'rejected'
-                      ? 'bg-red-100 text-red-600'
+                      ? 'bg-sc-error/15 text-sc-error'
                       : p.status === 'shortlisted'
-                      ? 'bg-yellow-100 text-yellow-700'
-                      : 'bg-gray-100 text-gray-600'
+                      ? 'bg-sc-gold/15 text-sc-gold-dark'
+                      : 'bg-sc-bg text-sc-text-light'
                   }`}
                 >
                   {p.status === 'winner' ? 'זוכה' : p.status === 'rejected' ? 'נדחה' : p.status === 'shortlisted' ? 'ברשימה מצומצמת' : 'הוגש'}
@@ -164,7 +164,7 @@ function NegotiationTimeline({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold text-sc-dark">🤝 סבבי משא ומתן</h3>
+        <h3 className="text-lg font-bold text-sc-text">🤝 סבבי משא ומתן</h3>
         {isRep && (
           <button onClick={() => setShowAdd(!showAdd)} className="sc-btn-secondary text-sm">
             ➕ סבב חדש
@@ -222,7 +222,7 @@ function NegotiationTimeline({
 
       {(!rounds || rounds.length === 0) && (
         <div className="sc-card p-6 text-center">
-          <p className="text-gray-400">עדיין לא התקיימו סבבי מו"מ</p>
+          <p className="text-sc-text-light">עדיין לא התקיימו סבבי מו"מ</p>
         </div>
       )}
 
@@ -241,16 +241,16 @@ function NegotiationTimeline({
             {/* Content */}
             <div className="sc-card p-4 flex-1">
               <div className="flex items-center justify-between mb-1">
-                <h4 className="font-bold text-sc-dark">{round.title}</h4>
-                <span className="text-xs text-gray-400">
+                <h4 className="font-bold text-sc-text">{round.title}</h4>
+                <span className="text-xs text-sc-text-light">
                   {new Date(round.created_at).toLocaleDateString('he-IL')}
                 </span>
               </div>
               {round.summary && (
-                <p className="text-sm text-gray-600 mb-2">{round.summary}</p>
+                <p className="text-sm text-sc-text-light mb-2">{round.summary}</p>
               )}
               {round.changes_description && (
-                <div className="text-xs bg-yellow-50 p-2 rounded border border-yellow-200">
+                <div className="text-xs bg-sc-gold/10 p-2 rounded border border-sc-gold/20">
                   <strong>שינויים:</strong> {round.changes_description}
                 </div>
               )}
@@ -259,13 +259,13 @@ function NegotiationTimeline({
                   href={round.document_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-blue-500 hover:underline mt-2 inline-block"
+                  className="text-xs text-sc-primary hover:underline mt-2 inline-block"
                 >
                   📄 צפה במסמך
                 </a>
               )}
               {round.creator?.full_name && (
-                <p className="text-xs text-gray-400 mt-1">👤 {round.creator.full_name}</p>
+                <p className="text-xs text-sc-text-light mt-1">👤 {round.creator.full_name}</p>
               )}
             </div>
           </div>
@@ -314,14 +314,14 @@ function ContractFlow({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-bold text-sc-dark">📝 שיוך חוזה</h3>
+      <h3 className="text-lg font-bold text-sc-text">📝 שיוך חוזה</h3>
       {tenderAssignments.map((a: any) => {
         const currentStep = stepIndex(a.status)
         return (
           <div key={a.id} className="sc-card p-5">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-lg">🏆</span>
-              <span className="font-bold text-sc-dark">{a.provider?.full_name ?? 'ספק'}</span>
+              <span className="font-bold text-sc-text">{a.provider?.full_name ?? 'ספק'}</span>
             </div>
 
             {/* Progress Steps */}
@@ -332,13 +332,13 @@ function ContractFlow({
                     className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap ${
                       i <= currentStep
                         ? 'bg-sc-gold text-white'
-                        : 'bg-gray-100 text-gray-400'
+                        : 'bg-sc-bg text-sc-text-light'
                     }`}
                   >
                     {step.icon} {step.label}
                   </div>
                   {i < STEPS.length - 1 && (
-                    <div className={`w-4 h-0.5 ${i < currentStep ? 'bg-sc-gold' : 'bg-gray-200'}`} />
+                    <div className={`w-4 h-0.5 ${i < currentStep ? 'bg-sc-gold' : 'bg-sc-border'}`} />
                   )}
                 </div>
               ))}
@@ -347,11 +347,11 @@ function ContractFlow({
             {/* Approval Progress Bar */}
             {a.approval_required_count && (
               <div className="mb-4">
-                <div className="flex justify-between text-xs text-gray-500 mb-1">
+                <div className="flex justify-between text-xs text-sc-text-light mb-1">
                   <span>אישורים: {a.approvals_received}/{a.approval_required_count}</span>
                   <span>{Math.round((a.approvals_received / a.approval_required_count) * 100)}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
+                <div className="w-full bg-sc-border rounded-full h-3">
                   <div
                     className="bg-sc-gold h-3 rounded-full transition-all duration-500"
                     style={{ width: `${Math.min(100, (a.approvals_received / a.approval_required_count) * 100)}%` }}
@@ -364,7 +364,7 @@ function ContractFlow({
             {isRep && a.status === 'pending_meeting' && (
               <div className="flex gap-2 items-end">
                 <div className="flex-1">
-                  <label className="text-xs text-gray-500">תאריך פגישה</label>
+                  <label className="text-xs text-sc-text-light">תאריך פגישה</label>
                   <input
                     type="datetime-local"
                     value={meetingDate}
@@ -384,7 +384,7 @@ function ContractFlow({
 
             {isRep && a.status === 'pending_meeting' && a.meeting_scheduled_at && (
               <div className="mt-3 flex items-center gap-3">
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-sc-text-light">
                   פגישה ב-{new Date(a.meeting_scheduled_at).toLocaleString('he-IL')}
                 </span>
                 <button
@@ -399,7 +399,7 @@ function ContractFlow({
             {isRep && a.status === 'meeting_done' && (
               <div className="flex gap-2 items-end">
                 <div className="flex-1">
-                  <label className="text-xs text-gray-500">קישור לחוזה</label>
+                  <label className="text-xs text-sc-text-light">קישור לחוזה</label>
                   <input
                     value={contractUrl}
                     onChange={e => setContractUrl(e.target.value)}
@@ -420,7 +420,7 @@ function ContractFlow({
             {isRep && a.status === 'contract_uploaded' && (
               <div className="flex gap-2 items-end">
                 <div className="flex-1">
-                  <label className="text-xs text-gray-500">מספר אישורים נדרש</label>
+                  <label className="text-xs text-sc-text-light">מספר אישורים נדרש</label>
                   <input
                     type="number"
                     value={requiredCount}
@@ -442,7 +442,7 @@ function ContractFlow({
             {a.status === 'pending_approval' && (
               <div className="flex gap-2 items-end mt-3">
                 <div className="flex-1">
-                  <label className="text-xs text-gray-500">מספר דירה</label>
+                  <label className="text-xs text-sc-text-light">מספר דירה</label>
                   <input
                     value={apartmentId}
                     onChange={e => setApartmentId(e.target.value)}
@@ -463,7 +463,7 @@ function ContractFlow({
             {a.status === 'approved' && (
               <div className="text-center py-3">
                 <span className="text-2xl">🎉</span>
-                <p className="text-green-600 font-bold">החוזה אושר!</p>
+                <p className="text-sc-success font-bold">החוזה אושר!</p>
               </div>
             )}
 
@@ -472,7 +472,7 @@ function ContractFlow({
                 href={a.contract_file_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-blue-500 hover:underline mt-2 inline-block"
+                className="text-sm text-sc-primary hover:underline mt-2 inline-block"
               >
                 📄 צפה בחוזה
               </a>
@@ -509,7 +509,7 @@ export default function TenderDetailPage() {
     return (
       <div className="min-h-screen bg-sc-cream" dir="rtl">
         <Navbar />
-        <div className="max-w-5xl mx-auto px-4 py-8 text-center text-gray-400">טוען...</div>
+        <div className="max-w-5xl mx-auto px-4 py-8 text-center text-sc-text-light">טוען...</div>
       </div>
     )
   }
@@ -523,7 +523,7 @@ export default function TenderDetailPage() {
         {/* Header */}
         <button
           onClick={() => navigate('/tenders')}
-          className="text-sm text-gray-400 hover:text-sc-dark mb-4 inline-block"
+          className="text-sm text-sc-text-light hover:text-sc-text mb-4 inline-block"
         >
           → חזרה למכרזים
         </button>
@@ -533,25 +533,25 @@ export default function TenderDetailPage() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-2xl">{TYPE_LABELS[tender.tender_type]?.slice(0, 2)}</span>
-                <h1 className="text-2xl font-bold text-sc-dark">{tender.title}</h1>
+                <h1 className="text-2xl font-bold text-sc-text">{tender.title}</h1>
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
                   {statusInfo.label}
                 </span>
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-sc-text-light">
                 סוג: {TYPE_LABELS[tender.tender_type]} • נוצר ב-{new Date(tender.created_at).toLocaleDateString('he-IL')}
                 {tender.deadline && ` • מועד אחרון: ${new Date(tender.deadline).toLocaleDateString('he-IL')}`}
               </p>
               {tender.description && (
-                <p className="text-gray-600 mt-3">{tender.description}</p>
+                <p className="text-sc-text-light mt-3">{tender.description}</p>
               )}
               {tender.requirements && (
-                <div className="mt-2 text-sm bg-yellow-50 p-3 rounded border border-yellow-200">
+                <div className="mt-2 text-sm bg-sc-gold/10 p-3 rounded border border-sc-gold/20">
                   <strong>דרישות:</strong> {tender.requirements}
                 </div>
               )}
               {tender.winner?.full_name && (
-                <p className="mt-2 text-green-600 font-bold">🏆 זוכה: {tender.winner.full_name}</p>
+                <p className="mt-2 text-sc-success font-bold">🏆 זוכה: {tender.winner.full_name}</p>
               )}
             </div>
             {isRep && tender.status === 'open' && (
@@ -569,7 +569,7 @@ export default function TenderDetailPage() {
         <div className="space-y-6">
           {/* C2: Proposal Comparison */}
           <div>
-            <h3 className="text-lg font-bold text-sc-dark mb-3">📊 השוואת הצעות</h3>
+            <h3 className="text-lg font-bold text-sc-text mb-3">📊 השוואת הצעות</h3>
             <ProposalComparison
               tenderId={tender.id}
               isRep={!!isRep && tender.status === 'open'}

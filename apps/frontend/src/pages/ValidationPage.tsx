@@ -57,8 +57,8 @@ export default function ValidationPage() {
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 pt-24 pb-12">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-sc-dark mb-2">🏗️ הערכת ציפיות</h1>
-          <p className="text-sc-gray text-sm">
+          <h1 className="text-2xl font-bold text-sc-text mb-2">🏗️ הערכת ציפיות</h1>
+          <p className="text-sc-text-light text-sm">
             בדיקה אוטומטית של הציפיות שלך מול המתווה העירוני
           </p>
         </div>
@@ -73,7 +73,7 @@ export default function ValidationPage() {
             {validateMutation.isPending ? '🔄 בודק...' : '🔍 בדוק את הציפיות שלי'}
           </button>
           {validateMutation.isError && (
-            <p className="text-red-500 text-sm mt-2">
+            <p className="text-sc-error text-sm mt-2">
               {(validateMutation.error as any)?.message || 'שגיאה בבדיקה'}
             </p>
           )}
@@ -82,10 +82,10 @@ export default function ValidationPage() {
         {/* Validation Results from mutation */}
         {validateMutation.data?.validations && validateMutation.data.validations.length > 0 && (
           <div className="sc-card p-6 mb-6">
-            <h2 className="text-lg font-bold text-sc-dark mb-1">
+            <h2 className="text-lg font-bold text-sc-text mb-1">
               תוצאות עבור {validateMutation.data.city}
             </h2>
-            <p className="text-xs text-sc-gray mb-4">
+            <p className="text-xs text-sc-text-light mb-4">
               לפי מתווה: עד {validateMutation.data.outline?.max_floors} קומות
               {validateMutation.data.outline?.sukkah_balcony_allowed ? ' | סוכה מותרת' : ''}
               {' | '}חניה: {validateMutation.data.outline?.parking_required_per_unit} ליח"ד
@@ -113,10 +113,10 @@ export default function ValidationPage() {
                         {config.label}
                       </span>
                     </div>
-                    <p className="text-sc-gray text-sm mt-1">
+                    <p className="text-sc-text-light text-sm mt-1">
                       <strong>ביקשת:</strong> {v.requested_value}
                     </p>
-                    <p className="text-sc-dark text-sm mt-1">{v.explanation}</p>
+                    <p className="text-sc-text text-sm mt-1">{v.explanation}</p>
                   </div>
                 )
               })}
@@ -125,7 +125,7 @@ export default function ValidationPage() {
         )}
 
         {(validateMutation.data as any)?.message && !validateMutation.data?.validations?.length && (
-          <div className="sc-card p-6 text-center text-sc-gray mb-6">
+          <div className="sc-card p-6 text-center text-sc-text-light mb-6">
             <p>{(validateMutation.data as any).message}</p>
           </div>
         )}
@@ -133,7 +133,7 @@ export default function ValidationPage() {
         {/* History */}
         {latestValidations.length > 0 && !hasRun && (
           <div className="sc-card p-6">
-            <h2 className="text-lg font-bold text-sc-dark mb-4">📋 היסטוריית בדיקות</h2>
+            <h2 className="text-lg font-bold text-sc-text mb-4">📋 היסטוריית בדיקות</h2>
             <div className="space-y-3">
               {latestValidations.map((v: any) => {
                 const config = RESULT_CONFIG[v.validation_result] || RESULT_CONFIG.needs_review
@@ -149,8 +149,8 @@ export default function ValidationPage() {
                         {TYPE_LABELS[v.request_type] || v.request_type}: {v.requested_value}
                       </span>
                     </div>
-                    <p className="text-sc-dark text-sm">{v.explanation}</p>
-                    <p className="text-xs text-sc-gray mt-1">
+                    <p className="text-sc-text text-sm">{v.explanation}</p>
+                    <p className="text-xs text-sc-text-light mt-1">
                       {new Date(v.validated_at).toLocaleDateString('he-IL')}
                     </p>
                   </div>
@@ -162,7 +162,7 @@ export default function ValidationPage() {
 
         {!userId && (
           <div className="sc-card p-8 text-center">
-            <p className="text-sc-gray">יש להתחבר כדי לבדוק את הציפיות שלך.</p>
+            <p className="text-sc-text-light">יש להתחבר כדי לבדוק את הציפיות שלך.</p>
           </div>
         )}
       </div>
