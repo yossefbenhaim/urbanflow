@@ -97,8 +97,13 @@ export const tenantRouter = router({
   }),
 
   getDocuments: protectedProcedure.query(async ({ ctx }) => {
-    const { data: tp } = await ctx.supabase.from('tenant_profiles').select('unit:units(building:buildings(project_id))').eq('user_id', ctx.user.id).single()
-    const projectId = (tp?.unit as any)?.building?.project_id
+    // Try project_tenants first (direct link), then fallback to unit→building chain
+    const { data: pt } = await ctx.supabase.from('project_tenants').select('project_id').eq('tenant_id', ctx.user.id).single()
+    let projectId = pt?.project_id
+    if (!projectId) {
+      const { data: tp } = await ctx.supabase.from('tenant_profiles').select('unit:units(building:buildings(project_id))').eq('user_id', ctx.user.id).single()
+      projectId = (tp?.unit as any)?.building?.project_id
+    }
     if (!projectId) return []
     const { data: docs } = await ctx.supabase.from('documents').select('*, signatures(signed_at)').eq('project_id', projectId).in('type', ['SIGN_REQUIRED', 'INFO_ONLY'])
     return docs ?? []
