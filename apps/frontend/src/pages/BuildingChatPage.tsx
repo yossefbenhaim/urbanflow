@@ -212,6 +212,38 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
   )
 }
 
+function JoinBuildingGroupBanner() {
+  const { data: tp } = trpc.tenant.getMyProfile.useQuery()
+  const { data: group } = trpc.tenant.getMyBuildingGroup.useQuery()
+  const navigate = useNavigate()
+  const joinGroup = trpc.tenant.joinBuildingGroup.useMutation({
+    onSuccess: (data) => {
+      navigate(`/building-chat/${data.groupId}`)
+      window.location.reload()
+    },
+  })
+
+  const buildingId = (tp as any)?.building_id
+  if (group || !buildingId) return null
+
+  return (
+    <div className="sc-card p-5 text-center my-4">
+      <div className="text-4xl mb-3">🏢</div>
+      <h3 className="font-bold text-[#212121] mb-2">הצטרף לקבוצת הבניין</h3>
+      <p className="text-sm text-[#5a5a6e] mb-4">
+        הצטרף לקבוצת הדיירים בבניין שלך כדי לשוחח, להצביע ולהשתתף בהחלטות
+      </p>
+      <button
+        onClick={() => joinGroup.mutate({ buildingId })}
+        disabled={joinGroup.isPending}
+        className="sc-btn-primary px-8 py-3 disabled:opacity-50"
+      >
+        {joinGroup.isPending ? 'מצטרף...' : '🏢 הצטרף לקבוצת הבניין'}
+      </button>
+    </div>
+  )
+}
+
 export default function BuildingChatPage() {
   const { groupId } = useParams<{ groupId: string }>()
   const navigate = useNavigate()
@@ -224,6 +256,17 @@ export default function BuildingChatPage() {
   const token = localStorage.getItem('sb-token')
   const { data: me } = trpc.auth.me.useQuery(undefined, { enabled: !!token })
   const currentUserId = (me as any)?.id ?? ''
+
+  // Show join banner if no groupId
+  if (!groupId) {
+    return (
+      <PageLayout>
+        <div className="max-w-lg mx-auto p-4 pt-20">
+          <JoinBuildingGroupBanner />
+        </div>
+      </PageLayout>
+    )
+  }
 
   const { data: messages, refetch } = trpc.tenant.getChatMessages.useQuery(
     { groupId: groupId! },
@@ -281,8 +324,6 @@ export default function BuildingChatPage() {
     window.addEventListener('popstate', handlePop)
     return () => window.removeEventListener('popstate', handlePop)
   }, [navigate])
-
-  if (!groupId) return null
 
   const handleSend = () => {
     if (!message.trim()) return

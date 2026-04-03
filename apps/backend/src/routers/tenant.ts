@@ -496,6 +496,171 @@ export const tenantRouter = router({
     return data ?? []
   }),
 
+  // ─── Step 11: Join Building Group ──────────────────────
+  joinBuildingGroup: protectedProcedure
+    .input(z.object({ buildingId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      // Find or create group for this building
+      let { data: group } = await ctx.supabase
+        .from('building_groups').select('id').eq('building_id', input.buildingId).maybeSingle()
+      if (!group) {
+        const { data: newGroup, error } = await ctx.supabase
+          .from('building_groups')
+          .insert({ building_id: input.buildingId, name: 'קבוצת הבניין' })
+          .select('id').single()
+        if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+        group = newGroup
+      }
+      // Upsert membership
+      const { error } = await ctx.supabase
+        .from('building_group_members')
+        .upsert({ group_id: group.id, user_id: ctx.user.id }, { onConflict: 'group_id,user_id' })
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return { groupId: group.id }
+    }),
+
+  // ─── Step 12: Get Building Tenants for Election ────────
+  getBuildingTenants: protectedProcedure.query(async ({ ctx }) => {
+    const { data: tp } = await ctx.supabase.from('tenant_profiles').select('building_id').eq('user_id', ctx.user.id).single()
+    if (!(tp as any)?.building_id) return []
+    const { data: tenants } = await ctx.supabase
+      .from('tenant_profiles')
+      .select('user_id, profiles:user_id(id, full_name, avatar_url, email)')
+      .eq('building_id', (tp as any).building_id)
+    return (tenants ?? []).map((t: any) => ({
+      userId: t.user_id,
+      fullName: t.profiles?.full_name ?? t.profiles?.email ?? 'דייר',
+      avatarUrl: t.profiles?.avatar_url ?? null,
+    }))
+  }),
+
+  // ─── Step 12: Get Building Representatives ─────────────
+  getBuildingRepresentatives: protectedProcedure.query(async ({ ctx }) => {
+    const { data: tp } = await ctx.supabase.from('tenant_profiles').select('building_id').eq('user_id', ctx.user.id).single()
+    if (!(tp as any)?.building_id) return []
+    const { data: reps } = await ctx.supabase
+      .from('building_representatives')
+      .select('*, profile:profiles(full_name, avatar_url)')
+      .eq('building_id', (tp as any).building_id)
+      .eq('is_active', true)
+    return reps ?? []
+  }),
+
+  // ─── Step 14: Get Inspections for Tenant's Project ─────
+  getProjectInspections: protectedProcedure.query(async ({ ctx }) => {
+    const { data: tp } = await ctx.supabase
+      .from('tenant_profiles')
+      .select('unit:units(building:buildings(project_id))')
+      .eq('user_id', ctx.user.id).single()
+    const projectId = (tp?.unit as any)?.building?.project_id
+    if (!projectId) {
+      // Try via building_id directly
+      const { data: tp2 } = await ctx.supabase.from('tenant_profiles').select('building_id').eq('user_id', ctx.user.id).single()
+      if (!(tp2 as any)?.building_id) return []
+      const { data: building } = await ctx.supabase.from('buildings').select('project_id').eq('id', (tp2 as any).building_id).single()
+      if (!(building as any)?.project_id) return []
+      const { data: inspections } = await ctx.supabase
+        .from('inspections')
+        .select('id, inspection_type, status, conclusion, notes, submitted_at, is_useful')
+        .eq('project_id', (building as any).project_id)
+        .in('status', ['submitted', 'approved'])
+        .order('submitted_at', { ascending: false })
+      return inspections ?? []
+    }
+    const { data: inspections } = await ctx.supabase
+      .from('inspections')
+      .select('id, inspection_type, status, conclusion, notes, submitted_at, is_useful')
+      .eq('project_id', projectId)
+      .in('status', ['submitted', 'approved'])
+      .order('submitted_at', { ascending: false })
+    return inspections ?? []
+  }),
+
+  // ─── Steps 11-15 Status ────────────────────────────────
+  getStepsStatus: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.user.id
+
+    // Get tenant profile with building info
+    const { data: tp } = await ctx.supabase
+      .from('tenant_profiles')
+      .select('building_id, unit:units(building:buildings(project_id))')
+      .eq('user_id', userId).single()
+
+    const buildingId = (tp as any)?.building_id
+    const projectId = (tp?.unit as any)?.building?.project_id
+
+    // Step 11: building_group_members has record
+    let step11 = false
+    if (buildingId) {
+      const { data: group } = await ctx.supabase
+        .from('building_groups').select('id').eq('building_id', buildingId).maybeSingle()
+      if (group) {
+        const { data: member } = await ctx.supabase
+          .from('building_group_members')
+          .select('user_id')
+          .eq('group_id', group.id)
+          .eq('user_id', userId)
+          .maybeSingle()
+        step11 = !!member
+      }
+    }
+
+    // Step 12: building_representatives has active record for building
+    let step12 = false
+    if (buildingId) {
+      const { count } = await ctx.supabase
+        .from('building_representatives')
+        .select('*', { count: 'exact', head: true })
+        .eq('building_id', buildingId)
+        .eq('is_active', true)
+      step12 = (count ?? 0) > 0
+    }
+
+    // Step 13: protocol signed (check signatures for protocol-type doc)
+    let step13 = false
+    if (buildingId) {
+      const { data: protocolDocs } = await ctx.supabase
+        .from('documents')
+        .select('id')
+        .eq('building_id', buildingId)
+        .eq('doc_type', 'protocol')
+      if (protocolDocs && protocolDocs.length > 0) {
+        const docIds = protocolDocs.map((d: any) => d.id)
+        const { data: sigs } = await ctx.supabase
+          .from('signatures')
+          .select('id')
+          .eq('user_id', userId)
+          .in('document_id', docIds)
+        step13 = (sigs?.length ?? 0) > 0
+      }
+    }
+
+    // Step 14: inspections exist for project (any status)
+    let step14 = false
+    const resolvedProjectId = projectId ?? await (async () => {
+      if (!buildingId) return null
+      const { data: b } = await ctx.supabase.from('buildings').select('project_id').eq('id', buildingId).single()
+      return (b as any)?.project_id ?? null
+    })()
+    if (resolvedProjectId) {
+      const { count } = await ctx.supabase
+        .from('inspections')
+        .select('*', { count: 'exact', head: true })
+        .eq('project_id', resolvedProjectId)
+      step14 = (count ?? 0) > 0
+    }
+
+    // Step 15: expectation_validations exist for user
+    let step15 = false
+    const { count: valCount } = await ctx.supabase
+      .from('expectation_validations')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+    step15 = (valCount ?? 0) > 0
+
+    return { step11, step12, step13, step14, step15 }
+  }),
+
   // ─── E1: Elderly / Disability Profile ──────────────────
   saveElderlyProfile: protectedProcedure
     .input(z.object({

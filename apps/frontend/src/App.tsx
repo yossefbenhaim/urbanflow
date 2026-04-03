@@ -37,6 +37,9 @@ import TimelinePage from './pages/TimelinePage'
 import ValidationPage from './pages/ValidationPage'
 import LearningPage from './pages/LearningPage'
 import DocumentViewPage from './pages/DocumentViewPage'
+import ElectRepresentatives from './pages/ElectRepresentatives'
+import CommitteeProtocol from './pages/CommitteeProtocol'
+import TenantInspectionView from './pages/TenantInspectionView'
 
 function OAuthCallback() {
   const navigate = useNavigate()
@@ -96,6 +99,9 @@ export default function App() {
         <Route path="/elderly-form" element={<ElderlyForm />} />
         <Route path="/timeline" element={<TimelinePage />} />
         <Route path="/validation" element={<ValidationPage />} />
+        <Route path="/elect-representatives" element={<ElectRepresentatives />} />
+        <Route path="/committee-protocol" element={<CommitteeProtocol />} />
+        <Route path="/inspection-results" element={<TenantInspectionView />} />
         <Route path="/learn" element={<LearningPage />} />
       </Routes>
       <FaqBot />
