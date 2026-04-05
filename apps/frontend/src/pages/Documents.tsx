@@ -180,11 +180,11 @@ export default function Documents() {
           </div>
         ) : (
           <div className="space-y-3">
-            {STAGES.map(stage => {
+            {STAGES.map((stage, i) => {
               const idx = stageIndex(stage.key)
-              const isCurrent = hasProject && idx === currentIdx
-              const isPast = hasProject && idx < currentIdx
-              const isLocked = hasProject && idx > currentIdx
+              const isCurrent = hasProject ? idx === currentIdx : i === 0
+              const isPast = hasProject ? idx < currentIdx : false
+              const isLocked = hasProject ? idx > currentIdx : false
               return (
                 <StageSection
                   key={stage.key}
