@@ -26,16 +26,16 @@ const DEFAULT_INFO = {
 const statusMap: Record<string, { label: string; cls: string }> = {
   PENDING: { label: 'ממתין לחתימה', cls: 'bg-[#8b6f47]/15 text-[#8b6f47]' },
   SIGNED:  { label: 'נחתם',         cls: 'bg-[#4a8c5c]/15 text-[#4a8c5c]'  },
-  INFO:    { label: 'לעיון',         cls: 'bg-sc-border text-[#5a5a6e]'    },
+  INFO:    { label: 'לעיון',         cls: 'bg-[#eeeeee] text-[#5a5a6e]'    },
   SIGN_REQUIRED: { label: 'ממתין לחתימה', cls: 'bg-[#8b6f47]/15 text-[#8b6f47]' },
-  INFO_ONLY: { label: 'לעיון', cls: 'bg-sc-border text-[#5a5a6e]' },
+  INFO_ONLY: { label: 'לעיון', cls: 'bg-[#eeeeee] text-[#5a5a6e]' },
 }
 
 type Filter = 'ALL' | 'PENDING' | 'SIGNED'
 
 function DocCard({ doc }: { doc: any }) {
   const navigate = useNavigate()
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(true)
   const info = DOC_INFO[doc.title] ?? DEFAULT_INFO
   const hasSigned = doc.signatures && doc.signatures.length > 0
   const status = hasSigned ? 'SIGNED' : (doc.type === 'SIGN_REQUIRED' ? 'PENDING' : doc.type)

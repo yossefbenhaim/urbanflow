@@ -4,7 +4,6 @@ import PageLayout from '../components/PageLayout'
 import { trpc } from '../lib/trpc'
 import { useUser } from '../hooks/useUser'
 import { getAgreementTemplate } from '../data/agreementTemplates'
-import GenerateDocPDF from '../components/GenerateDocPDF'
 
 export default function DocumentViewPage() {
   const { docId } = useParams<{ docId: string }>()
@@ -235,16 +234,13 @@ export default function DocumentViewPage() {
               נחתם על ידי {fullName} • ת.ז. {idNumber} • {today}
             </p>
 
-            {/* PDF download */}
-            <GenerateDocPDF
-              template={template}
-              fullName={fullName}
-              idNumber={idNumber}
-              address={address}
-              date={today}
-              signatureImage={(doc as any)?.mySig?.signature_image || canvasRef.current?.toDataURL('image/png')}
-              docTitle={(doc as any).title}
-            />
+            <button
+              onClick={() => window.print()}
+              className="w-full py-3 rounded-xl font-bold text-white transition"
+              style={{ backgroundColor: '#8b6f47' }}
+            >
+              הדפס מסמך 🖨️
+            </button>
           </div>
         )}
       </div>
