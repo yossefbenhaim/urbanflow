@@ -41,19 +41,42 @@ import DocumentViewPage from './pages/DocumentViewPage'
 function OAuthCallback() {
   const navigate = useNavigate()
   useEffect(() => {
-    if (window.location.hash.includes('access_token')) {
-      const hash = window.location.hash.substring(1)
-      const params = new URLSearchParams(hash)
-      const token = params.get('access_token')
-      const refresh = params.get('refresh_token')
-      if (token) {
-        localStorage.setItem('sb-token', token)
-        if (refresh) localStorage.setItem('sb-refresh-token', refresh)
-        setTimeout(() => navigate('/oauth-role', { replace: true }), 50)
-      }
+    const hash = window.location.hash
+    const search = window.location.search
+    let token: string | null = null
+    let refresh: string | null = null
+
+    // Check hash fragment (implicit flow)
+    if (hash.includes('access_token')) {
+      const params = new URLSearchParams(hash.substring(1))
+      token = params.get('access_token')
+      refresh = params.get('refresh_token')
+    }
+    // Check query params (PKCE flow)
+    if (!token && search.includes('access_token')) {
+      const params = new URLSearchParams(search)
+      token = params.get('access_token')
+      refresh = params.get('refresh_token')
+    }
+
+    if (token) {
+      localStorage.setItem('sb-token', token)
+      if (refresh) localStorage.setItem('sb-refresh-token', refresh)
+      navigate('/oauth-role', { replace: true })
+    } else {
+      // No token found - redirect to login
+      navigate('/login', { replace: true })
     }
   }, [navigate])
-  return null
+
+  return (
+    <div dir="rtl" className="min-h-screen flex items-center justify-center bg-[#f8f9fa] font-heebo">
+      <div className="text-center">
+        <div className="animate-spin w-10 h-10 border-4 border-[#3b6b9c] border-t-transparent rounded-full mx-auto mb-4" />
+        <p className="text-[#5a5a6e] text-lg">מתחבר עם Google...</p>
+      </div>
+    </div>
+  )
 }
 
 export default function App() {
