@@ -7,6 +7,7 @@ export type UserProfile = {
   id: string; fullName: string | null; email: string | null
   phone: string | null; idNumber: string | null
   role: 'tenant' | 'manager' | 'provider' | 'organizer' | 'developer' | null
+  project_id?: string | null
 }
 
 export const ROLE_LABELS: Record<string, { label: string; color: string; icon: string }> = {

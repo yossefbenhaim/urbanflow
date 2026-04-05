@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import BuildingLoader from '../components/BuildingLoader'
+import Navbar from '../components/Navbar'
 
 type Tab = 'project' | 'tenants' | 'group' | 'contract' | 'stages'
 
@@ -379,6 +380,7 @@ export default function OrganizerDashboard() {
   const navigate = useNavigate()
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<Tab>('project')
+  const [showNewProject, setShowNewProject] = useState(false)
 
   const { data: projects, isLoading, refetch } = trpc.organizer.getMyProjects.useQuery()
   const utils = trpc.useUtils()

@@ -332,7 +332,7 @@ function ReportMeetingModal({ tenderId, counterpartId, counterpartName, onClose,
 
 // ── Main Page ────────────────────────────────────────────
 export default function TendersPage() {
-  const { user, profile } = useUser()
+  const { profile } = useUser()
   const navigate = useNavigate()
   const [showCreate, setShowCreate] = useState(false)
   const [proposalTarget, setProposalTarget] = useState<{ id: string; title: string } | null>(null)

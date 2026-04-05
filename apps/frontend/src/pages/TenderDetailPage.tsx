@@ -286,7 +286,7 @@ function ContractFlow({
   projectId: string
   isRep: boolean
 }) {
-  const { user } = useUser()
+  const { profile: _user } = useUser()
   const { data: assignments, refetch } = trpc.tenders.getProjectAssignments.useQuery({ projectId })
   const tenderAssignments = (assignments ?? []).filter((a: any) => a.tender_id === tenderId)
 
@@ -509,9 +509,9 @@ export default function TenderDetailPage() {
   if (!tender) {
     return (
       <PageLayout>
-        
+
         <div className="max-w-5xl mx-auto px-4 py-8 text-center text-[#5a5a6e]">טוען...</div>
-      </div>
+      </PageLayout>
     )
   }
 
@@ -595,7 +595,7 @@ export default function TenderDetailPage() {
             />
           )}
         </div>
-      </PageLayout>
+      </div>
     </PageLayout>
   )
 }
