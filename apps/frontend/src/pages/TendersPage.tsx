@@ -261,12 +261,83 @@ function SubmitProposalModal({
   )
 }
 
+// ── Match Proposal Modal ────────────────────────────────
+function MatchProposalModal({ tenderId, targetName, targetId, onClose, onSuccess }: {
+  tenderId: string; targetName: string; targetId: string; onClose: () => void; onSuccess: () => void
+}) {
+  const [message, setMessage] = useState('')
+  const send = trpc.tenders.sendMatchProposal.useMutation({ onSuccess: () => { onSuccess(); onClose() } })
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" dir="rtl">
+      <div className="sc-card p-6 w-full max-w-md shadow-xl">
+        <h2 className="text-xl font-bold text-[#212121] mb-1">🤝 שליחת הצעת התאמה</h2>
+        <p className="text-sm text-[#5a5a6e] mb-4">אל: {targetName}</p>
+        <div>
+          <label className="text-sm font-medium text-[#212121]">הודעה *</label>
+          <textarea value={message} onChange={e => setMessage(e.target.value)} rows={3}
+            placeholder="שלום, אני מעוניין לדון על שיתוף פעולה..." className="sc-input mt-1 resize-none" />
+        </div>
+        <div className="flex gap-2 mt-4">
+          <button onClick={() => send.mutate({ tenderId, targetUserId: targetId, message })}
+            disabled={message.length < 3 || send.isPending} className="sc-btn-primary flex-1 disabled:opacity-50">
+            {send.isPending ? 'שולח...' : '🤝 שלח הצעה'}
+          </button>
+          <button onClick={onClose} className="sc-btn-secondary flex-1">ביטול</button>
+        </div>
+        {send.error && <p className="text-red-500 text-sm mt-2">{send.error.message}</p>}
+      </div>
+    </div>
+  )
+}
+
+// ── Report Meeting Modal ────────────────────────────────
+function ReportMeetingModal({ tenderId, counterpartId, counterpartName, onClose, onSuccess }: {
+  tenderId: string; counterpartId: string; counterpartName: string; onClose: () => void; onSuccess: () => void
+}) {
+  const [scheduledAt, setScheduledAt] = useState('')
+  const [location, setLocation] = useState('')
+  const [notes, setNotes] = useState('')
+  const report = trpc.tenders.reportMeeting.useMutation({ onSuccess: () => { onSuccess(); onClose() } })
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" dir="rtl">
+      <div className="sc-card p-6 w-full max-w-md shadow-xl">
+        <h2 className="text-xl font-bold text-[#212121] mb-1">📅 דיווח על פגישה</h2>
+        <p className="text-sm text-[#5a5a6e] mb-4">פגישה עם: {counterpartName}</p>
+        <div className="space-y-3">
+          <div>
+            <label className="text-sm font-medium text-[#212121]">תאריך ושעה *</label>
+            <input type="datetime-local" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)} className="sc-input mt-1" />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-[#212121]">מיקום</label>
+            <input value={location} onChange={e => setLocation(e.target.value)} placeholder="כתובת או Zoom" className="sc-input mt-1" />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-[#212121]">הערות</label>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} className="sc-input mt-1 resize-none" />
+          </div>
+        </div>
+        <div className="flex gap-2 mt-4">
+          <button onClick={() => report.mutate({ tenderId, counterpartId, scheduledAt, location: location || undefined, notes: notes || undefined })}
+            disabled={!scheduledAt || report.isPending} className="sc-btn-primary flex-1 disabled:opacity-50">
+            {report.isPending ? 'שולח...' : '📅 דווח פגישה'}
+          </button>
+          <button onClick={onClose} className="sc-btn-secondary flex-1">ביטול</button>
+        </div>
+        {report.error && <p className="text-red-500 text-sm mt-2">{report.error.message}</p>}
+      </div>
+    </div>
+  )
+}
+
 // ── Main Page ────────────────────────────────────────────
 export default function TendersPage() {
   const { user, profile } = useUser()
   const navigate = useNavigate()
   const [showCreate, setShowCreate] = useState(false)
   const [proposalTarget, setProposalTarget] = useState<{ id: string; title: string } | null>(null)
+  const [matchTarget, setMatchTarget] = useState<{ id: string; name: string; tenderId: string } | null>(null)
+  const [meetingTarget, setMeetingTarget] = useState<{ tenderId: string; counterpartId: string; counterpartName: string } | null>(null)
 
   // Get user's project
   const projectId = profile?.project_id
@@ -356,6 +427,18 @@ export default function TendersPage() {
                       📝 הגש הצעה
                     </button>
                   )}
+                  {isRep && tender.status === 'awarded' && tender.winner && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={e => { e.stopPropagation(); setMatchTarget({ id: tender.winner.id, name: tender.winner.full_name, tenderId: tender.id }) }}
+                        className="sc-btn-secondary text-sm whitespace-nowrap"
+                      >🤝 שלח הצעה</button>
+                      <button
+                        onClick={e => { e.stopPropagation(); setMeetingTarget({ tenderId: tender.id, counterpartId: tender.winner.id, counterpartName: tender.winner.full_name }) }}
+                        className="sc-btn-secondary text-sm whitespace-nowrap"
+                      >📅 דווח פגישה</button>
+                    </div>
+                  )}
                 </div>
               </div>
             )
@@ -376,6 +459,26 @@ export default function TendersPage() {
           tenderId={proposalTarget.id}
           tenderTitle={proposalTarget.title}
           onClose={() => setProposalTarget(null)}
+          onSuccess={() => refetch()}
+        />
+      )}
+
+      {matchTarget && (
+        <MatchProposalModal
+          tenderId={matchTarget.tenderId}
+          targetId={matchTarget.id}
+          targetName={matchTarget.name}
+          onClose={() => setMatchTarget(null)}
+          onSuccess={() => refetch()}
+        />
+      )}
+
+      {meetingTarget && (
+        <ReportMeetingModal
+          tenderId={meetingTarget.tenderId}
+          counterpartId={meetingTarget.counterpartId}
+          counterpartName={meetingTarget.counterpartName}
+          onClose={() => setMeetingTarget(null)}
           onSuccess={() => refetch()}
         />
       )}

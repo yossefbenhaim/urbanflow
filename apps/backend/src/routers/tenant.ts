@@ -42,10 +42,12 @@ async function handleBuildingGroup(supabase: any, buildingId: string, userId: st
     await supabase.from('building_group_members').insert(members)
 
     const { data: poll1 } = await supabase.from('polls').insert({ group_id: groupId, question: 'כמה דירות יש בבניין שלך?', poll_type: 'apartment_count', threshold_pct: 60 }).select('id').single()
-    const { data: poll2 } = await supabase.from('polls').insert({ group_id: groupId, question: 'מי יהיה נציג הוועד?', poll_type: 'representative_election', threshold_pct: 60 }).select('id').single()
+    const { data: poll2 } = await supabase.from('polls').insert({ group_id: groupId, question: 'מי יהיה נציג הוועד?', poll_type: 'representative_election', threshold_pct: 51 }).select('id').single()
+    const { data: poll3 } = await supabase.from('polls').insert({ group_id: groupId, question: 'האם אתה מסכים להצטרף לפרויקט הפינוי-בינוי?', poll_type: 'project_approval', threshold_pct: 66 }).select('id').single()
     await supabase.from('group_messages').insert([
       { group_id: groupId, sender_id: userId, content: 'כמה דירות יש בבניין שלך?', message_type: 'poll', poll_id: poll1.id },
       { group_id: groupId, sender_id: userId, content: 'מי יהיה נציג הוועד?', message_type: 'poll', poll_id: poll2.id },
+      { group_id: groupId, sender_id: userId, content: 'האם אתה מסכים להצטרף לפרויקט הפינוי-בינוי?', message_type: 'poll', poll_id: poll3.id },
     ])
   }
 }
@@ -78,6 +80,47 @@ async function processVote(supabase: any, pollId: string, buildingId: string) {
     await supabase.from('building_representatives').update({ is_active: false }).eq('building_id', resolvedBuildingId)
     await supabase.from('building_representatives').insert({ building_id: resolvedBuildingId, user_id: resultValue, poll_id: pollId, is_active: true })
     await supabase.from('profiles').update({ is_building_representative: true, representative_building_id: resolvedBuildingId }).eq('id', resultValue)
+
+    // Notify all building members about elected representative
+    const { data: repProfile } = await supabase.from('profiles').select('full_name').eq('id', resultValue).single()
+    const repName = (repProfile as any)?.full_name ?? 'הנציג שנבחר'
+    const { data: groupMembers } = await supabase.from('building_group_members').select('user_id').eq('group_id', poll.group_id)
+    if (groupMembers && groupMembers.length > 0) {
+      await supabase.from('notifications').insert(
+        groupMembers.map((m: any) => ({
+          user_id: m.user_id,
+          type: 'representative_elected',
+          title: '🎉 נבחר נציג דיירים!',
+          body: `${repName} נבחר/ה ברוב קולות כנציג/ת הדיירים. נשאר רק לחתום על טופס בחירת נציגות ולהעלות אותו חתום.`,
+          is_read: false,
+        }))
+      )
+      await supabase.from('group_messages').insert({
+        group_id: poll.group_id,
+        sender_id: resultValue,
+        content: `🎉 ${repName} נבחר/ה ברוב קולות כנציג/ת הדיירים!\n\nנשאר לכם רק לחתום על טופס בחירת נציגות ולהעלות אותו חתום אלינו.\n📥 להורדת הטופס לחצו כאן`,
+        message_type: 'text',
+      })
+    }
+  } else if (poll.poll_type === 'project_approval') {
+    const { data: groupMembers } = await supabase.from('building_group_members').select('user_id').eq('group_id', poll.group_id)
+    if (groupMembers && groupMembers.length > 0) {
+      await supabase.from('notifications').insert(
+        groupMembers.map((m: any) => ({
+          user_id: m.user_id,
+          type: 'project_approved',
+          title: '✅ הפרויקט אושר!',
+          body: `הושגה הסכמה של ${pct}% מבעלי הדירות להצטרף לפרויקט הפינוי-בינוי.`,
+          is_read: false,
+        }))
+      )
+      await supabase.from('group_messages').insert({
+        group_id: poll.group_id,
+        sender_id: (groupMembers[0] as any).user_id,
+        content: `✅ הושגה הסכמה של ${pct}% מבעלי הדירות! הפרויקט אושר.`,
+        message_type: 'text',
+      })
+    }
   }
 }
 
@@ -342,6 +385,50 @@ export const tenantRouter = router({
     }
     return { uploaded: !!d.tabu_file_url, locked: !!d.tabu_locked, url: d.tabu_file_url, uploadedAt: d.tabu_uploaded_at }
   }),
+
+  // ─── A1b: Ownership Documents (מסמכי בעלות) ──────────
+  uploadOwnershipDocument: protectedProcedure
+    .input(z.object({
+      fileUrl: z.string().url(),
+      fileName: z.string(),
+      documentType: z.enum(['tabu_extract', 'purchase_contract', 'ownership_certificate', 'inheritance_docs', 'power_of_attorney_doc', 'other']),
+      notes: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { data: tp } = await ctx.supabase.from('tenant_profiles').select('building_id').eq('user_id', ctx.user.id).single()
+      const { data, error } = await ctx.supabase.from('ownership_documents').insert({
+        user_id: ctx.user.id,
+        building_id: (tp as any)?.building_id ?? null,
+        file_url: input.fileUrl,
+        file_name: input.fileName,
+        document_type: input.documentType,
+        notes: input.notes ?? null,
+        is_confidential: true,
+      }).select().single()
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return data
+    }),
+
+  getOwnershipDocuments: protectedProcedure.query(async ({ ctx }) => {
+    const { data } = await ctx.supabase
+      .from('ownership_documents')
+      .select('*')
+      .eq('user_id', ctx.user.id)
+      .order('created_at', { ascending: false })
+    return data ?? []
+  }),
+
+  deleteOwnershipDocument: protectedProcedure
+    .input(z.object({ documentId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { error } = await ctx.supabase
+        .from('ownership_documents')
+        .delete()
+        .eq('id', input.documentId)
+        .eq('user_id', ctx.user.id)
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return { ok: true }
+    }),
 
   // ─── A2: Complex Ownership ─────────────────────────────
   addCoOwner: protectedProcedure

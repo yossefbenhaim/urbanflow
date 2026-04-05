@@ -66,7 +66,7 @@ export const committeeRouter = router({
       question: z.string().min(5),
       options: z.array(z.string()).min(2),
       isAnonymous: z.boolean().default(true),
-      pollType: z.enum(['single', 'multiple']).default('single'),
+      pollType: z.enum(['single', 'multiple', 'project_approval', 'representative_election']).default('single'),
       closeAt: z.string().optional(),
       thresholdPct: z.number().min(50).max(90).default(60),
       groupId: z.string().uuid(),
@@ -959,6 +959,65 @@ export const committeeRouter = router({
         .eq('project_id', input.projectId)
         .order('stage')
       return data ?? []
+    }),
+
+  // ─── Post-Election: Form Upload ────────────────────────
+  uploadElectionForm: protectedProcedure
+    .input(z.object({
+      buildingId: z.string().uuid(),
+      formType: z.enum(['representative_election_form', 'organizer_election_form']),
+      fileUrl: z.string().url(),
+      fileName: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { data, error } = await ctx.supabase.from('election_forms').insert({
+        user_id: ctx.user.id,
+        building_id: input.buildingId,
+        form_type: input.formType,
+        file_url: input.fileUrl,
+        file_name: input.fileName,
+      }).select().single()
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return data
+    }),
+
+  getElectionForms: protectedProcedure
+    .input(z.object({ buildingId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data } = await ctx.supabase
+        .from('election_forms')
+        .select('*, user:profiles(full_name)')
+        .eq('building_id', input.buildingId)
+        .order('created_at', { ascending: false })
+      return data ?? []
+    }),
+
+  getElectionStatus: protectedProcedure
+    .input(z.object({ buildingId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data: rep } = await ctx.supabase
+        .from('building_representatives')
+        .select('*, user:profiles(full_name)')
+        .eq('building_id', input.buildingId)
+        .eq('is_active', true)
+        .maybeSingle()
+      const { data: myForm } = await ctx.supabase
+        .from('election_forms')
+        .select('id, file_url, created_at')
+        .eq('building_id', input.buildingId)
+        .eq('user_id', ctx.user.id)
+        .eq('form_type', 'representative_election_form')
+        .maybeSingle()
+      const { count } = await ctx.supabase
+        .from('election_forms')
+        .select('*', { count: 'exact', head: true })
+        .eq('building_id', input.buildingId)
+        .eq('form_type', 'representative_election_form')
+      return {
+        representative: rep ? { name: (rep.user as any)?.full_name, userId: rep.user_id } : null,
+        myFormUploaded: !!myForm,
+        totalFormsUploaded: count ?? 0,
+      }
     }),
 })
 

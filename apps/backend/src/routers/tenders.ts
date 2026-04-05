@@ -100,6 +100,28 @@ export const tendersRouter = router({
         })
         .select().single()
 
+      // Notify building tenants if organizer tender was awarded
+      if (tender.tender_type === 'organizer') {
+        const { data: winnerProfile } = await ctx.supabase.from('profiles').select('full_name').eq('id', input.winnerId).single()
+        const winnerName = (winnerProfile as any)?.full_name ?? 'המארגן שנבחר'
+        // Get all tenants in the project
+        const { data: projectTenants } = await ctx.supabase
+          .from('project_tenants')
+          .select('tenant_id')
+          .eq('project_id', tender.project_id)
+        if (projectTenants && projectTenants.length > 0) {
+          await ctx.supabase.from('notifications').insert(
+            projectTenants.map((t: any) => ({
+              user_id: t.tenant_id,
+              type: 'organizer_selected',
+              title: '🎉 נבחר מארגן/מנהלת!',
+              body: `${winnerName} נבחר/ה כמארגן/ת הפרויקט. נשאר רק לחתום על טופס בחירת מארגן/מנהלת ולהעלות אותו חתום.`,
+              is_read: false,
+            }))
+          )
+        }
+      }
+
       return { tender, assignment }
     }),
 
@@ -358,6 +380,155 @@ export const tendersRouter = router({
         .select('*, provider:profiles!contract_assignments_provider_id_fkey(id,full_name), tender:tenders!contract_assignments_tender_id_fkey(id,title,tender_type)')
         .eq('project_id', input.projectId)
         .order('created_at', { ascending: false })
+      return data ?? []
+    }),
+
+  // ===== C5: Match Proposals (שליחת הצעת match) =====
+
+  sendMatchProposal: protectedProcedure
+    .input(z.object({
+      tenderId: z.string().uuid(),
+      targetUserId: z.string().uuid(),
+      message: z.string().min(3),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { data, error } = await ctx.supabase
+        .from('match_proposals')
+        .insert({
+          tender_id: input.tenderId,
+          sender_id: ctx.user.id,
+          target_id: input.targetUserId,
+          message: input.message,
+          status: 'pending',
+        })
+        .select().single()
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      const { data: senderProfile } = await ctx.supabase.from('profiles').select('full_name').eq('id', ctx.user.id).single()
+      await ctx.supabase.from('notifications').insert({
+        user_id: input.targetUserId,
+        type: 'match_proposal',
+        title: '🤝 הצעת התאמה חדשה!',
+        body: `${(senderProfile as any)?.full_name ?? 'משתמש'} שלח/ה לך הצעת התאמה למכרז`,
+        is_read: false,
+      })
+      return data
+    }),
+
+  respondToMatch: protectedProcedure
+    .input(z.object({
+      matchId: z.string().uuid(),
+      accepted: z.boolean(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { data, error } = await ctx.supabase
+        .from('match_proposals')
+        .update({ status: input.accepted ? 'accepted' : 'rejected' })
+        .eq('id', input.matchId)
+        .eq('target_id', ctx.user.id)
+        .select().single()
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      if (!data) throw new TRPCError({ code: 'NOT_FOUND', message: 'הצעה לא נמצאה' })
+      if (input.accepted) {
+        const { data: existing } = await ctx.supabase
+          .from('conversations')
+          .select('id')
+          .or(`and(participant_a.eq.${data.sender_id},participant_b.eq.${ctx.user.id}),and(participant_a.eq.${ctx.user.id},participant_b.eq.${data.sender_id})`)
+          .maybeSingle()
+        if (!existing) {
+          await ctx.supabase.from('conversations').insert({
+            participant_a: data.sender_id,
+            participant_b: ctx.user.id,
+            last_message: '🤝 התאמה אושרה! אפשר להתחיל לדבר',
+            last_message_at: new Date().toISOString(),
+          })
+        }
+        await ctx.supabase.from('notifications').insert({
+          user_id: data.sender_id,
+          type: 'match_accepted',
+          title: '✅ ההצעה התקבלה!',
+          body: 'הצעת ההתאמה שלך אושרה. אפשר להתחיל צ׳אט.',
+          is_read: false,
+        })
+      }
+      return data
+    }),
+
+  getMatchProposals: protectedProcedure
+    .input(z.object({ tenderId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data } = await ctx.supabase
+        .from('match_proposals')
+        .select('*, sender:profiles!match_proposals_sender_id_fkey(id,full_name), target:profiles!match_proposals_target_id_fkey(id,full_name)')
+        .eq('tender_id', input.tenderId)
+        .or(`sender_id.eq.${ctx.user.id},target_id.eq.${ctx.user.id}`)
+        .order('created_at', { ascending: false })
+      return data ?? []
+    }),
+
+  // ===== C6: Meeting Scheduling (דיווח פגישה) =====
+
+  reportMeeting: protectedProcedure
+    .input(z.object({
+      tenderId: z.string().uuid(),
+      counterpartId: z.string().uuid(),
+      scheduledAt: z.string(),
+      location: z.string().optional(),
+      notes: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { data, error } = await ctx.supabase
+        .from('tender_meetings')
+        .insert({
+          tender_id: input.tenderId,
+          reporter_id: ctx.user.id,
+          counterpart_id: input.counterpartId,
+          scheduled_at: input.scheduledAt,
+          location: input.location ?? null,
+          notes: input.notes ?? null,
+          reporter_confirmed: true,
+          counterpart_confirmed: false,
+        })
+        .select().single()
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      const { data: reporter } = await ctx.supabase.from('profiles').select('full_name').eq('id', ctx.user.id).single()
+      await ctx.supabase.from('notifications').insert({
+        user_id: input.counterpartId,
+        type: 'meeting_scheduled',
+        title: '📅 פגישה נקבעה!',
+        body: `${(reporter as any)?.full_name ?? 'משתמש'} דיווח/ה על פגישה ב-${new Date(input.scheduledAt).toLocaleDateString('he-IL')}`,
+        is_read: false,
+      })
+      return data
+    }),
+
+  confirmMeeting: protectedProcedure
+    .input(z.object({ meetingId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { data: meeting } = await ctx.supabase
+        .from('tender_meetings').select('*').eq('id', input.meetingId).single()
+      if (!meeting) throw new TRPCError({ code: 'NOT_FOUND' })
+      const isReporter = (meeting as any).reporter_id === ctx.user.id
+      const isCounterpart = (meeting as any).counterpart_id === ctx.user.id
+      if (!isReporter && !isCounterpart) throw new TRPCError({ code: 'FORBIDDEN' })
+      const updateField = isReporter ? { reporter_confirmed: true } : { counterpart_confirmed: true }
+      const { data, error } = await ctx.supabase
+        .from('tender_meetings').update(updateField).eq('id', input.meetingId).select().single()
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      const d = data as any
+      if (d.reporter_confirmed && d.counterpart_confirmed) {
+        await ctx.supabase.from('tender_meetings').update({ status: 'confirmed' }).eq('id', input.meetingId)
+      }
+      return data
+    }),
+
+  getTenderMeetings: protectedProcedure
+    .input(z.object({ tenderId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data } = await ctx.supabase
+        .from('tender_meetings')
+        .select('*, reporter:profiles!tender_meetings_reporter_id_fkey(full_name), counterpart:profiles!tender_meetings_counterpart_id_fkey(full_name)')
+        .eq('tender_id', input.tenderId)
+        .order('scheduled_at', { ascending: true })
       return data ?? []
     }),
 })

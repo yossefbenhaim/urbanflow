@@ -38,6 +38,15 @@ const APARTMENT_EXTRAS_OPTIONS = [
   { key: 'other', label: '✏️ אחר' },
 ]
 
+const OWNERSHIP_DOC_TYPES = [
+  { key: 'tabu_extract', label: '📜 נסח טאבו', desc: 'נסח רשם המקרקעין' },
+  { key: 'purchase_contract', label: '📝 חוזה רכישה / מכר', desc: 'חוזה קניית הדירה' },
+  { key: 'ownership_certificate', label: '🏛️ אישור בעלות', desc: 'אישור מרשם המקרקעין' },
+  { key: 'inheritance_docs', label: '📋 מסמכי ירושה', desc: 'צו ירושה או צוואה' },
+  { key: 'power_of_attorney_doc', label: '⚖️ מסמכי ייפוי כוח', desc: 'ייפוי כוח נוטריוני' },
+  { key: 'other', label: '📎 מסמך אחר', desc: 'כל מסמך רלוונטי לנכס' },
+]
+
 type FormData = {
   idNumber: string
   phone: string
@@ -154,6 +163,8 @@ export default function TenantOnboarding() {
   const [tabuFile, setTabuFile] = useState<File | null>(null)
   const [tabuUploading, setTabuUploading] = useState(false)
   const [tabuUrl, setTabuUrl] = useState<string | null>(null)
+  const [ownershipDocs, setOwnershipDocs] = useState<Array<{ file: File; type: string; name: string }>>([])
+
 
   const uploadTabu = trpc.tenant.uploadTabu.useMutation()
 
@@ -308,45 +319,107 @@ export default function TenantOnboarding() {
             </div>
           )}
 
-          {/* ─── Step 4 - Tabu Upload ─── */}
+          {/* ─── Step 4 - Ownership Documents ─── */}
           {step === 4 && (
             <div className="flex flex-col gap-5">
               <div>
-                <h2 className="text-[17px] font-bold text-[#212121] mb-1">📄 העלאת נסח טאבו</h2>
+                <h2 className="text-[17px] font-bold text-[#212121] mb-1">📄 העלאת מסמכי בעלות</h2>
                 <p className="text-[13px] text-[#5a5a6e] mb-4">
-                  נסח טאבו מעיד על בעלות הדירה. ניתן לדלג — אך מומלץ להעלות לצורך אימות מהיר.
+                  מסמכים המעידים על בעלות בנכס. ניתן להעלות נסח טאבו, חוזה רכישה, ומסמכים נוספים.
                 </p>
               </div>
 
-              <div
-                onDrop={handleTabuDrop}
-                onDragOver={e => e.preventDefault()}
-                className="border-2 border-dashed border-[#eeeeee] rounded-xl p-8 text-center cursor-pointer hover:border-[#3b6b9c] hover:bg-[#ebf1f7]/30 transition-colors"
-                onClick={() => document.getElementById('tabu-input')?.click()}
-              >
-                <input id="tabu-input" type="file" accept="application/pdf" onChange={handleTabuSelect} className="hidden" />
-                {tabuFile ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <span className="text-3xl">✅</span>
-                    <p className="text-sm font-semibold text-[#212121]">{tabuFile.name}</p>
-                    <p className="text-xs text-[#5a5a6e]">{(tabuFile.size / 1024).toFixed(0)} KB</p>
-                    <button
-                      onClick={e => { e.stopPropagation(); setTabuFile(null); setTabuUrl(null) }}
-                      className="text-xs text-red-500 underline bg-transparent border-none cursor-pointer mt-1"
-                    >הסר קובץ</button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-2">
-                    <span className="text-4xl">📄</span>
-                    <p className="text-sm font-semibold text-[#212121]">גרור קובץ PDF לכאן</p>
-                    <p className="text-xs text-[#5a5a6e]">או לחץ לבחירת קובץ</p>
-                  </div>
-                )}
+              {/* Main Tabu Upload */}
+              <div>
+                <label className="block text-[13px] font-semibold text-[#212121] mb-2">📜 נסח טאבו (מומלץ)</label>
+                <div
+                  onDrop={handleTabuDrop}
+                  onDragOver={e => e.preventDefault()}
+                  className="border-2 border-dashed border-[#eeeeee] rounded-xl p-6 text-center cursor-pointer hover:border-[#3b6b9c] hover:bg-[#ebf1f7]/30 transition-colors"
+                  onClick={() => document.getElementById('tabu-input')?.click()}
+                >
+                  <input id="tabu-input" type="file" accept="application/pdf" onChange={handleTabuSelect} className="hidden" />
+                  {tabuFile ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="text-3xl">✅</span>
+                      <p className="text-sm font-semibold text-[#212121]">{tabuFile.name}</p>
+                      <p className="text-xs text-[#5a5a6e]">{(tabuFile.size / 1024).toFixed(0)} KB</p>
+                      <button
+                        onClick={e => { e.stopPropagation(); setTabuFile(null); setTabuUrl(null) }}
+                        className="text-xs text-red-500 underline bg-transparent border-none cursor-pointer mt-1"
+                      >הסר קובץ</button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="text-4xl">📄</span>
+                      <p className="text-sm font-semibold text-[#212121]">גרור קובץ PDF לכאן</p>
+                      <p className="text-xs text-[#5a5a6e]">או לחץ לבחירת קובץ</p>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* Additional Ownership Documents */}
+              <div>
+                <label className="block text-[13px] font-semibold text-[#212121] mb-2">📎 מסמכים נוספים לבעלות</label>
+                <p className="text-[11px] text-[#5a5a6e] mb-3">בחר סוג מסמך להעלאה:</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {OWNERSHIP_DOC_TYPES.filter(d => d.key !== 'tabu_extract').map(docType => (
+                    <button
+                      key={docType.key}
+                      type="button"
+                      onClick={() => {
+                        const input = document.createElement('input')
+                        input.type = 'file'
+                        input.accept = 'application/pdf,image/*'
+                        input.onchange = (e: any) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            setOwnershipDocs(prev => [...prev, { file, type: docType.key, name: docType.label }])
+                          }
+                        }
+                        input.click()
+                      }}
+                      className="p-2.5 rounded-xl border-2 border-[#eeeeee] bg-white text-[13px] text-right cursor-pointer transition-all hover:border-[#3b6b9c] hover:bg-[#ebf1f7]/30 flex flex-col gap-0.5"
+                    >
+                      <span className="font-semibold text-[#212121]">{docType.label}</span>
+                      <span className="text-[10px] text-[#5a5a6e]">{docType.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Uploaded Documents List */}
+              {ownershipDocs.length > 0 && (
+                <div>
+                  <label className="block text-[13px] font-semibold text-[#212121] mb-2">קבצים שהועלו:</label>
+                  <div className="flex flex-col gap-2">
+                    {ownershipDocs.map((doc, i) => (
+                      <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-[#f8f9fa] border border-[#eeeeee]">
+                        <span className="text-lg flex-shrink-0">✅</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-semibold text-[#212121] truncate">{doc.name}</p>
+                          <p className="text-[11px] text-[#5a5a6e]">{doc.file.name} · {(doc.file.size / 1024).toFixed(0)} KB</p>
+                        </div>
+                        <button
+                          onClick={() => setOwnershipDocs(prev => prev.filter((_, idx) => idx !== i))}
+                          className="text-red-500 text-sm font-bold bg-transparent border-none cursor-pointer px-2"
+                        >✕</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="bg-[#8b6f47]/10 border border-[#8b6f47]/30 rounded-xl p-3">
                 <p className="text-xs text-[#8b6f47] m-0">
-                  ⏰ <strong>שים לב:</strong> לאחר שעה מההעלאה, הקובץ ננעל ולא ניתן לשנות אותו
+                  ⏰ <strong>שים לב:</strong> לאחר שעה מההעלאה, נסח הטאבו ננעל ולא ניתן לשנות אותו
+                </p>
+              </div>
+
+              <div className="bg-[#3b6b9c]/10 border border-[#3b6b9c]/30 rounded-xl p-3">
+                <p className="text-xs text-[#3b6b9c] m-0">
+                  🔒 <strong>סודיות:</strong> מסמכים אלו מסומנים כסודיים — גישה לדייר, מלווה ונציגות מאושרת בלבד
                 </p>
               </div>
 

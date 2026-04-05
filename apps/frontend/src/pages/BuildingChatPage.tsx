@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import PageLayout from '../components/PageLayout'
 import BuildingLoader from '../components/BuildingLoader'
+import ElectionBanner from '../components/ElectionBanner'
 
 function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; currentUserId: string; onUnvoted?: (id: string) => void }) {
   const utils = trpc.useUtils()
@@ -225,6 +226,9 @@ export default function BuildingChatPage() {
   const { data: me } = trpc.auth.me.useQuery(undefined, { enabled: !!token })
   const currentUserId = (me as any)?.id ?? ''
 
+  const { data: myProfile } = trpc.tenant.getMyProfile.useQuery()
+  const buildingId = (myProfile as any)?.building_id ?? null
+
   const { data: messages, refetch } = trpc.tenant.getChatMessages.useQuery(
     { groupId: groupId! },
     { enabled: !!groupId, refetchInterval: 3000 }
@@ -294,6 +298,9 @@ export default function BuildingChatPage() {
       
       <div className="max-w-[720px] mx-auto w-full flex-1 flex flex-col px-4 min-h-0">
 
+        {/* Election Banner */}
+        {buildingId && <ElectionBanner buildingId={buildingId} />}
+
         {/* Header */}
         <div className="py-3.5 border-b border-[#eeeeee] flex items-center gap-3 flex-shrink-0">
           <button onClick={() => navigate('/dashboard')}
@@ -302,6 +309,9 @@ export default function BuildingChatPage() {
           </button>
           <h1 className="m-0 text-[17px] font-bold text-[#212121] flex-1">🏢 קבוצת הבניין</h1>
         </div>
+
+        {/* Election Banner */}
+        {buildingId && <ElectionBanner buildingId={buildingId} />}
 
         {/* Messages scroll area */}
         <div

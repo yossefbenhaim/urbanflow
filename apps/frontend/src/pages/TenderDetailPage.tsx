@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import PageLayout, { PageTitle } from '../components/PageLayout'
 import { useUser } from '../hooks/useUser'
+import ElectionBanner from '../components/ElectionBanner'
 
 const TYPE_LABELS: Record<string, string> = {
   lawyer: '⚖️ עורך דין',
@@ -576,6 +577,11 @@ export default function TenderDetailPage() {
               onAward={winnerId => award.mutate({ tenderId: tender.id, winnerId })}
             />
           </div>
+
+          {/* Organizer Election Banner */}
+          {tender.status === 'awarded' && tender.tender_type === 'organizer' && tender.project_id && (
+            <ElectionBanner buildingId={tender.project_id} formType="organizer" />
+          )}
 
           {/* C3: Negotiation Timeline */}
           <NegotiationTimeline tenderId={tender.id} isRep={!!isRep} />
