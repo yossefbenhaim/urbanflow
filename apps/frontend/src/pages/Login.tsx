@@ -34,7 +34,7 @@ export default function Login() {
   const handleGoogle = () => {
     const SUPABASE_URL = 'https://supabase.byclick.co.il'
     const ANON_KEY = 'eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJyb2xlIjogImFub24iLCAiaXNzIjogInN1cGFiYXNlIiwgImlhdCI6IDE3MDAwMDAwMDAsICJleHAiOiAyMDAwMDAwMDAwfQ.wTmOz3TCdhnx-swY9p2aHf6gvg9zgI0_TLTs8W28Ris'
-    const redirectTo = encodeURIComponent(`${window.location.origin}/auth/callback`)
+    const redirectTo = encodeURIComponent('https://urbanflow.byclick.co.il/dashboard')
     window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${redirectTo}&apikey=${ANON_KEY}`
   }
 

@@ -63,20 +63,11 @@ function OAuthCallback() {
       localStorage.setItem('sb-token', token)
       if (refresh) localStorage.setItem('sb-refresh-token', refresh)
       navigate('/oauth-role', { replace: true })
-    } else {
-      // No token found - redirect to login
-      navigate('/login', { replace: true })
     }
+    // No token in URL = regular navigation (email/password login), do nothing
   }, [navigate])
 
-  return (
-    <div dir="rtl" className="min-h-screen flex items-center justify-center bg-[#f8f9fa] font-heebo">
-      <div className="text-center">
-        <div className="animate-spin w-10 h-10 border-4 border-[#3b6b9c] border-t-transparent rounded-full mx-auto mb-4" />
-        <p className="text-[#5a5a6e] text-lg">מתחבר עם Google...</p>
-      </div>
-    </div>
-  )
+  return null
 }
 
 export default function App() {
