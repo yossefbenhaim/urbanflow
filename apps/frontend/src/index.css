@@ -79,4 +79,23 @@ body { background-color: #f8f9fa; }
   .sc-tab-inactive {
     @apply bg-[#f8f9fa] text-[#8e8e9e] rounded-[8px] px-4 py-2 text-[13px] font-normal;
   }
+
+  .sc-h1 {
+    @apply text-[32px] font-bold text-[#212121];
+  }
+  .sc-h2 {
+    @apply text-[24px] font-bold text-[#212121];
+  }
+  .sc-h3 {
+    @apply text-[18px] font-semibold text-[#212121];
+  }
+  .sc-body {
+    @apply text-[15px] font-normal text-[#212121];
+  }
+  .sc-caption {
+    @apply text-[13px] font-normal text-[#5a5a6e];
+  }
+  .sc-small {
+    @apply text-[11px] font-normal text-[#8e8e9e];
+  }
 }

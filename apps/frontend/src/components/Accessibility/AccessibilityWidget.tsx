@@ -101,6 +101,7 @@ export default function AccessibilityWidget() {
   }, [s])
 
   const toggle = (key: keyof A11yState) => setS(p => ({ ...p, [key]: !p[key] }))
+  const cycleFontSize = () => setS(p => ({ ...p, fontSize: (p.fontSize + 1) % 4 }))
 
   const reset = () => {
     setS({ ...DEFAULT })
@@ -110,10 +111,9 @@ export default function AccessibilityWidget() {
   }
 
   const Opt = ({ icon, label, k }: { icon: string; label: string; k: keyof A11yState }) => (
-    <button onClick={() => toggle(k)} className={`${styles.opt} ${s[k] ? styles.optOn : ''}`}>
-      <span>{icon}</span>
+    <button onClick={() => k === 'fontSize' ? cycleFontSize() : toggle(k)} className={`${styles.opt} ${k === 'fontSize' ? (s.fontSize > 0 ? styles.optOn : '') : (s[k] ? styles.optOn : '')}`}>
+      <span className={styles.optIcon}>{icon}</span>
       <span className={styles.optLabel}>{label}</span>
-      {s[k] && <span className={styles.check}>✓</span>}
     </button>
   )
 
@@ -121,50 +121,38 @@ export default function AccessibilityWidget() {
     <div className={styles.root} dir="rtl">
       {open && (
         <div className={styles.panel}>
+          {/* Header */}
           <div className={styles.header}>
-            <span>♿ נגישות</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {activeCount > 0 && <button onClick={reset} className={styles.reset}>איפוס</button>}
-              <button onClick={() => setOpen(false)} className={styles.closeBtn} aria-label="סגור">✕</button>
-            </div>
+            <span>⚙️ הגדרות נגישות</span>
+            <button onClick={() => setOpen(false)} className={styles.closeBtn} aria-label="סגור">✕</button>
           </div>
 
-          <div className={styles.sec}>
-            <div className={styles.secTitle}>גודל טקסט</div>
-            <div className={styles.fontRow}>
-              <button className={styles.fontBtn} onClick={() => setS(p => ({ ...p, fontSize: Math.max(0, p.fontSize - 1) }))}>A−</button>
-              <span className={styles.fontVal}>{['רגיל','+קטן','+בינוני','+גדול'][s.fontSize]}</span>
-              <button className={styles.fontBtn} onClick={() => setS(p => ({ ...p, fontSize: Math.min(3, p.fontSize + 1) }))}>A+</button>
-            </div>
-          </div>
-
-          <div className={styles.sec}>
-            <div className={styles.secTitle}>תצוגה</div>
+          {/* Body — 4x3 grid */}
+          <div className={styles.body}>
             <div className={styles.grid}>
-              <Opt icon="🌑" label="ניגודיות גבוהה" k="highContrast" />
-              <Opt icon="🔄" label="היפוך צבעים" k="invertColors" />
-              <Opt icon="⬛" label="גוני אפור" k="grayscale" />
-              <Opt icon="🔆" label="רוויה גבוהה" k="saturation" />
+              {/* Row 1 */}
+              <Opt icon="Aa+" label="גודל גופן" k="fontSize" />
+              <Opt icon="◐" label="ניגודיות" k="highContrast" />
+              <Opt icon="↩" label="הפוך צבעים" k="invertColors" />
+              {/* Row 2 */}
+              <Opt icon="◼" label="גווני אפור" k="grayscale" />
+              <Opt icon="🎨" label="רוויה" k="saturation" />
+              <Opt icon="__" label="קו לקישורים" k="underlineLinks" />
+              {/* Row 3 */}
+              <Opt icon="↔" label="ריווח טקסט" k="textSpacing" />
+              <Opt icon="↕" label="גובה שורה" k="lineHeight" />
+              <Opt icon="Dx" label="דיסלקציה" k="dyslexiaFont" />
+              {/* Row 4 */}
+              <Opt icon="⊕" label="סמן גדול" k="bigCursor" />
+              <Opt icon="◎" label="הדגשת מיקוד" k="focusHighlight" />
+              <Opt icon="⏸" label="עצור אנימציות" k="pauseAnimations" />
             </div>
           </div>
 
-          <div className={styles.sec}>
-            <div className={styles.secTitle}>קריאה</div>
-            <div className={styles.grid}>
-              <Opt icon="🔗" label="קו תחת קישורים" k="underlineLinks" />
-              <Opt icon="📏" label="ריווח טקסט" k="textSpacing" />
-              <Opt icon="↕️" label="גובה שורה" k="lineHeight" />
-              <Opt icon="🔡" label="פונט דיסלקציה" k="dyslexiaFont" />
-            </div>
-          </div>
-
-          <div className={styles.sec}>
-            <div className={styles.secTitle}>ניווט</div>
-            <div className={styles.grid}>
-              <Opt icon="🖱️" label="סמן גדול" k="bigCursor" />
-              <Opt icon="🎯" label="הדגשת פוקוס" k="focusHighlight" />
-              <Opt icon="⏸️" label="עצור אנימציות" k="pauseAnimations" />
-            </div>
+          {/* Footer */}
+          <div className={styles.footer}>
+            <button onClick={reset} className={styles.reset}>איפוס הגדרות</button>
+            <span className={styles.counter}>{activeCount}/12</span>
           </div>
         </div>
       )}
@@ -177,8 +165,12 @@ export default function AccessibilityWidget() {
           </div>
         )}
         <button onClick={() => setOpen(o => !o)} className={styles.fab} aria-label="תפריט נגישות">
-          <span style={{ fontSize: '26px', lineHeight: 1 }}>♿</span>
-        {activeCount > 0 && <span className={styles.badge}>{activeCount}</span>}
+          {/* Accessibility person icon */}
+          <svg className={styles.fabIcon} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="4" r="2" />
+            <path d="M13 7h-2c-2.76 0-5 2.24-5 5v2h2v-2c0-1.1.45-2.09 1.17-2.83L9 22h2.5l1.5-6 1.5 6H17l-.17-12.83A4.982 4.982 0 0 1 18 12v2h2v-2c0-2.76-2.24-5-5-5z" />
+          </svg>
+          {activeCount > 0 && <span className={styles.badge}>{activeCount}</span>}
         </button>
       </div>
     </div>

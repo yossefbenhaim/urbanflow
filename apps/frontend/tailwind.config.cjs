@@ -4,7 +4,7 @@ module.exports = {
     extend: {
       colors: {
         'sc-primary': '#3b6b9c',
-        'sc-primary-light': '#5a8ab8',
+        'sc-primary-light': '#5A8DB8',
         'sc-gold': '#8b6f47',
         'sc-gold-dark': '#8b6f47',
         'sc-navy': '#1e3a5f',
@@ -20,6 +20,8 @@ module.exports = {
         'sc-success-bg': '#edf5ef',
         'sc-error': '#B94A48',
         'sc-warning': '#c4841d',
+        'sc-brown-light': '#A6895F',
+        'sc-gray': '#757575',
         'sc-warning-bg': '#fcf4e7',
       },
       fontFamily: { heebo: ['Heebo', 'sans-serif'] },

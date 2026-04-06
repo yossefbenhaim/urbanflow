@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import { TRPCClientError } from '@trpc/client'
@@ -33,13 +33,17 @@ export async function tryRefreshToken(): Promise<boolean> {
   const refreshToken = getRefreshToken()
   if (!refreshToken) return false
   try {
+    // tRPC v11 httpBatchLink: POST to the procedure path, body is batch-indexed
     const res = await fetch('/api/trpc/auth.refreshToken', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ json: { refreshToken } }),
+      body: JSON.stringify({ "0": { json: { refreshToken } } }),
     })
     const data = await res.json()
-    const result = data?.result?.data?.json
+    // tRPC v11 batch response: array of results
+    const result = Array.isArray(data)
+      ? data[0]?.result?.data?.json
+      : data?.result?.data?.json
     if (result?.accessToken) {
       saveTokens(result.accessToken, result.refreshToken)
       return true
@@ -53,7 +57,6 @@ export async function tryRefreshToken(): Promise<boolean> {
 export function useUser() {
   const navigate = useNavigate()
   const token = getToken()
-  const refreshingRef = useRef(false)
 
   const { data: profile, isLoading, isError, error } = trpc.auth.me.useQuery(undefined, {
     enabled: !!token,
@@ -69,22 +72,16 @@ export function useUser() {
   })
 
   useEffect(() => {
-    if (!isError || refreshingRef.current) return
-    
+    if (!isError) return
+
     // Only log out for UNAUTHORIZED errors, not network errors
     const isAuthError = error instanceof TRPCClientError && error.data?.code === 'UNAUTHORIZED'
     if (!isAuthError) return // ignore network errors — stay logged in
 
-    refreshingRef.current = true
-    tryRefreshToken().then(success => {
-      refreshingRef.current = false
-      if (success) {
-        window.location.reload()
-      } else {
-        clearTokens()
-        navigate('/')
-      }
-    })
+    // If we get here, the link-level retry already failed to refresh.
+    // Clear tokens and redirect to login.
+    clearTokens()
+    navigate('/')
   }, [isError, error, navigate])
 
   // Proactive refresh every 50 min

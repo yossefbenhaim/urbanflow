@@ -33,46 +33,44 @@ const roles = [
 export default function Register() {
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center p-4 font-heebo" dir="rtl">
-      <div className="w-full max-w-[500px]">
+      <div className="w-full max-w-[480px]">
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-10 h-10 bg-[#1e3a5f] rounded-[9px] flex items-center justify-center text-white font-extrabold text-sm">SC</div>
-            <span className="text-xl font-bold text-[#212121] tracking-tight">
-              Silver <span className="text-[#8b6f47]">Castle</span>
-            </span>
+            <div className="w-9 h-9 bg-[#ebf1f7] rounded-[9px] flex items-center justify-center text-[#1e3a5f] font-bold text-sm">SC</div>
+            <span className="text-[16px] font-bold text-[#212121] tracking-tight">Silver Castle</span>
           </div>
-          <h1 className="text-[26px] font-extrabold text-[#212121]">הצטרפו ל-Silver Castle</h1>
-          <p className="text-[#8e8e9e] text-sm mt-1">בחרו את סוג החשבון</p>
+          <h1 className="text-[24px] font-extrabold text-[#212121]">הצטרפו ל-Silver Castle</h1>
+          <p className="text-[#8e8e9e] text-[14px] mt-1">בחרו את סוג החשבון</p>
         </div>
 
         {/* Role Cards */}
         <div className="space-y-3">
           {roles.map((role) => (
-            <Link
-              key={role.key}
-              to={role.href}
-              className="bg-white rounded-[14px] shadow-card border border-[#eeeeee] flex items-center gap-4 p-5 hover:shadow-lg transition-all duration-200 cursor-pointer no-underline"
-            >
-              {/* Icon circle */}
-              <div className={`w-12 h-12 ${role.iconBg} rounded-[12px] flex items-center justify-center text-xl flex-shrink-0`}>
-                {role.icon}
-              </div>
-              {/* Text */}
-              <div className="flex-1 text-right">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-[#212121] text-base">{role.title}</span>
-                  {role.badgeText && (
-                    <span className="bg-[#8b6f47] text-white text-[10px] rounded-full px-2.5 py-0.5 font-semibold">
-                      {role.badgeText}
-                    </span>
-                  )}
+            <div key={role.key} className="relative">
+              {/* Popular badge positioned above the card */}
+              {role.badgeText && (
+                <span className="absolute -top-2.5 left-4 z-10 bg-[#8b6f47] text-white text-[10px] rounded-full px-2.5 py-0.5 font-bold">
+                  {role.badgeText}
+                </span>
+              )}
+              <Link
+                to={role.href}
+                className="bg-white rounded-[14px] border-[1.5px] border-[#eeeeee] flex items-center gap-4 px-5 h-[76px] hover:shadow-md transition-all duration-200 cursor-pointer no-underline"
+              >
+                {/* Icon */}
+                <div className={`w-[50px] h-[50px] ${role.iconBg} rounded-[13px] flex items-center justify-center text-xl flex-shrink-0`}>
+                  {role.icon}
                 </div>
-                <p className="text-[#5a5a6e] text-[13px] mt-0.5">{role.subtitle}</p>
-              </div>
-              {/* Arrow */}
-              <span className="text-[#8e8e9e] text-xl flex-shrink-0">←</span>
-            </Link>
+                {/* Text */}
+                <div className="flex-1 text-right">
+                  <span className="font-bold text-[#212121] text-[16px]">{role.title}</span>
+                  <p className="text-[#8e8e9e] text-[12px] mt-0.5">{role.subtitle}</p>
+                </div>
+                {/* Arrow */}
+                <span className="text-[#8e8e9e] text-[16px] flex-shrink-0">←</span>
+              </Link>
+            </div>
           ))}
         </div>
 

@@ -71,7 +71,11 @@ function OAuthCallback() {
 }
 
 export default function App() {
-  const [showLoader, setShowLoader] = useState(true)
+  const [showLoader, setShowLoader] = useState(() => {
+    if (sessionStorage.getItem('uf-loaded')) return false
+    sessionStorage.setItem('uf-loaded', '1')
+    return true
+  })
 
   return (
     <>

@@ -19,12 +19,12 @@ export default function LoadingScreen({ onDone }: { onDone?: () => void }) {
   useEffect(() => {
     // Trigger entry animation
     requestAnimationFrame(() => setMounted(true))
-    // Auto-dismiss after 2.5s if onDone provided
+    // Auto-dismiss after 600ms if onDone provided
     if (onDone) {
       const t = setTimeout(() => {
         setFadeOut(true)
-        setTimeout(onDone, 400)
-      }, 2500)
+        setTimeout(onDone, 200)
+      }, 600)
       return () => clearTimeout(t)
     }
   }, [])
@@ -35,7 +35,7 @@ export default function LoadingScreen({ onDone }: { onDone?: () => void }) {
       background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       opacity: fadeOut ? 0 : 1,
-      transition: 'opacity 0.4s ease',
+      transition: 'opacity 0.2s ease',
     }}>
       <style>{`
         @keyframes riseBuilding {
@@ -71,8 +71,8 @@ export default function LoadingScreen({ onDone }: { onDone?: () => void }) {
               width: b.w, height: b.h,
               position: 'relative',
               transformOrigin: 'bottom',
-              animation: mounted ? `riseBuilding 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards` : 'none',
-              animationDelay: `${b.d + i * 0.05}s`,
+              animation: mounted ? `riseBuilding 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards` : 'none',
+              animationDelay: `${(b.d + i * 0.05) * 0.5}s`,
               opacity: 0,
             }}>
               <div style={{
@@ -103,8 +103,8 @@ export default function LoadingScreen({ onDone }: { onDone?: () => void }) {
       {/* Logo text */}
       <div style={{
         textAlign: 'center',
-        animation: mounted ? 'fadeInUp 0.5s ease forwards' : 'none',
-        animationDelay: '0.6s',
+        animation: mounted ? 'fadeInUp 0.25s ease forwards' : 'none',
+        animationDelay: '0.2s',
         opacity: 0,
       }}>
         <div style={{
@@ -133,8 +133,8 @@ export default function LoadingScreen({ onDone }: { onDone?: () => void }) {
       {/* Loading dots */}
       <div style={{
         display: 'flex', gap: 8, marginTop: 24,
-        animation: mounted ? 'fadeInUp 0.4s ease forwards' : 'none',
-        animationDelay: '0.9s',
+        animation: mounted ? 'fadeInUp 0.2s ease forwards' : 'none',
+        animationDelay: '0.3s',
         opacity: 0,
       }}>
         {[0, 1, 2].map(i => (
