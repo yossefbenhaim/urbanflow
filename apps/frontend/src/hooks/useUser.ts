@@ -32,13 +32,14 @@ export async function tryRefreshToken(): Promise<boolean> {
   const refreshToken = getRefreshToken()
   if (!refreshToken) return false
   try {
-    const res = await fetch('/api/trpc/auth.refreshToken', {
+    const res = await fetch('/api/trpc/auth.refreshToken?batch=1', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ json: { refreshToken } }),
+      body: JSON.stringify({ '0': { refreshToken } }),
     })
     const data = await res.json()
-    const result = data?.result?.data?.json
+    const item = Array.isArray(data) ? data[0] : data
+    const result = item?.result?.data
     if (result?.accessToken) {
       saveTokens(result.accessToken, result.refreshToken)
       return true
