@@ -658,12 +658,12 @@ export const tenantRouter = router({
 
   // ─── E3: Next Step ─────────────────────────────────────
   getDocumentContent: protectedProcedure
-    .input(z.object({ docId: z.string().uuid() }))
+    .input(z.object({ docId: z.string() }))
     .query(async ({ ctx, input }) => {
       const { data: doc, error } = await ctx.supabase
         .from('documents')
         .select('*, signatures(signed_at, signature_image, full_name, id_number, user_id)')
-        .eq('id', input.docId)
+        .eq('slug', input.docId)
         .single()
       if (error || !doc) throw new TRPCError({ code: 'NOT_FOUND', message: 'מסמך לא נמצא' })
       // Check if current user already signed
@@ -673,23 +673,32 @@ export const tenantRouter = router({
 
   signDocumentWithSignature: protectedProcedure
     .input(z.object({
-      docId: z.string().uuid(),
+      docId: z.string(),
       signatureImage: z.string(),
       fullName: z.string(),
       idNumber: z.string(),
     }))
     .mutation(async ({ ctx, input }) => {
+      // Resolve slug to UUID
+      const { data: doc } = await ctx.supabase
+        .from('documents')
+        .select('id')
+        .eq('slug', input.docId)
+        .single()
+      if (!doc) throw new TRPCError({ code: 'NOT_FOUND', message: 'מסמך לא נמצא' })
+      const documentId = (doc as any).id
+
       // Check not already signed
       const { data: existing } = await ctx.supabase
         .from('signatures')
         .select('id')
-        .eq('document_id', input.docId)
+        .eq('document_id', documentId)
         .eq('user_id', ctx.user.id)
         .maybeSingle()
       if (existing) throw new TRPCError({ code: 'BAD_REQUEST', message: 'כבר חתמת על מסמך זה' })
 
       const { error } = await ctx.supabase.from('signatures').insert({
-        document_id: input.docId,
+        document_id: documentId,
         user_id: ctx.user.id,
         verified_otp: true,
         signature_image: input.signatureImage,
