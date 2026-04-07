@@ -1,15 +1,29 @@
 import { useState } from 'react'
 import { Document, Page, Text, View, Image, StyleSheet, Font, pdf } from '@react-pdf/renderer'
 import type { AgreementTemplate } from '../data/agreementTemplates'
+import { normalizePlaceholderName } from '../utils/templateRenderer'
 
-// Register Hebrew-supporting font
+// PDF-specific template fill: replace unresolved placeholders with underline blanks
+const PLACEHOLDER_REGEX = /\{\{([\w\u0590-\u05FF]+)\}\}/g
+function fillTemplateForPDF(text: string, vars: Record<string, string>): string {
+  return text.replace(PLACEHOLDER_REGEX, (_match, rawName: string) => {
+    const key = normalizePlaceholderName(rawName)
+    return vars[key] || '_____________'
+  })
+}
+
+// Register Heebo TTF fonts — local files served from /public/fonts
+// These include Hebrew character support (react-pdf requires TTF, not WOFF)
 Font.register({
   family: 'Heebo',
   fonts: [
-    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/heebo@5.0.0/files/heebo-latin-400-normal.woff', fontWeight: 400 },
-    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/heebo@5.0.0/files/heebo-latin-700-normal.woff', fontWeight: 700 },
+    { src: '/fonts/Heebo-Regular.ttf', fontWeight: 400 },
+    { src: '/fonts/Heebo-Bold.ttf', fontWeight: 700 },
   ],
 })
+
+// Disable hyphenation — Hebrew words should never be hyphenated
+Font.registerHyphenationCallback((word) => [word])
 
 const styles = StyleSheet.create({
   page: { padding: 40, fontFamily: 'Heebo', fontSize: 11 },
@@ -27,37 +41,38 @@ const styles = StyleSheet.create({
 
 interface Props {
   template: AgreementTemplate | null
-  fullName: string
-  idNumber: string
-  address: string
-  date: string
+  variables: Record<string, string>
+  filledVariables?: Record<string, string>
   signatureImage?: string
   docTitle: string
 }
 
-function DocPDF({ template, fullName, idNumber, address, date, signatureImage, docTitle }: Props) {
+function DocPDF({ template, variables, filledVariables = {}, signatureImage, docTitle }: Props) {
+  // Merge variables: filledVariables (auto-filled + manually filled) take priority
+  const mergedVars = { ...variables, ...filledVariables }
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Silver Castle</Text>
-          <Text style={styles.headerSub}>{template?.title || docTitle} | {date}</Text>
+          <Text style={styles.headerSub}>{template?.title || docTitle} | {mergedVars.date || ''}</Text>
         </View>
 
         {template?.sections.map((section, i) => (
-          <View key={i} wrap={false}>
+          <View key={i}>
             <Text style={styles.sectionTitle}>{section.heading}</Text>
-            <Text style={styles.sectionContent}>{section.content}</Text>
+            <Text style={styles.sectionContent}>{fillTemplateForPDF(section.content, mergedVars)}</Text>
           </View>
         ))}
 
         <View style={styles.footer}>
           <View style={styles.footerRow}>
             <View>
-              <Text style={styles.footerText}>שם: {fullName}</Text>
-              <Text style={styles.footerText}>ת.ז.: {idNumber}</Text>
-              <Text style={styles.footerText}>כתובת: {address}</Text>
-              <Text style={styles.footerText}>תאריך: {date}</Text>
+              <Text style={styles.footerText}>שם: {mergedVars.fullName || ''}</Text>
+              <Text style={styles.footerText}>ת.ז.: {mergedVars.idNumber || ''}</Text>
+              <Text style={styles.footerText}>כתובת: {mergedVars.address || ''}</Text>
+              <Text style={styles.footerText}>תאריך: {mergedVars.date || ''}</Text>
               <Text style={styles.digitalBadge}>נחתם דיגיטלית באמצעות Silver Castle</Text>
             </View>
             {signatureImage && (

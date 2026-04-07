@@ -1,10 +1,12 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useRef, useState, useEffect, useCallback } from 'react'
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
 import PageLayout from '../components/PageLayout'
 import { trpc } from '../lib/trpc'
 import { useUser } from '../hooks/useUser'
 import { getAgreementTemplate } from '../data/agreementTemplates'
 import GenerateDocPDF from '../components/GenerateDocPDF'
+import TemplateRenderer from '../components/TemplateRenderer'
+import { buildVariablesFromProfile } from '../utils/templateRenderer'
 
 export default function DocumentViewPage() {
   const { docId } = useParams<{ docId: string }>()
@@ -17,6 +19,7 @@ export default function DocumentViewPage() {
   )
 
   const { data: tenantProfile } = trpc.tenant.getMyProfile.useQuery()
+  const { data: projectData } = trpc.tenant.getMyProject.useQuery()
 
   const signMutation = trpc.tenant.signDocumentWithSignature.useMutation({
     onSuccess: () => {
@@ -35,11 +38,25 @@ export default function DocumentViewPage() {
   const contentKey = (doc as any)?.content_key
   const template = contentKey ? getAgreementTemplate(contentKey) : null
 
-  // User info
-  const fullName = profile?.fullName || ''
-  const idNumber = profile?.idNumber || ''
-  const address = (tenantProfile as any)?.address || ''
-  const today = new Date().toLocaleDateString('he-IL')
+  // Build auto-filled variables from profile + tenant profile + project data
+  const profileData = useMemo(
+    () => buildVariablesFromProfile(profile as any, tenantProfile as any, projectData as any),
+    [profile, tenantProfile, projectData],
+  )
+
+  // State for manually filled template fields (only for missing data)
+  const [manualFields, setManualFields] = useState<Record<string, string>>({})
+
+  // Merged variables for PDF generation
+  const allVariables = useMemo(
+    () => ({ ...profileData, ...manualFields }),
+    [profileData, manualFields],
+  )
+
+  // Convenience aliases for signing flow
+  const fullName = allVariables.fullName
+  const idNumber = allVariables.idNumber
+  const today = allVariables.date
 
   // Is already signed
   const alreadySigned = !!(doc as any)?.mySig
@@ -110,6 +127,10 @@ export default function DocumentViewPage() {
     setSigned(true)
   }
 
+  const handleFieldChange = useCallback((field: string, value: string) => {
+    setManualFields(prev => ({ ...prev, [field]: value }))
+  }, [])
+
   if (isLoading) {
     return (
       <PageLayout>
@@ -151,26 +172,32 @@ export default function DocumentViewPage() {
             </div>
           </div>
 
-          {/* Auto fields */}
-          <div className="grid grid-cols-2 gap-3 bg-[#f8f9fa] rounded-xl p-3 text-sm">
-            <div><span className="text-[#5a5a6e]">שם הדייר:</span> <span className="font-medium text-[#212121]">{fullName || '—'}</span></div>
-            <div><span className="text-[#5a5a6e]">ת.ז.:</span> <span className="font-medium text-[#212121]">{idNumber || '—'}</span></div>
-            <div className="col-span-2"><span className="text-[#5a5a6e]">כתובת:</span> <span className="font-medium text-[#212121]">{address || '—'}</span></div>
-          </div>
+          {/* Auto-filled data is now rendered inline via TemplateRenderer */}
         </div>
 
         {/* Agreement sections */}
-        {template && (
+        {template ? (
           <div className="bg-white rounded-[14px] shadow-sm border border-[#eeeeee] overflow-hidden">
             <div className="p-5 space-y-5">
               {template.sections.map((section, i) => (
                 <div key={i}>
                   <h2 className="text-base font-bold text-[#1e3a5f] mb-2">{section.heading}</h2>
-                  <div className="text-sm text-[#333] leading-relaxed whitespace-pre-wrap">{section.content}</div>
+                  <div className="text-sm text-[#333] leading-relaxed">
+                    <TemplateRenderer
+                      content={section.content}
+                      profileData={profileData}
+                      manualFields={manualFields}
+                      onFieldChange={handleFieldChange}
+                    />
+                  </div>
                   {i < template.sections.length - 1 && <hr className="mt-4 border-[#eeeeee]" />}
                 </div>
               ))}
             </div>
+          </div>
+        ) : (
+          <div className="bg-[#fffbe6] rounded-[14px] p-4 border border-[#f5c518] text-sm text-[#5a5a6e]">
+            תוכן המסמך אינו זמין להצגה — ניתן עדיין לחתום.
           </div>
         )}
 
@@ -237,13 +264,10 @@ export default function DocumentViewPage() {
               נחתם על ידי {fullName} • ת.ז. {idNumber} • {today}
             </p>
 
-            {/* PDF download */}
+            {/* PDF download — passes merged auto+manual variables */}
             <GenerateDocPDF
               template={template}
-              fullName={fullName}
-              idNumber={idNumber}
-              address={address}
-              date={today}
+              variables={allVariables}
               signatureImage={(doc as any)?.mySig?.signature_image || canvasRef.current?.toDataURL('image/png')}
               docTitle={(doc as any).title}
             />

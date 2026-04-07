@@ -22,7 +22,10 @@ const STAGES: Stage[] = [
     docs: [
       { id: 'join_form', title: 'אישור הצטרפות לפרויקט', summary: 'טופס הצטרפות רשמי לפרויקט הפינוי-בינוי', type: 'SIGN_REQUIRED' },
       { id: 'tenant_survey', title: 'שאלון פרטי דייר', summary: 'מילוי פרטים אישיים ומידע על הדירה הקיימת', type: 'SIGN_REQUIRED' },
+      { id: 'tenant_declaration', title: 'הצהרת דייר', summary: 'הצהרה על זכויות, מצב הדירה ונתונים אישיים', type: 'SIGN_REQUIRED' },
+      { id: 'info_receipt', title: 'אישור קבלת מידע', summary: 'אישור שקיבלת וקראת את כל מסמכי הפרויקט', type: 'SIGN_REQUIRED' },
       { id: 'ownership_docs', title: 'מסמכי בעלות (נסח טאבו)', summary: 'העלאת נסח טאבו או אישור זכויות להוכחת בעלות', type: 'INFO_ONLY' },
+      { id: 'rights_verification', title: 'אישור בדיקת זכויות', summary: 'בדיקת זכויות רשומות בנכס ואימות בעלות', type: 'INFO_ONLY' },
     ],
   },
   {
@@ -43,6 +46,7 @@ const STAGES: Stage[] = [
     key: 'AGREEMENT', label: 'הסכם', icon: '📝',
     docs: [
       { id: 'agreement_principles', title: 'הסכם עקרונות', summary: 'הסכמה על עקרונות הפרויקט — שטחים, תמורות, לוח זמנים', type: 'SIGN_REQUIRED' },
+      { id: 'conditions_appendix', title: 'נספח תנאים', summary: 'תנאים מתלים, מפרט טכני ותנאים מיוחדים', type: 'SIGN_REQUIRED' },
     ],
   },
   {
