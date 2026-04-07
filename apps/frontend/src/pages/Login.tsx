@@ -83,8 +83,8 @@ export default function Login() {
             )}
 
             <button type="submit" disabled={signIn.isPending}
-              className="bg-[#3b6b9c] text-white rounded-[10px] h-[44px] w-[340px] text-[15px] font-semibold hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
-              style={{ boxShadow: '0 2px 8px rgba(59,107,156,0.2)' }}>
+              className="bg-[#4a8c5c] text-white rounded-[10px] h-[44px] w-[340px] text-[15px] font-semibold hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{ boxShadow: '0 2px 8px rgba(74,140,92,0.2)' }}>
               {signIn.isPending ? 'מתחבר...' : 'התחברות'}
             </button>
           </form>
