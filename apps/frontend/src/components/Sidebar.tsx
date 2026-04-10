@@ -88,7 +88,6 @@ function getSidebarItems(role: string, isRepresentative: boolean): NavItem[] {
         { to: '/dashboard', icon: '🏠', label: 'ראשי' },
         { to: '/apartment-wishes', icon: '🏗️', label: 'דירה חדשה' },
         { to: '/documents', icon: '📄', label: 'מסמכים' },
-        { to: '/my-documents', icon: '📁', label: 'המסמכים שלי' },
         { to: '/chat', icon: '💬', label: 'צ\'אט' },
         { to: '/directory', icon: '📋', label: 'ספריית מומחים' },
         { to: '/profile', icon: '👤', label: 'פרופיל' },
@@ -230,31 +229,7 @@ export default function Sidebar({ overrideItems }: { overrideItems?: NavItem[] }
         <SidebarContent />
       </div>
 
-      {/* Mobile bottom bar */}
-      <div className="sidebar-mobile fixed bottom-0 left-0 right-0 bg-white border-t border-[#eeeeee] py-2 px-1 pb-3 flex items-center justify-around z-[100] shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
-        {navItems.slice(0, 4).map(item => {
-          const active = isActive(item.to)
-          return (
-            <Link key={item.to + item.label} to={item.to} className="no-underline flex flex-col items-center gap-[3px] flex-1">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${active ? 'bg-[#ebf1f7]' : ''}`}>
-                <span className="text-[22px]">{item.icon}</span>
-              </div>
-              <span className={`text-[10px] ${active ? 'text-[#3b6b9c] font-semibold' : 'text-[#8e8e9e] font-normal'}`}>
-                {item.label.split(' ')[0]}
-              </span>
-            </Link>
-          )
-        })}
-        <div className="flex-1 flex flex-col items-center gap-[3px]">
-          <NotificationBell />
-          <span className="text-[10px] text-[#8e8e9e]">התראות</span>
-        </div>
-      </div>
-
       <style>{`
-        @media (min-width: 768px) {
-          .sidebar-mobile { display: none !important; }
-        }
         @media (max-width: 767px) {
           .sidebar-desktop { display: none !important; }
         }

@@ -1025,6 +1025,7 @@ export const tenantRouter = router({
       category: z.enum(['signed_forms', 'ownership', 'personal', 'correspondence', 'contracts', 'other']),
       description: z.string().optional(),
       storagePath: z.string(),
+      linkedDocId: z.string().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const { data: tp } = await ctx.supabase.from('tenant_profiles').select('building_id').eq('user_id', ctx.user.id).single()
@@ -1039,6 +1040,7 @@ export const tenantRouter = router({
         description: input.description ?? null,
         is_confidential: true,
         storage_path: input.storagePath,
+        linked_doc_id: input.linkedDocId ?? null,
       }).select().single()
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
       return data
@@ -1084,6 +1086,37 @@ export const tenantRouter = router({
       stats[d.category] = (stats[d.category] ?? 0) + 1
     }
     return { total: (data ?? []).length, byCategory: stats }
+  }),
+
+  // ─── Document Statuses (signed + uploaded) ────────────────
+  getDocumentStatuses: protectedProcedure.query(async ({ ctx }) => {
+    // Get all digitally signed docs by this user
+    const { data: sigs } = await ctx.supabase
+      .from('signatures')
+      .select('document_id, documents!inner(slug)')
+      .eq('user_id', ctx.user.id)
+    const signedSlugs = new Set(
+      ((sigs ?? []) as unknown as Array<{ document_id: string; documents: { slug: string } | Array<{ slug: string }> }>)
+        .map(s => {
+          const docs = s.documents
+          if (Array.isArray(docs)) return docs[0]?.slug
+          return docs?.slug
+        })
+        .filter(Boolean)
+    )
+
+    // Get all uploaded docs linked to specific doc IDs
+    const { data: uploads } = await ctx.supabase
+      .from('tenant_documents')
+      .select('linked_doc_id, file_url, file_name')
+      .eq('user_id', ctx.user.id)
+      .not('linked_doc_id', 'is', null)
+    const uploadedMap: Record<string, { file_url: string; file_name: string }> = {}
+    for (const u of (uploads ?? []) as Array<{ linked_doc_id: string; file_url: string; file_name: string }>) {
+      if (u.linked_doc_id) uploadedMap[u.linked_doc_id] = { file_url: u.file_url, file_name: u.file_name }
+    }
+
+    return { signedSlugs: Array.from(signedSlugs), uploadedMap }
   }),
 
 })

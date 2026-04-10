@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useUser, ROLE_LABELS, type UserProfile } from '../hooks/useUser'
 import { trpc } from '../lib/trpc'
+import { getSidebarItems, getCommitteeSidebarItems } from './Sidebar'
 
 // ── Notification Bell ─────────────────────────────────────────────────────────
 type Notification = { id: string; is_read: boolean; type?: string; title?: string; message?: string; created_at: string; action_url?: string }
@@ -94,18 +95,7 @@ function RightDrawer({ open, onClose, profile, isRepresentative, signOut }: {
     profile?.role === 'provider'  ? '/provider'  :
     profile?.role === 'manager'   ? '/manager'   : '/dashboard'
 
-  const navItems = [
-    { to: dashLink, icon: '🏠', label: 'דף הבית' },
-    { to: '/chat', icon: '💬', label: 'הודעות שלי' },
-    ...(profile?.role === 'tenant' && isRepresentative ? [
-      { to: '/committee-actions', icon: '🏛️', label: 'פעולות ועד' },
-      { to: '/directory', icon: '🔨', label: 'ספריית שירותים' },
-    ] : []),
-    ...(profile?.role === 'provider' ? [
-      { to: '/quotes', icon: '📋', label: 'הצעות מחיר' },
-    ] : []),
-    { to: '/profile', icon: '👤', label: 'הפרופיל שלי' },
-  ]
+  const navItems = getSidebarItems(profile?.role ?? '', isRepresentative)
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/')
 
