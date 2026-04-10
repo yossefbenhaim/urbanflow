@@ -794,4 +794,212 @@ export const tenantRouter = router({
     return { action: 'all_done', text: 'הפרויקט מתקדם, אין פעולות נדרשות ✅', link: '/dashboard', icon: '✅' }
   }),
 
+  // ─── DI2: Apartment Wishes ────────────────────────────────
+
+  getApartmentWishes: protectedProcedure.query(async ({ ctx }) => {
+    const { data } = await ctx.supabase
+      .from('apartment_wishes')
+      .select('*')
+      .eq('user_id', ctx.user.id)
+      .single()
+    return data ?? null
+  }),
+
+  saveApartmentWishes: protectedProcedure
+    .input(z.object({
+      fullName: z.string().optional(),
+      idNumber: z.string().optional(),
+      phone: z.string().optional(),
+      email: z.string().optional(),
+      apartmentNumber: z.string().optional(),
+      currentFloor: z.number().optional(),
+      currentType: z.enum(['regular', 'garden', 'penthouse', 'duplex', 'other']).optional(),
+      currentTypeOther: z.string().optional(),
+      currentFeatures: z.array(z.string()).optional(),
+      currentFeaturesOther: z.string().optional(),
+      tabuMatch: z.boolean().optional(),
+      tabuMismatchDetails: z.string().optional(),
+      floorPreference: z.enum(['same', 'up', 'down', 'any']).optional(),
+      floorChangeAmount: z.number().optional(),
+      sizePreference: z.enum(['same', 'bigger', 'smaller', 'any']).optional(),
+      roomsPreference: z.enum(['same', 'add', 'remove', 'any']).optional(),
+      airDirections: z.enum(['same', 'important', 'any']).optional(),
+      desiredType: z.enum(['regular', 'garden', 'penthouse', 'duplex', 'split_two', 'premium', 'any']).optional(),
+      standardAdditions: z.record(z.unknown()).optional(),
+      extraAdditions: z.array(z.string()).optional(),
+      extraAdditionsOther: z.string().optional(),
+      wantsInteriorChanges: z.boolean().optional(),
+      interiorChanges: z.array(z.string()).optional(),
+      interiorChangesOther: z.string().optional(),
+      ceilingHeight: z.enum(['standard', 'high']).optional(),
+      ceilingHeightMeters: z.number().optional(),
+      parkingCurrent: z.enum(['none', 'one', 'two']).optional(),
+      parkingDesired: z.enum(['none', 'one', 'two']).optional(),
+      balconyCurrent: z.enum(['none', 'regular', 'sukkah', 'large']).optional(),
+      balconyDesired: z.enum(['none', 'regular', 'sukkah', 'large']).optional(),
+      gardenRoofPreference: z.enum(['garden', 'roof', 'any']).optional(),
+      buildingPreferences: z.array(z.string()).optional(),
+      buildingPreferencesOther: z.string().optional(),
+      topPriorities: z.array(z.string()).max(3).optional(),
+      topPrioritiesOther: z.string().optional(),
+      status: z.enum(['draft', 'submitted']).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const row = {
+        user_id: ctx.user.id,
+        full_name: input.fullName ?? null,
+        id_number: input.idNumber ?? null,
+        phone: input.phone ?? null,
+        email: input.email ?? null,
+        apartment_number: input.apartmentNumber ?? null,
+        current_floor: input.currentFloor ?? null,
+        current_type: input.currentType ?? null,
+        current_type_other: input.currentTypeOther ?? null,
+        current_features: input.currentFeatures ?? [],
+        current_features_other: input.currentFeaturesOther ?? null,
+        tabu_match: input.tabuMatch ?? null,
+        tabu_mismatch_details: input.tabuMismatchDetails ?? null,
+        floor_preference: input.floorPreference ?? null,
+        floor_change_amount: input.floorChangeAmount ?? null,
+        size_preference: input.sizePreference ?? null,
+        rooms_preference: input.roomsPreference ?? null,
+        air_directions: input.airDirections ?? null,
+        desired_type: input.desiredType ?? null,
+        standard_additions: input.standardAdditions ?? {},
+        extra_additions: input.extraAdditions ?? [],
+        extra_additions_other: input.extraAdditionsOther ?? null,
+        wants_interior_changes: input.wantsInteriorChanges ?? false,
+        interior_changes: input.interiorChanges ?? [],
+        interior_changes_other: input.interiorChangesOther ?? null,
+        ceiling_height: input.ceilingHeight ?? null,
+        ceiling_height_meters: input.ceilingHeightMeters ?? null,
+        parking_current: input.parkingCurrent ?? null,
+        parking_desired: input.parkingDesired ?? null,
+        balcony_current: input.balconyCurrent ?? null,
+        balcony_desired: input.balconyDesired ?? null,
+        garden_roof_preference: input.gardenRoofPreference ?? null,
+        building_preferences: input.buildingPreferences ?? [],
+        building_preferences_other: input.buildingPreferencesOther ?? null,
+        top_priorities: input.topPriorities ?? [],
+        top_priorities_other: input.topPrioritiesOther ?? null,
+        status: input.status ?? 'draft',
+        updated_at: new Date().toISOString(),
+      }
+
+      const { error } = await ctx.supabase
+        .from('apartment_wishes')
+        .upsert(row, { onConflict: 'user_id' })
+
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return { success: true }
+    }),
+
+  analyzeApartmentWishes: protectedProcedure
+    .mutation(async ({ ctx }) => {
+      // Fetch the saved wishes
+      const { data: wishes } = await ctx.supabase
+        .from('apartment_wishes')
+        .select('*')
+        .eq('user_id', ctx.user.id)
+        .single()
+
+      if (!wishes) throw new TRPCError({ code: 'NOT_FOUND', message: 'לא נמצא טופס דירה חדשה' })
+
+      const apiKey = process.env.ANTHROPIC_API_KEY
+      if (!apiKey) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI service unavailable' })
+
+      const wishesData = wishes as Record<string, unknown>
+
+      const prompt = `אתה יועץ מומחה לפרויקטי פינוי-בינוי בישראל. נתונים של דייר שמילא טופס ציפיות לדירה חדשה:
+
+מצב נוכחי:
+- סוג דירה: ${wishesData.current_type || 'לא צוין'}
+- קומה: ${wishesData.current_floor || 'לא צוין'}
+- מאפיינים קיימים: ${(wishesData.current_features as string[] || []).join(', ') || 'לא צוין'}
+- התאמה לטאבו: ${wishesData.tabu_match === true ? 'כן' : wishesData.tabu_match === false ? 'לא - ' + (wishesData.tabu_mismatch_details || '') : 'לא צוין'}
+
+ציפיות לדירה חדשה:
+- קומה: ${wishesData.floor_preference || 'לא צוין'}${wishesData.floor_change_amount ? ' (' + wishesData.floor_change_amount + ' קומות)' : ''}
+- גודל: ${wishesData.size_preference || 'לא צוין'}
+- חדרים: ${wishesData.rooms_preference || 'לא צוין'}
+- כיווני אוויר: ${wishesData.air_directions || 'לא צוין'}
+- סוג דירה רצוי: ${wishesData.desired_type || 'לא צוין'}
+- תוספות: ${JSON.stringify(wishesData.standard_additions || {})}
+- תכנון פנימי: ${wishesData.wants_interior_changes ? (wishesData.interior_changes as string[] || []).join(', ') : 'ללא שינוי'}
+- חניה: נוכחי ${wishesData.parking_current || '?'} → רצוי ${wishesData.parking_desired || '?'}
+- מרפסות: נוכחי ${wishesData.balcony_current || '?'} → רצוי ${wishesData.balcony_desired || '?'}
+- העדפות בניין: ${(wishesData.building_preferences as string[] || []).join(', ') || 'לא צוין'}
+- עדיפויות: ${(wishesData.top_priorities as string[] || []).join(', ') || 'לא צוין'}
+
+כללי מערכת לפרויקט פינוי-בינוי:
+1. דירה חדשה חייבת לכלול ממ"ד (חדר מוגן) לפי חוק
+2. שטח דירה חדשה בפינוי-בינוי: לפחות 25 מ"ר + תוספת של לפחות 12 מ"ר על השטח המקורי
+3. כל דירה חדשה מקבלת מרפסת (לפחות 12 מ"ר)
+4. חניה אחת לפחות לכל דירה
+5. מחסן לכל דירה
+6. הדייר לא יכול לדרוש יותר ממה שמאפשר תב"ע (תוכנית בניין עיר)
+7. דייר מעל גיל 70 - זכויות מיוחדות
+8. פיצול או שדרוג דירות - תלוי בתב"ע ובהסכמת היזם
+
+תן ניתוח קצר בעברית (עד 300 מילים) שכולל:
+1. **סיכום ציפיות** - מה הדייר רוצה בקצרה
+2. **זכויות מובטחות** - מה מגיע לו לפי חוק/תב"ע
+3. **נקודות לבירור** - מה צריך לבדוק מול היזם/עו"ד
+4. **המלצות** - טיפים חשובים לדייר
+5. **ציון התאמה** - 1-10, כמה ריאלי מה שהדייר מבקש
+
+תענה בפורמט JSON:
+{
+  "summary": "...",
+  "guaranteedRights": ["..."],
+  "pointsToCheck": ["..."],
+  "recommendations": ["..."],
+  "matchScore": 8,
+  "matchExplanation": "..."
+}`
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1500,
+          messages: [{ role: 'user', content: prompt }],
+        }),
+      })
+
+      if (!response.ok) {
+        logger.error({ err: await response.text() }, 'AI analysis failed')
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'AI analysis failed' })
+      }
+
+      const aiResult = await response.json() as { content: Array<{ text: string }> }
+      const text = aiResult.content[0]?.text || '{}'
+
+      // Extract JSON from response
+      let analysis: Record<string, unknown>
+      try {
+        const jsonMatch = text.match(/\{[\s\S]*\}/)
+        analysis = jsonMatch ? JSON.parse(jsonMatch[0]) : { raw: text }
+      } catch {
+        analysis = { raw: text }
+      }
+
+      // Save analysis
+      await ctx.supabase
+        .from('apartment_wishes')
+        .update({
+          ai_analysis: analysis,
+          ai_analyzed_at: new Date().toISOString(),
+          status: 'analyzed',
+        })
+        .eq('user_id', ctx.user.id)
+
+      return analysis
+    }),
+
 })

@@ -36,6 +36,7 @@ import UnlocatedTenantForm from './pages/UnlocatedTenantForm'
 import OwnershipDisputeForm from './pages/OwnershipDisputeForm'
 import TenantReportForm from './pages/TenantReportForm'
 import ElderlyForm from './pages/ElderlyForm'
+import ApartmentWishesForm from './pages/ApartmentWishesForm'
 import TimelinePage from './pages/TimelinePage'
 import ValidationPage from './pages/ValidationPage'
 import LearningPage from './pages/LearningPage'
@@ -115,6 +116,7 @@ export default function App() {
         <Route path="/ownership-dispute" element={<OwnershipDisputeForm />} />
         <Route path="/tenant-report" element={<TenantReportForm />} />
         <Route path="/elderly-form" element={<ElderlyForm />} />
+        <Route path="/apartment-wishes" element={<ApartmentWishesForm />} />
         <Route path="/timeline" element={<TimelinePage />} />
         <Route path="/validation" element={<ValidationPage />} />
         <Route path="/learn" element={<LearningPage />} />
