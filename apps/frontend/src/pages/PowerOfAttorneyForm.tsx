@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import PageLayout, { PageTitle } from '../components/PageLayout'
 import { trpc } from '../lib/trpc'
 
@@ -6,7 +7,7 @@ const POA_TYPES = [
   { value: 'full', label: '📋 ייפוי כוח מלא', desc: 'כולל את כל ההחלטות והפעולות' },
   { value: 'partial', label: '📝 ייפוי כוח חלקי', desc: 'לפעולות מסוימות בלבד' },
   { value: 'voting_only', label: '🗳️ הצבעה בלבד', desc: 'מיופה הכוח מצביע במקום הבעלים' },
-]
+] as const
 
 const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
   pending: { label: '⏳ ממתין לאישור', cls: 'bg-[#8b6f47]/15 text-[#8b6f47]' },
@@ -29,7 +30,8 @@ export default function PowerOfAttorneyForm() {
 
   const { data: poas, refetch } = trpc.tenant.getMyPowerOfAttorneys.useQuery()
   const create = trpc.tenant.createPowerOfAttorney.useMutation({
-    onSuccess: () => { refetch(); setShowForm(false) },
+    onSuccess: () => { refetch(); setShowForm(false); toast.success('ייפוי הכוח נוצר בהצלחה') },
+    onError: () => { toast.error('שגיאה ביצירת ייפוי הכוח') },
   })
 
   return (
@@ -48,7 +50,7 @@ export default function PowerOfAttorneyForm() {
 
         {/* Existing POAs */}
         <div className="flex flex-col gap-3 mb-6">
-          {(poas ?? []).map((poa: any) => (
+          {(poas ?? []).map((poa: { id: string; poa_type: string; status: string; granter?: { full_name?: string }; receiver?: { full_name?: string }; valid_from?: string; valid_until?: string; notarized?: boolean; file_url?: string }) => (
             <div key={poa.id} className="sc-card p-5">
               <div className="flex items-start justify-between mb-3">
                 <div>
@@ -103,7 +105,7 @@ export default function PowerOfAttorneyForm() {
                 <div className="flex flex-col gap-2">
                   {POA_TYPES.map(t => (
                     <button key={t.value} type="button"
-                      onClick={() => setForm(f => ({ ...f, poaType: t.value as any }))}
+                      onClick={() => setForm(f => ({ ...f, poaType: t.value }))}
                       className={`p-3 rounded-xl border-2 text-right transition-all ${
                         form.poaType === t.value
                           ? 'border-[#3b6b9c] bg-[#ebf1f7]'

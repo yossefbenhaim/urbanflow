@@ -1,6 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
+import { toast } from 'sonner'
 import PageLayout from '../components/PageLayout'
+import { Skeleton } from '../components/Skeleton'
 import { trpc } from '../lib/trpc'
 import { useUser } from '../hooks/useUser'
 import { getAgreementTemplate } from '../data/agreementTemplates'
@@ -24,6 +26,10 @@ export default function DocumentViewPage() {
   const signMutation = trpc.tenant.signDocumentWithSignature.useMutation({
     onSuccess: () => {
       refetch()
+      toast.success('המסמך נחתם בהצלחה!')
+    },
+    onError: () => {
+      toast.error('שגיאה בחתימת המסמך, נסה שוב')
     },
   })
 
@@ -35,12 +41,12 @@ export default function DocumentViewPage() {
   const [signed, setSigned] = useState(false)
 
   // Get template content
-  const contentKey = (doc as any)?.content_key
+  const contentKey = (doc as { content_key?: string })?.content_key
   const template = contentKey ? getAgreementTemplate(contentKey) : null
 
   // Build auto-filled variables from profile + tenant profile + project data
   const profileData = useMemo(
-    () => buildVariablesFromProfile(profile as any, tenantProfile as any, projectData as any),
+    () => buildVariablesFromProfile(profile as Record<string, unknown> | null | undefined, tenantProfile as Record<string, unknown> | null | undefined, projectData as Record<string, unknown> | null | undefined),
     [profile, tenantProfile, projectData],
   )
 
@@ -59,7 +65,7 @@ export default function DocumentViewPage() {
   const today = allVariables.date
 
   // Is already signed
-  const alreadySigned = !!(doc as any)?.mySig
+  const alreadySigned = !!(doc as { mySig?: { signature_image?: string } })?.mySig
 
   useEffect(() => {
     if (alreadySigned) setSigned(true)
@@ -134,8 +140,24 @@ export default function DocumentViewPage() {
   if (isLoading) {
     return (
       <PageLayout>
-        <div className="flex justify-center items-center min-h-[60vh]">
-          <div className="animate-spin w-8 h-8 border-4 border-[#3b6b9c] border-t-transparent rounded-full" />
+        <div className="max-w-2xl mx-auto p-4 space-y-4">
+          <Skeleton className="h-4 w-24" />
+          <div className="sc-card p-5 space-y-3">
+            <div className="flex items-center gap-3">
+              <Skeleton className="w-10 h-10 rounded-full" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-3 w-1/3" />
+              </div>
+            </div>
+          </div>
+          <div className="sc-card p-5 space-y-4">
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-5/6" />
+            <Skeleton className="h-3 w-4/5" />
+            <Skeleton className="h-3 w-full" />
+          </div>
         </div>
       </PageLayout>
     )
@@ -167,7 +189,7 @@ export default function DocumentViewPage() {
               📄
             </div>
             <div>
-              <h1 className="text-xl font-bold text-[#1e3a5f]">{template?.title || (doc as any).title}</h1>
+              <h1 className="text-xl font-bold text-[#1e3a5f]">{template?.title || (doc as { title?: string }).title}</h1>
               <p className="text-xs text-[#5a5a6e]">תאריך: {today}</p>
             </div>
           </div>
@@ -268,8 +290,8 @@ export default function DocumentViewPage() {
             <GenerateDocPDF
               template={template}
               variables={allVariables}
-              signatureImage={(doc as any)?.mySig?.signature_image || canvasRef.current?.toDataURL('image/png')}
-              docTitle={(doc as any).title}
+              signatureImage={(doc as { mySig?: { signature_image?: string } })?.mySig?.signature_image || canvasRef.current?.toDataURL('image/png')}
+              docTitle={(doc as { title?: string }).title ?? ''}
             />
           </div>
         )}

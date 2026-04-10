@@ -75,7 +75,7 @@ export default function Directory() {
     onSuccess: ({ conversationId }: { conversationId: string }) => navigate(`/chat/${conversationId}`)
   })
 
-  if (!roleLoading && !(myRole as any)?.isRepresentative) {
+  if (!roleLoading && !(myRole as { isRepresentative?: boolean })?.isRepresentative) {
     return (
       <PageLayout>
         <div className="flex-1 flex items-center justify-center p-6">
@@ -92,13 +92,13 @@ export default function Directory() {
 
   const meId = profile?.id
   const filtered = providers
-    .filter((p: any) => {
+    .filter((p: { role?: string }) => {
       if (filter === 'developer') return p.role === 'developer'
       if (filter === 'provider') return p.role === 'provider'
       return true
     })
-    .filter((p: any) => !search || p.full_name?.toLowerCase().includes(search.toLowerCase()))
-    .sort((a: any, b: any) => (a.role === 'developer' ? -1 : b.role === 'developer' ? 1 : 0))
+    .filter((p: { full_name?: string }) => !search || p.full_name?.toLowerCase().includes(search.toLowerCase()))
+    .sort((a: { role?: string }, b: { role?: string }) => (a.role === 'developer' ? -1 : b.role === 'developer' ? 1 : 0))
 
   const filterBtns: { key: FilterType; label: string }[] = [
     { key: 'all', label: 'הכל' },
@@ -135,7 +135,7 @@ export default function Directory() {
               {conversations.length === 0 ? (
                 <p className="text-[#5a5a6e] text-sm text-center py-6">אין שיחות עדיין</p>
               ) : (
-                conversations.map((conv: any) => {
+                conversations.map((conv: { id: string; participant_a?: string; pb?: { full_name?: string }; pa?: { full_name?: string }; last_message?: string }) => {
                   const other = conv.participant_a === meId ? conv.pb : conv.pa
                   return (
                     <button key={conv.id} onClick={() => navigate(`/chat/${conv.id}`)}
@@ -175,14 +175,14 @@ export default function Directory() {
 
         {/* ── Provider cards ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {filtered.map((p: any) => {
+          {filtered.map((p: { id: string; role?: string; full_name?: string; developer_profiles?: Record<string, unknown> | Record<string, unknown>[]; provider_profiles?: Record<string, unknown> | Record<string, unknown>[] }) => {
             const isDev = p.role === 'developer'
             const profile_data = isDev ? p.developer_profiles : p.provider_profiles
             const pd = Array.isArray(profile_data) ? profile_data[0] : profile_data
-            const bio = pd?.bio
-            const company = pd?.company
-            const regions = pd?.operating_regions
-            const serviceTypes = pd?.service_types
+            const bio = pd?.bio as string | undefined
+            const company = pd?.company as string | undefined
+            const regions = pd?.operating_regions as string[] | undefined
+            const serviceTypes = pd?.service_types as string[] | undefined
 
             return (
               <div key={p.id} className={`sc-card p-5 border-2 transition-shadow active:scale-[0.99] ${
@@ -230,7 +230,7 @@ export default function Directory() {
                     💬 הודעה
                   </button>
                   <button
-                    onClick={() => setQuoteModal({ id: p.id, name: p.full_name })}
+                    onClick={() => setQuoteModal({ id: p.id, name: p.full_name ?? '' })}
                     className="flex-1 flex items-center justify-center gap-1.5 bg-[#4a8c5c]/10 text-[#4a8c5c] rounded-xl py-2.5 text-sm font-medium hover:bg-[#4a8c5c]/20 active:scale-95 transition-all">
                     📋 הצעה
                   </button>

@@ -4,7 +4,11 @@ import { router, protectedProcedure, publicProcedure } from '../middleware/auth'
 const CITIES_RESOURCE = '5c78e9fa-c2e2-4771-93ff-7f400a12f7ba'
 const STREETS_RESOURCE = '9ad3862c-8391-4b2f-84a4-2d4c68625f4b'
 
-async function govFetch(resource: string, params: Record<string, string>, retries = 2): Promise<any[]> {
+interface GovRecord {
+  [key: string]: string | number | undefined
+}
+
+async function govFetch(resource: string, params: Record<string, string>, retries = 2): Promise<GovRecord[]> {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const url = new URL('https://data.gov.il/api/3/action/datastore_search')
@@ -17,7 +21,7 @@ async function govFetch(resource: string, params: Record<string, string>, retrie
       clearTimeout(timeout)
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const json = await res.json() as any
+      const json = await res.json() as { result?: { records?: GovRecord[] } }
       return json?.result?.records ?? []
     } catch (e) {
       if (attempt === retries) return []
@@ -38,8 +42,8 @@ export const addressRouter = router({
         fields: 'שם_ישוב,סמל_ישוב',
       })
       return records
-        .map((r: any) => ({ name: (r['שם_ישוב'] ?? '').trim(), code: r['סמל_ישוב'] }))
-        .filter((r: any) => r.name && r.name.includes(q))
+        .map((r: GovRecord) => ({ name: String(r['שם_ישוב'] ?? '').trim(), code: r['סמל_ישוב'] }))
+        .filter((r) => r.name && r.name.includes(q))
         .slice(0, 12)
     }),
 
@@ -55,7 +59,7 @@ export const addressRouter = router({
         fields: 'שם_ישוב,סמל_ישוב',
       })
       const city = cityRecords.find(
-        (r: any) => (r['שם_ישוב'] ?? '').trim() === input.cityName.trim()
+        (r: GovRecord) => String(r['שם_ישוב'] ?? '').trim() === input.cityName.trim()
       )
       if (!city) return []
 
@@ -68,8 +72,8 @@ export const addressRouter = router({
 
       const records = await govFetch(STREETS_RESOURCE, params)
       return records
-        .map((r: any) => ({ name: (r['שם_רחוב'] ?? '').trim(), code: r['סמל_רחוב'] }))
-        .filter((r: any) => r.name && (q === '' || r.name.includes(q)))
+        .map((r: GovRecord) => ({ name: String(r['שם_רחוב'] ?? '').trim(), code: r['סמל_רחוב'] }))
+        .filter((r) => r.name && (q === '' || r.name.includes(q)))
         .slice(0, 30)
     }),
 
@@ -83,7 +87,7 @@ export const addressRouter = router({
         const controller = new AbortController()
         setTimeout(() => controller.abort(), 6000)
         const res = await fetch(url, { signal: controller.signal })
-        const data = await res.json() as any
+        const data = await res.json() as { candidates?: { attributes?: { Addr_type?: string } }[] }
         const best = data?.candidates?.[0]
         if (!best) return { valid: null }
         const addrType: string = best.attributes?.Addr_type ?? ''

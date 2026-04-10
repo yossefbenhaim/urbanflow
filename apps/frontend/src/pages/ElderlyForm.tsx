@@ -34,20 +34,21 @@ export default function ElderlyForm() {
 
   useEffect(() => {
     if (existing) {
+      const e = existing as Record<string, unknown>
       setForm({
-        age: (existing as any).age?.toString() ?? '',
-        hasDisability: (existing as any).has_disability ?? false,
-        disabilityDescription: (existing as any).disability_description ?? '',
-        needsAccessibility: (existing as any).needs_accessibility ?? false,
-        needsLowFloor: (existing as any).needs_low_floor ?? false,
-        needsElevator: (existing as any).needs_elevator ?? false,
-        cannotRelocateFar: (existing as any).cannot_relocate_far ?? false,
-        preferredArea: (existing as any).preferred_area ?? '',
-        hasCompanion: (existing as any).has_companion ?? false,
-        companionName: (existing as any).companion_name ?? '',
-        companionPhone: (existing as any).companion_phone ?? '',
-        legalAlternatives: (existing as any).legal_alternatives ?? [],
-        notes: (existing as any).notes ?? '',
+        age: e.age != null ? String(e.age) : '',
+        hasDisability: (e.has_disability as boolean) ?? false,
+        disabilityDescription: (e.disability_description as string) ?? '',
+        needsAccessibility: (e.needs_accessibility as boolean) ?? false,
+        needsLowFloor: (e.needs_low_floor as boolean) ?? false,
+        needsElevator: (e.needs_elevator as boolean) ?? false,
+        cannotRelocateFar: (e.cannot_relocate_far as boolean) ?? false,
+        preferredArea: (e.preferred_area as string) ?? '',
+        hasCompanion: (e.has_companion as boolean) ?? false,
+        companionName: (e.companion_name as string) ?? '',
+        companionPhone: (e.companion_phone as string) ?? '',
+        legalAlternatives: (e.legal_alternatives as string[]) ?? [],
+        notes: (e.notes as string) ?? '',
       })
     }
   }, [existing])
@@ -171,7 +172,7 @@ export default function ElderlyForm() {
                   <label key={item.key} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-[#eeeeee] cursor-pointer hover:bg-[#f8f9fa] transition-colors">
                     <input
                       type="checkbox"
-                      checked={(form as any)[item.key]}
+                      checked={form[item.key as keyof typeof form] as boolean}
                       onChange={e => setForm(f => ({ ...f, [item.key]: e.target.checked }))}
                       className="w-5 h-5 rounded accent-sc-primary"
                     />

@@ -2,6 +2,39 @@ import { z } from 'zod'
 import { router, protectedProcedure } from '../middleware/auth'
 import { TRPCError } from '@trpc/server'
 
+// ── Supabase row types for committee operations ──────────
+interface UnitCount { count: number }
+interface GroupMember { user_id: string }
+interface TenantWithUnit { user_id: string; [key: string]: unknown }
+interface TenantProfileRow {
+  user_id: string
+  profile?: { id?: string; full_name?: string; email?: string; is_building_representative?: boolean } | { id?: string; full_name?: string; email?: string }[] | null
+  [key: string]: unknown
+}
+interface PollRow { id?: string; question?: string; group_id?: string; building_groups?: { building_id: string } | { building_id: string }[] | null }
+interface ApartmentOwner { user_id: string }
+interface ApartmentVoteRow {
+  internal_votes: Record<string, string> | null
+  vote_value?: string
+  decided_by?: string
+  finalized?: boolean
+  apartment_id?: string
+}
+interface UnitRow { id: string; floor?: number; unit_number?: string }
+interface DisputeRow { apartment_id: string }
+interface PoaRow { apartment_id: string; receiver_user_id?: string }
+interface ProjectRow { id: string; stage?: string; name?: string }
+interface StageRequirement {
+  id: string
+  requirement_type: string
+  requirement_value?: string
+  next_stage?: string
+  is_met?: boolean
+}
+interface BuildingRow { id: string; project_id?: string }
+interface BuildingGroupRow { id: string; building_id?: string }
+interface ElectionRepRow { user_id: string; user?: { full_name?: string } | null; is_active?: boolean }
+
 export const committeeRouter = router({
   getBuildingOverview: protectedProcedure.query(async ({ ctx }) => {
     const { data: buildings } = await ctx.supabase
@@ -31,13 +64,13 @@ export const committeeRouter = router({
     .input(z.object({ buildingId: z.string(), title: z.string(), body: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const { data: units } = await ctx.supabase.from('units').select('count').eq('building_id', input.buildingId)
-      const count = (units as any)?.[0]?.count ?? 0
+      const count = (units as UnitCount[] | null)?.[0]?.count ?? 0
       const { data, error } = await ctx.supabase.from('broadcast_messages').insert({
         building_id: input.buildingId, sender_id: ctx.user.id,
         title: input.title, body: input.body,
         recipient_count: count, channel: 'EMAIL'
       }).select().single()
-      if (error) throw error
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
       return data
     }),
 
@@ -49,7 +82,7 @@ export const committeeRouter = router({
         attendees: input.attendees, decisions: input.decisions,
         created_by: ctx.user.id
       }).select().single()
-      if (error) throw error
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
       return data
     }),
 
@@ -82,7 +115,7 @@ export const committeeRouter = router({
         threshold_pct: input.thresholdPct,
         status: 'open',
       }).select().single()
-      if (pollErr) throw pollErr
+      if (pollErr) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: pollErr.message })
 
       const { data: msg, error: msgErr } = await ctx.supabase.from('group_messages').insert({
         group_id: input.groupId,
@@ -91,7 +124,7 @@ export const committeeRouter = router({
         message_type: 'poll',
         poll_id: poll.id,
       }).select().single()
-      if (msgErr) throw msgErr
+      if (msgErr) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: msgErr.message })
 
       // Notify all group members
       const { data: members } = await ctx.supabase
@@ -105,7 +138,7 @@ export const committeeRouter = router({
           ? new Date(input.closeAt).toLocaleDateString('he-IL', { day: 'numeric', month: 'long' })
           : null
         await ctx.supabase.from('notifications').insert(
-          members.map((m: any) => ({
+          members.map((m: GroupMember) => ({
             user_id: m.user_id,
             type: 'poll',
             title: '📊 סקר חדש מהועד',
@@ -131,7 +164,7 @@ export const committeeRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { data: building } = await ctx.supabase
         .from('buildings').select('project_id').eq('id', input.buildingId).single()
-      if (!building) throw new Error('Building not found')
+      if (!building) throw new TRPCError({ code: 'NOT_FOUND', message: 'Building not found' })
 
       const { data: doc, error: docErr } = await ctx.supabase.from('documents').insert({
         project_id: building.project_id,
@@ -142,7 +175,7 @@ export const committeeRouter = router({
         file_url: input.fileUrl,
         uploaded_by: ctx.user.id,
       }).select().single()
-      if (docErr) throw docErr
+      if (docErr) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: docErr.message })
 
       if (input.shareToGroup && input.groupId) {
         await ctx.supabase.from('group_messages').insert({
@@ -171,7 +204,7 @@ export const committeeRouter = router({
         .select('user_id, unit:units!inner(building_id)')
         .eq('unit.building_id', input.buildingId)
 
-      const tenantIds = (tenants ?? []).map((t: any) => t.user_id).filter(Boolean)
+      const tenantIds = (tenants ?? []).map((t: TenantWithUnit) => t.user_id).filter(Boolean)
 
       const { data: broadcast, error } = await ctx.supabase.from('broadcast_messages').insert({
         building_id: input.buildingId,
@@ -181,7 +214,7 @@ export const committeeRouter = router({
         recipient_count: tenantIds.length,
         channel: input.priority === 'urgent' ? 'URGENT' : 'EMAIL',
       }).select().single()
-      if (error) throw error
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
 
       if (tenantIds.length > 0) {
         await ctx.supabase.from('notifications').insert(
@@ -231,14 +264,14 @@ export const committeeRouter = router({
         decisions: '',
         created_by: ctx.user.id,
       }).select().single()
-      if (error) throw error
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
 
       if (input.notifyAll) {
         const { data: tenants } = await ctx.supabase
           .from('tenant_profiles')
           .select('user_id, unit:units!inner(building_id)')
           .eq('unit.building_id', input.buildingId)
-        const tenantIds = (tenants ?? []).map((t: any) => t.user_id).filter(Boolean)
+        const tenantIds = (tenants ?? []).map((t: TenantWithUnit) => t.user_id).filter(Boolean)
 
         if (tenantIds.length > 0) {
           await ctx.supabase.from('notifications').insert(
@@ -377,11 +410,14 @@ export const committeeRouter = router({
       .from('tenant_profiles')
       .select('user_id, profile:profiles(id, full_name, email), unit:units!inner(building_id)')
       .eq('unit.building_id', buildingId)
-    return (data ?? []).map((t: any) => ({
-      userId: t.user_id,
-      name: t.profile?.full_name ?? t.profile?.email ?? 'דייר',
-      email: t.profile?.email,
-    }))
+    return ((data ?? []) as TenantProfileRow[]).map((t) => {
+      const profile = Array.isArray(t.profile) ? t.profile[0] : t.profile
+      return {
+        userId: t.user_id,
+        name: profile?.full_name ?? profile?.email ?? 'דייר',
+        email: profile?.email,
+      }
+    })
   }),
 
 
@@ -389,7 +425,7 @@ export const committeeRouter = router({
     .input(z.object({ userId: z.string(), pollId: z.string(), phone: z.string().optional() }))
     .mutation(async ({ ctx, input }) => {
       const { data: poll } = await ctx.supabase.from('polls').select('question').eq('id', input.pollId).single()
-      const question = (poll as any)?.question ?? 'הסקר'
+      const question = (poll as PollRow | null)?.question ?? 'הסקר'
 
       await ctx.supabase.from('notifications').insert({
         user_id: input.userId,
@@ -410,17 +446,17 @@ export const committeeRouter = router({
 
       const { data: members } = await ctx.supabase
         .from('building_group_members')
-        .select('user_id').eq('group_id', (poll as any).group_id).neq('user_id', ctx.user.id)
+        .select('user_id').eq('group_id', (poll as PollRow | null)?.group_id ?? '').neq('user_id', ctx.user.id)
 
       if (!members?.length) return { sent: 0 }
 
       await ctx.supabase.from('notifications').insert(
-        members.map((m: any) => ({
+        members.map((m: GroupMember) => ({
           user_id: m.user_id,
           type: 'poll_reminder',
           title: '⏰ תזכורת הצבעה',
           message: input.message,
-          action_url: `/building-chat/${(poll as any).group_id}`,
+          action_url: `/building-chat/${(poll as PollRow | null)?.group_id ?? ''}`,
         }))
       )
       return { sent: members.length }
@@ -490,7 +526,7 @@ export const committeeRouter = router({
       }
 
       // Verify the voter is an owner
-      const isOwner = owners.some((o: any) => o.user_id === userId)
+      const isOwner = owners.some((o: ApartmentOwner) => o.user_id === userId)
       if (!isOwner) {
         throw new TRPCError({ code: 'FORBIDDEN', message: 'רק בעלי הדירה יכולים להצביע' })
       }
@@ -656,11 +692,13 @@ export const committeeRouter = router({
         internalVotes,
         votedOwners: votedUserIds,
         totalOwners,
-        owners: (owners ?? []).map((o: any) => ({
+        owners: ((owners ?? []) as Array<ApartmentOwner & { profiles?: { full_name?: string } | { full_name?: string }[] }>).map((o) => {
+          const profiles = Array.isArray(o.profiles) ? o.profiles[0] : o.profiles
+          return {
           userId: o.user_id,
-          name: o.profiles?.full_name ?? 'בעלים',
+          name: profiles?.full_name ?? 'בעלים',
           voted: votedUserIds.includes(o.user_id),
-        })),
+        }}),
         hasDispute,
         hasPoa,
       }
@@ -677,7 +715,9 @@ export const committeeRouter = router({
         .single()
       if (!poll) throw new TRPCError({ code: 'NOT_FOUND', message: 'סקר לא נמצא' })
 
-      const buildingId = (poll as any).building_groups?.building_id
+      const pollData = poll as PollRow | null
+      const bg = pollData?.building_groups
+      const buildingId = Array.isArray(bg) ? bg[0]?.building_id : bg?.building_id
       if (!buildingId) return { apartments: [], totalApartments: 0, votedCount: 0 }
 
       // Get all units in building
@@ -696,7 +736,7 @@ export const committeeRouter = router({
         .eq('poll_id', input.pollId)
 
       // Get disputes for all apartments
-      const unitIds = units.map((u: any) => u.id)
+      const unitIds = units.map((u: UnitRow) => u.id)
       const { data: disputes } = await ctx.supabase
         .from('ownership_disputes')
         .select('apartment_id')
@@ -710,11 +750,11 @@ export const committeeRouter = router({
         .in('apartment_id', unitIds)
         .eq('status', 'approved')
 
-      const disputeSet = new Set((disputes ?? []).map((d: any) => d.apartment_id))
-      const poaSet = new Set((poas ?? []).map((p: any) => p.apartment_id))
-      const voteMap = new Map((votes ?? []).map((v: any) => [v.apartment_id, v]))
+      const disputeSet = new Set((disputes ?? []).map((d: DisputeRow) => d.apartment_id))
+      const poaSet = new Set((poas ?? []).map((p: PoaRow) => p.apartment_id))
+      const voteMap = new Map((votes ?? []).map((v: ApartmentVoteRow) => [v.apartment_id, v]))
 
-      const apartments = units.map((u: any) => {
+      const apartments = units.map((u: UnitRow) => {
         const vote = voteMap.get(u.id)
         const hasDispute = disputeSet.has(u.id)
         const hasPoa = poaSet.has(u.id)
@@ -754,7 +794,7 @@ export const committeeRouter = router({
         .single()
       if (!project) throw new TRPCError({ code: 'NOT_FOUND', message: 'פרויקט לא נמצא' })
 
-      const currentStage = (project as any).stage ?? 'initial'
+      const currentStage = (project as ProjectRow).stage ?? 'initial'
 
       // Get requirements for this stage
       const { data: requirements } = await ctx.supabase
@@ -776,7 +816,7 @@ export const committeeRouter = router({
 
       // Check each requirement
       const checkedReqs = await Promise.all(
-        requirements.map(async (req: any) => {
+        requirements.map(async (req: StageRequirement) => {
           let isMet = false
 
           switch (req.requirement_type) {
@@ -785,11 +825,11 @@ export const committeeRouter = router({
               const { data: buildings } = await ctx.supabase
                 .from('buildings').select('id').eq('project_id', input.projectId)
               if (buildings && buildings.length > 0) {
-                const buildingIds = buildings.map((b: any) => b.id)
+                const buildingIds = buildings.map((b: BuildingRow) => b.id)
                 const { data: groups } = await ctx.supabase
                   .from('building_groups').select('id').in('building_id', buildingIds)
                 if (groups && groups.length > 0) {
-                  const groupIds = groups.map((g: any) => g.id)
+                  const groupIds = groups.map((g: BuildingGroupRow) => g.id)
                   const { data: polls } = await ctx.supabase
                     .from('polls').select('id').in('group_id', groupIds)
                   if (polls && polls.length > 0) {
@@ -822,11 +862,11 @@ export const committeeRouter = router({
                 .from('buildings').select('id').eq('project_id', input.projectId)
               if (buildings && buildings.length > 0) {
                 const { data: units } = await ctx.supabase
-                  .from('units').select('id').in('building_id', buildings.map((b: any) => b.id))
+                  .from('units').select('id').in('building_id', buildings.map((b: BuildingRow) => b.id))
                 if (units && units.length > 0) {
                   const { count } = await ctx.supabase
                     .from('ownership_disputes').select('*', { count: 'exact', head: true })
-                    .in('apartment_id', units.map((u: any) => u.id))
+                    .in('apartment_id', units.map((u: UnitRow) => u.id))
                     .eq('status', 'open')
                   isMet = (count ?? 0) === 0
                 }
@@ -839,7 +879,7 @@ export const committeeRouter = router({
               if (buildings && buildings.length > 0) {
                 const { count } = await ctx.supabase
                   .from('building_representatives').select('*', { count: 'exact', head: true })
-                  .in('building_id', buildings.map((b: any) => b.id))
+                  .in('building_id', buildings.map((b: BuildingRow) => b.id))
                 isMet = (count ?? 0) > 0
               }
               break
@@ -862,7 +902,7 @@ export const committeeRouter = router({
               if (buildings && buildings.length > 0) {
                 const { count } = await ctx.supabase
                   .from('meeting_minutes').select('*', { count: 'exact', head: true })
-                  .in('building_id', buildings.map((b: any) => b.id))
+                  .in('building_id', buildings.map((b: BuildingRow) => b.id))
                 isMet = (count ?? 0) > 0
               }
               break
@@ -908,7 +948,7 @@ export const committeeRouter = router({
         .single()
       if (!project) throw new TRPCError({ code: 'NOT_FOUND', message: 'פרויקט לא נמצא' })
 
-      const currentStage = (project as any).stage ?? 'initial'
+      const currentStage = (project as ProjectRow).stage ?? 'initial'
 
       const { data: requirements } = await ctx.supabase
         .from('project_stage_requirements')
@@ -920,9 +960,9 @@ export const committeeRouter = router({
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'אין דרישות מוגדרות לשלב זה' })
       }
 
-      const unmet = requirements.filter((r: any) => !r.is_met)
+      const unmet = requirements.filter((r: StageRequirement) => !r.is_met)
       if (unmet.length > 0) {
-        const missing = unmet.map((r: any) => {
+        const missing = unmet.map((r: StageRequirement) => {
           const labels: Record<string, string> = {
             min_vote_pct: `אחוז הצבעה מינימלי (${r.requirement_value}%)`,
             required_documents: 'מסמכים נדרשים',
@@ -1014,7 +1054,7 @@ export const committeeRouter = router({
         .eq('building_id', input.buildingId)
         .eq('form_type', 'representative_election_form')
       return {
-        representative: rep ? { name: (rep.user as any)?.full_name, userId: rep.user_id } : null,
+        representative: rep ? { name: (rep as ElectionRepRow).user?.full_name, userId: rep.user_id } : null,
         myFormUploaded: !!myForm,
         totalFormsUploaded: count ?? 0,
       }

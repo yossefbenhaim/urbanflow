@@ -9,10 +9,18 @@ interface ValidationResult {
   explanation: string
 }
 
+interface MunicipalityOutline {
+  city: string
+  max_floors?: number
+  sukkah_balcony_allowed?: boolean
+  parking_required_per_unit?: number
+  [key: string]: unknown
+}
+
 function validateSingleExpectation(
   requestType: string,
   requestedValue: string,
-  outline: any
+  outline: MunicipalityOutline
 ): ValidationResult {
   const value = requestedValue.trim()
   const numValue = parseFloat(value)
@@ -88,7 +96,7 @@ function validateSingleExpectation(
           explanation: 'חניה כפולה תלויה בתכנון האדריכל ובזמינות. דורש בדיקה מול היזם.',
         }
       }
-      if (outline.parking_required_per_unit >= 1) {
+      if ((outline.parking_required_per_unit ?? 0) >= 1) {
         return {
           request_type: requestType,
           requested_value: value,
@@ -183,7 +191,7 @@ function validateSingleExpectation(
 export const validationRouter = router({
   getMunicipalityOutline: publicProcedure
     .input(z.object({ city: z.string() }))
-    .query(async ({ ctx, input }: { ctx: any; input: any }) => {
+    .query(async ({ ctx, input }) => {
       const { data, error } = await ctx.supabase
         .from('municipality_outlines')
         .select('*')
@@ -194,7 +202,7 @@ export const validationRouter = router({
     }),
 
   getMunicipalityOutlines: publicProcedure
-    .query(async ({ ctx }: { ctx: any }) => {
+    .query(async ({ ctx }) => {
       const { data, error } = await ctx.supabase
         .from('municipality_outlines')
         .select('*')
@@ -208,7 +216,7 @@ export const validationRouter = router({
       userId: z.string().uuid(),
       apartmentId: z.string().uuid().optional(),
     }))
-    .mutation(async ({ ctx, input }: { ctx: any; input: any }) => {
+    .mutation(async ({ ctx, input }) => {
       // 1. Get tenant profile + building city
       const { data: profile, error: profileErr } = await ctx.supabase
         .from('tenant_profiles')
@@ -223,7 +231,7 @@ export const validationRouter = router({
         })
       }
 
-      const city = (profile.buildings as any)?.city
+      const city = (profile.buildings as { city?: string } | null)?.city
       if (!city) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
@@ -263,7 +271,7 @@ export const validationRouter = router({
       try {
         const parsed = JSON.parse(specialRequests)
         if (Array.isArray(parsed)) {
-          requests = parsed.map((r: any) => ({
+          requests = parsed.map((r: Record<string, string>) => ({
             type: r.type || r.request_type || 'other',
             value: r.value || r.requested_value || String(r),
           }))
@@ -316,7 +324,7 @@ export const validationRouter = router({
     }),
 
   getMyValidations: protectedProcedure
-    .query(async ({ ctx }: { ctx: any }) => {
+    .query(async ({ ctx }) => {
       const { data, error } = await ctx.supabase
         .from('expectation_validations')
         .select('*')

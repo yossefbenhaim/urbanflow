@@ -74,7 +74,7 @@ export default function ValidationPage() {
           </button>
           {validateMutation.isError && (
             <p className="text-red-500 text-sm mt-2">
-              {(validateMutation.error as any)?.message || 'שגיאה בבדיקה'}
+              {(validateMutation.error as { message?: string })?.message || 'שגיאה בבדיקה'}
             </p>
           )}
         </div>
@@ -91,7 +91,7 @@ export default function ValidationPage() {
               {' | '}חניה: {validateMutation.data.outline?.parking_required_per_unit} ליח"ד
             </p>
             <div className="space-y-3">
-              {validateMutation.data.validations.map((v: any, i: number) => {
+              {validateMutation.data.validations.map((v: { validation_result: string; request_type: string; requested_value: string; explanation: string }, i: number) => {
                 const config = RESULT_CONFIG[v.validation_result] || RESULT_CONFIG.needs_review
                 return (
                   <div
@@ -124,9 +124,9 @@ export default function ValidationPage() {
           </div>
         )}
 
-        {(validateMutation.data as any)?.message && !validateMutation.data?.validations?.length && (
+        {(validateMutation.data as { message?: string })?.message && !validateMutation.data?.validations?.length && (
           <div className="sc-card p-6 text-center text-[#5a5a6e] mb-6">
-            <p>{(validateMutation.data as any).message}</p>
+            <p>{(validateMutation.data as { message?: string }).message}</p>
           </div>
         )}
 
@@ -135,7 +135,7 @@ export default function ValidationPage() {
           <div className="sc-card p-6">
             <h2 className="text-lg font-bold text-[#212121] mb-4">📋 היסטוריית בדיקות</h2>
             <div className="space-y-3">
-              {latestValidations.map((v: any) => {
+              {latestValidations.map((v: { id: string; validation_result: string; request_type: string; requested_value: string; explanation: string; validated_at: string }) => {
                 const config = RESULT_CONFIG[v.validation_result] || RESULT_CONFIG.needs_review
                 return (
                   <div

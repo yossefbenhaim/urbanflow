@@ -5,6 +5,37 @@ import PageLayout from '../components/PageLayout'
 import BuildingLoader from '../components/BuildingLoader'
 import ElectionBanner from '../components/ElectionBanner'
 
+interface PollCandidate {
+  id: string
+  full_name: string
+}
+
+interface PollData {
+  status?: string
+  myVote?: string
+  close_at?: string
+  poll_type?: string
+  options?: string[]
+  question?: string
+  voteCount?: number
+  memberCount?: number
+  votePercent?: number
+  threshold_pct?: number
+  result_value?: string
+  result_user_id?: string
+  candidates?: PollCandidate[]
+}
+
+interface ChatMessage {
+  id: string
+  sender_id: string
+  message_type: string
+  poll_id?: string
+  content?: string
+  created_at: string
+  sender?: { full_name?: string }
+}
+
 function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; currentUserId: string; onUnvoted?: (id: string) => void }) {
   const utils = trpc.useUtils()
   const { data: poll, isLoading } = trpc.tenant.getPollDetails.useQuery({ pollId }, { refetchInterval: 5000 })
@@ -21,7 +52,7 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
     return () => clearInterval(t)
   }, [])
 
-  const p = (poll as any) ?? {}
+  const p = (poll as PollData) ?? {} as PollData
   const isOpen = p.status === 'open'
   const hasVoted = !!p.myVote
   const isExpired = p.close_at ? new Date(p.close_at).getTime() < now : false
@@ -78,7 +109,7 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
       {!isOpen && (
         <div className="p-2.5 bg-[#4a8c5c]/15 rounded-lg text-[13px] text-[#4a8c5c] font-semibold">
           {isApartmentCount && `תוצאה: ${p.result_value} דירות בבניין`}
-          {isElection && p.candidates?.length > 0 && `נבחר: ${p.candidates.find((c: any) => c.id === p.result_user_id)?.full_name ?? p.result_value}`}
+          {isElection && (p.candidates?.length ?? 0) > 0 && `נבחר: ${p.candidates!.find((c: PollCandidate) => c.id === p.result_user_id)?.full_name ?? p.result_value}`}
           {isCustom && `תוצאה: ${p.result_value}`}
         </div>
       )}
@@ -97,7 +128,7 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
           )}
           {isElection && (
             <div className="flex flex-col gap-1.5 mb-2">
-              {(p.candidates ?? []).map((c: any) => (
+              {(p.candidates ?? []).map((c: PollCandidate) => (
                 <button key={c.id} onClick={() => setSelectedValue(c.id)}
                   className={`p-2 rounded-lg border-2 text-right text-[13px] text-[#212121] cursor-pointer transition-colors ${
                     selectedValue === c.id ? 'border-[#3b6b9c] bg-[#ebf1f7]' : 'border-[#eeeeee] bg-white'
@@ -151,7 +182,7 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
         <div className="flex items-center justify-between p-2.5 bg-[#ebf1f7] rounded-lg">
           <span className="text-[13px] text-[#3b6b9c] font-semibold">
             ✓ הצבעת על: {isElection
-              ? (p.candidates ?? []).find((c: any) => c.id === p.myVote)?.full_name ?? p.myVote
+              ? (p.candidates ?? []).find((c: PollCandidate) => c.id === p.myVote)?.full_name ?? p.myVote
               : isApartmentCount ? `${p.myVote} דירות`
               : p.myVote}
           </span>
@@ -172,7 +203,7 @@ function PollCard({ pollId, currentUserId, onUnvoted }: { pollId: string; curren
           )}
           {isElection && (
             <div className="flex flex-col gap-1.5 mb-2">
-              {(p.candidates ?? []).map((c: any) => (
+              {(p.candidates ?? []).map((c: PollCandidate) => (
                 <button key={c.id} onClick={() => setSelectedValue(c.id)}
                   className={`p-2 rounded-lg border-2 text-right text-[13px] text-[#212121] cursor-pointer ${
                     selectedValue === c.id ? 'border-[#3b6b9c] bg-[#ebf1f7]' : 'border-[#eeeeee] bg-white'
@@ -224,10 +255,10 @@ export default function BuildingChatPage() {
   const prevMsgLen = useRef(0)
   const token = localStorage.getItem('sb-token')
   const { data: me } = trpc.auth.me.useQuery(undefined, { enabled: !!token })
-  const currentUserId = (me as any)?.id ?? ''
+  const currentUserId = (me as Record<string, unknown>)?.id as string ?? ''
 
   const { data: myProfile } = trpc.tenant.getMyProfile.useQuery()
-  const buildingId = (myProfile as any)?.building_id ?? null
+  const buildingId = (myProfile as Record<string, unknown>)?.building_id as string | null ?? null
 
   const { data: messages, refetch } = trpc.tenant.getChatMessages.useQuery(
     { groupId: groupId! },
@@ -239,8 +270,8 @@ export default function BuildingChatPage() {
   const [unvotedPollId, setUnvotedPollId] = useState<string | null>(null)
 
   // Check if there are any unvoted open polls
-  const msgs = (messages ?? []) as any[]
-  const openPollMsg = msgs.find((m: any) => m.message_type === 'poll' && m.poll_id)
+  const msgs = (messages ?? []) as ChatMessage[]
+  const openPollMsg = msgs.find((m: ChatMessage) => m.message_type === 'poll' && m.poll_id)
 
   const scrollToPoll = (pollId: string) => {
     const el = pollRefs.current[pollId]
@@ -320,11 +351,11 @@ export default function BuildingChatPage() {
           className="flex-1 overflow-y-auto py-4 flex flex-col gap-3 min-h-0 relative"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
-          {(messages ?? []).map((msg: any) => {
+          {(messages ?? [] as ChatMessage[]).map((msg: ChatMessage) => {
             const isMe = msg.sender_id === currentUserId
             const isPoll = msg.message_type === 'poll' && msg.poll_id
             return (
-              <div key={msg.id} ref={msg.message_type === 'poll' ? (el) => { pollRefs.current[msg.poll_id] = el } : undefined}
+              <div key={msg.id} ref={msg.message_type === 'poll' && msg.poll_id ? (el) => { pollRefs.current[msg.poll_id!] = el } : undefined}
                 className={`flex gap-2 ${isPoll ? 'flex-col items-stretch' : isMe ? 'flex-row-reverse' : 'flex-row'} ${!isPoll ? 'items-start' : ''}`}>
                 {!isPoll && (
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 ${
@@ -338,7 +369,7 @@ export default function BuildingChatPage() {
                     {isMe ? 'אני' : msg.sender?.full_name ?? 'דייר'} · {new Date(msg.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
                   </div>
                   {isPoll ? (
-                    <PollCard pollId={msg.poll_id} currentUserId={currentUserId} onUnvoted={setUnvotedPollId} />
+                    <PollCard pollId={msg.poll_id!} currentUserId={currentUserId} onUnvoted={setUnvotedPollId} />
                   ) : (
                     <div className={`p-2.5 rounded-xl text-sm leading-relaxed shadow-sm ${
                       isMe ? 'bg-[#3b6b9c] text-white' : 'bg-white text-[#212121] border border-[#eeeeee]'

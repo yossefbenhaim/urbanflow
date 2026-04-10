@@ -20,11 +20,11 @@ export default function VotesTracker() {
 
   // Get all polls in building group
   const { data: messages = [] } = trpc.tenant.getChatMessages.useQuery(
-    { groupId: (group as any)?.id ?? '' },
-    { enabled: !!(group as any)?.id }
+    { groupId: (group as { id?: string } | undefined)?.id ?? '' },
+    { enabled: !!(group as { id?: string } | undefined)?.id }
   )
 
-  const polls = (messages as any[]).filter(m => m.message_type === 'poll' && m.poll_id)
+  const polls = messages.filter((m: { message_type?: string; poll_id?: string }) => m.message_type === 'poll' && m.poll_id)
 
   const votesTrackerSidebar = [
     { to: '/committee', icon: '🏠', label: 'ראשי' },
@@ -53,12 +53,12 @@ export default function VotesTracker() {
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            {polls.map((msg: any) => (
+            {polls.map((msg: { poll_id?: string }) => (
               <ApartmentPollCard
                 key={msg.poll_id}
-                pollId={msg.poll_id}
+                pollId={msg.poll_id!}
                 isActive={activePollId === msg.poll_id}
-                onToggle={() => setActivePollId(activePollId === msg.poll_id ? null : msg.poll_id)}
+                onToggle={() => setActivePollId(activePollId === msg.poll_id ? null : msg.poll_id ?? null)}
               />
             ))}
           </div>
@@ -80,7 +80,7 @@ function ApartmentPollCard({ pollId, isActive, onToggle }: {
   )
 
   if (!poll) return null
-  const p = poll as any
+  const p = poll as { question?: string; status?: string; threshold_pct?: number }
 
   const totalApt = apartmentData?.totalApartments ?? 0
   const votedApt = apartmentData?.votedCount ?? 0
@@ -130,7 +130,7 @@ function ApartmentPollCard({ pollId, isActive, onToggle }: {
           {/* Summary chips */}
           <div className="flex flex-wrap gap-2 mb-4">
             {Object.entries(
-              (apartmentData.apartments as any[]).reduce((acc: Record<string, number>, a: any) => {
+              (apartmentData.apartments as { status: string }[]).reduce((acc: Record<string, number>, a) => {
                 acc[a.status] = (acc[a.status] ?? 0) + 1
                 return acc
               }, {} as Record<string, number>)
@@ -149,7 +149,7 @@ function ApartmentPollCard({ pollId, isActive, onToggle }: {
             רשימת דירות
           </div>
           <div className="space-y-1.5">
-            {(apartmentData.apartments as any[]).map((apt: any) => {
+            {(apartmentData.apartments as unknown as { apartmentId: string; unitNumber: string; floor: string; status: string; voteValue?: string; decidedBy?: string }[]).map((apt) => {
               const cfg = STATUS_CONFIG[apt.status] ?? STATUS_CONFIG.not_started
               return (
                 <div key={apt.apartmentId} className={`flex items-center gap-3 p-3 rounded-xl ${cfg.bg} transition-colors`}>

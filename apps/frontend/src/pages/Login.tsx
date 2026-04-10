@@ -15,7 +15,7 @@ export default function Login() {
   const signIn = trpc.auth.signIn.useMutation({
     onSuccess: async (data) => {
       localStorage.setItem('sb-token', data.accessToken)
-      if ((data as any).refreshToken) localStorage.setItem('sb-refresh-token', (data as any).refreshToken)
+      if ('refreshToken' in data && data.refreshToken) localStorage.setItem('sb-refresh-token', data.refreshToken as string)
       const pendingCode = localStorage.getItem('pending_join_code')
       if (pendingCode) {
         localStorage.removeItem('pending_join_code')

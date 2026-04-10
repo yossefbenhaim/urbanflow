@@ -1,9 +1,15 @@
 import { useState, useEffect } from 'react'
 import PageLayout, { PageTitle } from '../components/PageLayout'
 import BuildingLoader from '../components/BuildingLoader'
+import { DashboardSkeleton } from '../components/Skeleton'
 import { useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import { useUser } from '../hooks/useUser'
+
+type NextStepData = { action: string; icon: string; text: string; link: string }
+type MyRoleData = { isRepresentative?: boolean }
+type BuildingGroupData = { id: string }
+type DocData = { id: string; title: string; type: string; due_date?: string; signatures?: unknown[] }
 
 const STAGES = ['סקר','ייצוג','מו"מ','הסכם','חתימות','תכנון','היתר','פינוי','בנייה','מסירה']
 
@@ -203,15 +209,17 @@ export default function Dashboard() {
   const { data: buildingGroup } = trpc.tenant.getMyBuildingGroup.useQuery()
 
 
-  const { data: project, isLoading, isFetched } = trpc.tenant.getMyProject.useQuery(undefined, { retry: false })
+  const { data: rawProject, isLoading, isFetched } = trpc.tenant.getMyProject.useQuery(undefined, { retry: false })
+  const project = rawProject as { id: string; name?: string; type?: string; status: string; milestones: unknown[]; signatures?: unknown[] } | null | undefined
   const { data: docs } = trpc.tenant.getDocuments.useQuery()
-  const { data: leadership } = trpc.tenant.getLeadership.useQuery()
+  const { data: rawLeadership } = trpc.tenant.getLeadership.useQuery()
+  const leadership = rawLeadership as { manager?: { full_name?: string; phone?: string } } | null | undefined
   const { data: nextStep } = trpc.tenant.getNextStep.useQuery()
   const signDoc = trpc.tenant.signDocument.useMutation()
 
-  // Silent load — LoadingScreen already covers initial wait
+  // Show skeleton while loading
   if (statusLoading || (isLoading && !isFetched)) return (
-    <PageLayout><div /></PageLayout>
+    <PageLayout><DashboardSkeleton /></PageLayout>
   )
 
   // Full dashboard
@@ -231,7 +239,7 @@ export default function Dashboard() {
           <JoinProjectInline onJoined={() => refetchStatus()} />
         </div>
       )}
-      {(myRole as any)?.isRepresentative && (
+      {(myRole as MyRoleData)?.isRepresentative && (
         <div className="bg-[#1e3a5f] rounded-[14px] px-5 py-3 flex items-center gap-3 mb-5">
           <span className="text-xl">🏛️</span>
           <span className="text-white font-bold text-[13px]">נציג ועד הבניין</span>
@@ -243,27 +251,27 @@ export default function Dashboard() {
       <div className="space-y-5">
 
         {/* E3: Next Step Banner */}
-        {nextStep && (nextStep as any).action !== 'all_done' && (
+        {nextStep && (nextStep as NextStepData).action !== 'all_done' && (
           <div className="bg-[#ebf1f7] border border-[#3b6b9c]/20 rounded-2xl p-5 flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-[#3b6b9c] flex items-center justify-center text-2xl flex-shrink-0">
-              {(nextStep as any).icon}
+              {(nextStep as NextStepData).icon}
             </div>
             <div className="flex-1">
               <p className="text-xs text-[#3b6b9c] font-medium mb-0.5">הצעד הבא שלך</p>
-              <p className="text-base font-bold text-[#1e3a5f]">{(nextStep as any).text}</p>
+              <p className="text-base font-bold text-[#1e3a5f]">{(nextStep as NextStepData).text}</p>
             </div>
             <a
-              href={(nextStep as any).link}
+              href={(nextStep as NextStepData).link}
               className="sc-btn-primary px-5 py-2.5 text-sm no-underline whitespace-nowrap flex-shrink-0"
             >
               בצע עכשיו ←
             </a>
           </div>
         )}
-        {nextStep && (nextStep as any).action === 'all_done' && (
+        {nextStep && (nextStep as NextStepData).action === 'all_done' && (
           <div className="bg-[#4a8c5c]/10 border border-sc-success/20 rounded-2xl p-4 flex items-center gap-3">
             <span className="text-2xl">✅</span>
-            <p className="text-sm font-medium text-[#4a8c5c]">{(nextStep as any).text}</p>
+            <p className="text-sm font-medium text-[#4a8c5c]">{(nextStep as NextStepData).text}</p>
           </div>
         )}
 
@@ -304,7 +312,7 @@ export default function Dashboard() {
         {/* Building Group Card */}
         {buildingGroup && (
           <a
-            href={'/building-chat/' + (buildingGroup as any).id}
+            href={'/building-chat/' + (buildingGroup as BuildingGroupData).id}
             className="no-underline block"
           >
             <div className="bg-[#1e3a5f] rounded-[20px] p-5 shadow-lg cursor-pointer transition-transform hover:scale-[1.01]">
@@ -321,7 +329,7 @@ export default function Dashboard() {
         )}
 
         {/* Representative Tasks */}
-        {(myRole as any)?.isRepresentative && (
+        {(myRole as MyRoleData)?.isRepresentative && (
           <div className="sc-card p-6 border-t-4 border-t-sc-primary">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-11 h-11 rounded-xl bg-[#3b6b9c] flex items-center justify-center text-[22px]">🏛️</div>
@@ -441,8 +449,8 @@ export default function Dashboard() {
           <div className="sc-card p-6">
             <h3 className="sc-section-title text-base mb-4">מסמכים לחתימה</h3>
             <div className="space-y-3">
-              {docs.map((doc: any) => {
-                const isSigned = doc.signatures?.length > 0
+              {docs.map((doc: DocData) => {
+                const isSigned = (doc.signatures?.length ?? 0) > 0
                 return (
                   <div key={doc.id} className={`flex items-center justify-between p-3 rounded-xl border ${
                     isSigned ? 'border-sc-success/30 bg-[#4a8c5c]/5' :

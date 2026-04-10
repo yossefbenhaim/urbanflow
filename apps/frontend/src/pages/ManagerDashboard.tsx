@@ -21,7 +21,7 @@ export default function ManagerDashboard() {
     { enabled: !!selectedProjectId }
   )
 
-  const selectedProject = projects?.find((p: any) => p.id === selectedProjectId)
+  const selectedProject = projects?.find((p) => p.id === selectedProjectId)
 
   const managerSidebar = [
     { to: '/manager', icon: '🏠', label: 'ראשי' },
@@ -57,7 +57,7 @@ export default function ManagerDashboard() {
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4">
-                {projects.map((project: any) => (
+                {projects.map((project) => (
                   <div
                     key={project.id}
                     onClick={() => setSelectedProjectId(project.id === selectedProjectId ? null : project.id)}
@@ -71,7 +71,7 @@ export default function ManagerDashboard() {
                         {project.address && <p className="text-[#5a5a6e] text-sm mt-0.5">{project.address}</p>}
                       </div>
                       <span className="text-xs text-[#5a5a6e]">
-                        {(project.project_tenants as any)?.[0]?.count ?? 0} דיירים
+                        {(project.project_tenants as { count: number }[])?.[0]?.count ?? 0} דיירים
                       </span>
                     </div>
                     <div className="flex items-center gap-2 mt-3">
@@ -126,7 +126,7 @@ export default function ManagerDashboard() {
                   <p className="text-[#5a5a6e] text-sm">אין דיירים עדיין</p>
                 ) : (
                   <div className="space-y-2">
-                    {tenants.map((t: any) => (
+                    {tenants.map((t) => (
                       <div key={t.tenant_id} className="flex items-center gap-3 p-2 bg-[#f8f9fa] rounded-lg">
                         <div className="w-8 h-8 bg-[#ebf1f7] rounded-full flex items-center justify-center text-[#3b6b9c] font-medium text-sm">
                           {t.profiles?.full_name?.[0] ?? '?'}
@@ -164,7 +164,7 @@ export default function ManagerDashboard() {
                 <label className="block text-sm font-medium text-[#212121] mb-1">סוג התחדשות</label>
                 <select
                   value={renewalType}
-                  onChange={(e) => setRenewalType(e.target.value as any)}
+                  onChange={(e) => setRenewalType(e.target.value as typeof renewalType)}
                   className="sc-input"
                 >
                   <option value="pinuy_binuy">פינוי בינוי</option>

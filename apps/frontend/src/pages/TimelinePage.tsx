@@ -115,9 +115,10 @@ function TimelineView({ projectId }: { projectId: string }) {
   )
 
   // Group by provider
-  const byProvider: Record<string, any[]> = {}
+  type TimelineEntry = typeof timeline[number]
+  const byProvider: Record<string, TimelineEntry[]> = {}
   for (const entry of timeline) {
-    const name = (entry as any).provider?.full_name ?? 'לא ידוע'
+    const name = (entry as { provider?: { full_name?: string } }).provider?.full_name ?? 'לא ידוע'
     if (!byProvider[name]) byProvider[name] = []
     byProvider[name].push(entry)
   }
@@ -131,8 +132,8 @@ function TimelineView({ projectId }: { projectId: string }) {
     <div className="space-y-6">
       {Object.entries(byProvider).map(([providerName, entries]) => {
         const latest = entries[0]
-        const isCurrentWeek = (latest as any).week_start === weekStart
-        const progress = (latest as any).progress_pct ?? 0
+        const isCurrentWeek = (latest as { week_start?: string }).week_start === weekStart
+        const progress = (latest as { progress_pct?: number }).progress_pct ?? 0
 
         return (
           <div key={providerName} className="sc-card p-6">
@@ -142,7 +143,7 @@ function TimelineView({ projectId }: { projectId: string }) {
                 <div>
                   <h3 className="text-base font-bold text-[#212121]">{providerName}</h3>
                   <p className="text-xs text-[#5a5a6e]">
-                    עדכון אחרון: {new Date((latest as any).updated_at).toLocaleDateString('he-IL')}
+                    עדכון אחרון: {new Date((latest as { updated_at?: string }).updated_at ?? '').toLocaleDateString('he-IL')}
                   </p>
                 </div>
               </div>
@@ -171,7 +172,7 @@ function TimelineView({ projectId }: { projectId: string }) {
 
             {/* Timeline entries */}
             <div className="space-y-3 border-r-2 border-[#3b6b9c]/20 pr-4 mr-2">
-              {entries.slice(0, 5).map((entry: any, i: number) => (
+              {entries.slice(0, 5).map((entry) => (
                 <div key={entry.id} className="relative">
                   <div className="absolute -right-[1.35rem] top-1.5 w-3 h-3 rounded-full bg-[#3b6b9c] border-2 border-white" />
                   <div className="bg-[#f8f9fa] rounded-xl p-3">
@@ -205,7 +206,7 @@ export default function TimelinePage() {
   const [activeTab, setActiveTab] = useState<'view' | 'update'>('view')
 
   const isProvider = activeProjects && activeProjects.length > 0
-  const projectId = (project as any)?.id ?? (activeProjects?.[0] as any)?.id
+  const projectId = (project as { id?: string } | null)?.id ?? (activeProjects?.[0] as { id?: string } | undefined)?.id
 
   if (projectLoading) return (
     <PageLayout>

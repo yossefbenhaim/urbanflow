@@ -6,7 +6,7 @@ export const learningRouter = router({
   // Get all active content, optionally filtered by stage
   getContentForStage: publicProcedure
     .input(z.object({ projectId: z.string().uuid().optional() }).optional())
-    .query(async ({ ctx, input }: { ctx: any; input: any }) => {
+    .query(async ({ ctx, input }) => {
       let stage: string | null = null
 
       // If projectId is provided, get the project's current stage
@@ -53,7 +53,7 @@ export const learningRouter = router({
 
   // Get all content (no filter)
   getAllContent: publicProcedure
-    .query(async ({ ctx }: { ctx: any }) => {
+    .query(async ({ ctx }) => {
       const { data, error } = await ctx.supabase
         .from('learning_content')
         .select('*')
@@ -66,7 +66,7 @@ export const learningRouter = router({
   // Mark content as completed
   markCompleted: protectedProcedure
     .input(z.object({ contentId: z.string().uuid() }))
-    .mutation(async ({ ctx, input }: { ctx: any; input: any }) => {
+    .mutation(async ({ ctx, input }) => {
       const { error } = await ctx.supabase
         .from('learning_progress')
         .upsert(
@@ -84,7 +84,7 @@ export const learningRouter = router({
 
   // Get user's progress
   getProgress: protectedProcedure
-    .query(async ({ ctx }: { ctx: any }) => {
+    .query(async ({ ctx }) => {
       const { data: progress, error: progressErr } = await ctx.supabase
         .from('learning_progress')
         .select('content_id, completed, completed_at')
@@ -99,7 +99,7 @@ export const learningRouter = router({
 
       if (totalErr) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: totalErr.message })
 
-      const completedCount = (progress ?? []).filter((p: any) => p.completed).length
+      const completedCount = (progress ?? []).filter((p: { completed: boolean }) => p.completed).length
       const totalCount = (total ?? []).length
 
       return {

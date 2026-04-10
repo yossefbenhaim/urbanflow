@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import PageLayout from '../components/PageLayout'
 import { trpc } from '../lib/trpc'
 
@@ -26,7 +27,8 @@ export default function TenantReportForm() {
 
   const { data: reports, refetch } = trpc.tenant.getMyReports.useQuery()
   const report = trpc.tenant.reportProblem.useMutation({
-    onSuccess: () => { setSuccess(true); refetch(); setTimeout(() => setSuccess(false), 3000) },
+    onSuccess: () => { setSuccess(true); refetch(); setTimeout(() => setSuccess(false), 3000); toast.success('הדיווח נשלח בהצלחה') },
+    onError: () => { toast.error('שגיאה בשליחת הדיווח') },
   })
 
   return (
@@ -50,7 +52,7 @@ export default function TenantReportForm() {
               <div className="flex flex-col gap-2">
                 {REPORT_TYPES.map(t => (
                   <button key={t.value} type="button"
-                    onClick={() => setForm(f => ({ ...f, reportType: t.value as any }))}
+                    onClick={() => setForm(f => ({ ...f, reportType: t.value as 'refusal' | 'threat' | 'disruption' | 'other' }))}
                     className={`p-3 rounded-xl border-2 text-right transition-all ${
                       form.reportType === t.value
                         ? 'border-[#3b6b9c] bg-[#ebf1f7]'
@@ -74,7 +76,7 @@ export default function TenantReportForm() {
               <div className="flex gap-3">
                 {FREQUENCY_OPTIONS.map(opt => (
                   <button key={opt.value} type="button"
-                    onClick={() => setForm(f => ({ ...f, frequency: opt.value as any }))}
+                    onClick={() => setForm(f => ({ ...f, frequency: opt.value as 'one_time' | 'recurring' }))}
                     className={`flex-1 py-2.5 rounded-xl border-2 font-semibold text-sm cursor-pointer transition-colors ${
                       form.frequency === opt.value
                         ? 'border-[#3b6b9c] bg-[#ebf1f7] text-[#3b6b9c]'
@@ -127,7 +129,7 @@ export default function TenantReportForm() {
           <div>
             <h3 className="text-[15px] font-bold text-[#212121] mb-3">דיווחים קודמים</h3>
             <div className="flex flex-col gap-2.5">
-              {reports.map((r: any) => (
+              {reports.map((r: { id: string; report_type: string; frequency: string; blocks_project?: boolean; description: string; created_at: string }) => (
                 <div key={r.id} className="sc-card p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-semibold text-[#212121]">

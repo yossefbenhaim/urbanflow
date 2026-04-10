@@ -24,7 +24,7 @@ export const providerRouter = router({
         website: input.website,
         linkedin_url: input.linkedinUrl
       }).select().single()
-      if (error) throw error
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
       return data
     }),
 
@@ -34,7 +34,7 @@ export const providerRouter = router({
       const { error } = await ctx.supabase.from('provider_profiles')
         .update({ bio: input.bio, company: input.company, service_types: input.serviceTypes })
         .eq('id', ctx.user.id)
-      if (error) throw error
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
       return { success: true }
     }),
 
@@ -68,7 +68,7 @@ export const providerRouter = router({
         listing_id: input.listingId, provider_id: ctx.user.id,
         cover_letter: input.coverLetter, cv_url: input.cvUrl, status: 'PENDING'
       }).select().single()
-      if (error) throw error
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
       return data
     }),
 
@@ -84,7 +84,7 @@ export const providerRouter = router({
       .from('service_applications')
       .select('listing:service_listings(project:projects(*))')
       .eq('provider_id', ctx.user.id).eq('status', 'ACCEPTED')
-    return (data ?? []).map((d: any) => d.listing?.project).filter(Boolean)
+    return (data ?? []).map((d) => (d.listing as { project?: unknown } | undefined)?.project).filter(Boolean)
   }),
 
   // ─── E2: Weekly Timeline Updates ───────────────────────
@@ -152,10 +152,10 @@ export const providerRouter = router({
         .eq('project_id', input.projectId)
         .eq('week_start', weekStartStr)
 
-      const updatedIds = new Set((updates ?? []).map((u: any) => u.provider_id))
-      return (apps ?? []).filter((a: any) => !updatedIds.has(a.provider_id)).map((a: any) => ({
+      const updatedIds = new Set((updates ?? []).map((u) => u.provider_id))
+      return (apps ?? []).filter((a) => !updatedIds.has(a.provider_id)).map((a) => ({
         providerId: a.provider_id,
-        providerName: a.provider?.full_name ?? 'לא ידוע',
+        providerName: (a.provider as { full_name?: string } | undefined)?.full_name ?? 'לא ידוע',
       }))
     }),
 })

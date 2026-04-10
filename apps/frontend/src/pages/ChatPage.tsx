@@ -39,7 +39,7 @@ export default function ChatPage() {
   }, [conversationId])
 
   const meId = profile?.id
-  const activeConv = conversations.find((c: any) => c.id === conversationId)
+  const activeConv = conversations.find((c: { id: string }) => c.id === conversationId)
   const activeOther = activeConv
     ? (activeConv.participant_a === meId ? activeConv.pb : activeConv.pa)
     : null
@@ -58,7 +58,7 @@ export default function ChatPage() {
       {/* Building group chat */}
       {buildingGroup && (
         <button
-          onClick={() => navigate(`/building-chat/${(buildingGroup as any).id}`)}
+          onClick={() => navigate(`/building-chat/${(buildingGroup as { id?: string }).id}`)}
           className="w-full text-right px-4 py-3.5 border-b border-[#eeeeee] hover:bg-[#ebf1f7] active:bg-[#ebf1f7]/70 transition-all"
         >
           <div className="flex items-center gap-3">
@@ -78,7 +78,7 @@ export default function ChatPage() {
           <p className="text-[#5a5a6e] text-sm">אין שיחות עדיין</p>
         </div>
       ) : (
-        conversations.map((conv: any) => {
+        conversations.map((conv: { id: string; participant_a?: string; pb?: { full_name?: string }; pa?: { full_name?: string }; last_message?: string }) => {
           const other = conv.participant_a === meId ? conv.pb : conv.pa
           const isActive = conv.id === conversationId
           return (
@@ -166,7 +166,7 @@ export default function ChatPage() {
 
               {/* Messages */}
               <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2.5">
-                {messages.map((msg: any) => {
+                {messages.map((msg: { id: string; sender_id: string; content: string; created_at: string }) => {
                   const isMe = msg.sender_id === meId
                   return (
                     <div key={msg.id} className={`flex ${isMe ? 'justify-start' : 'justify-end'}`}>

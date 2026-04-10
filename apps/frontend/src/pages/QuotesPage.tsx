@@ -80,7 +80,7 @@ export default function QuotesPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {requests.map((req: any) => {
+            {requests.map((req) => {
               const responded = req.status === 'responded'
               return (
                 <div
@@ -111,7 +111,7 @@ export default function QuotesPage() {
                   {req.quote_responses?.length > 0 && (
                     <div className="mt-3 border-t border-[#eeeeee] pt-3">
                       <p className="text-xs font-medium text-[#5a5a6e] mb-2">התגובות שלך:</p>
-                      {req.quote_responses.map((r: any) => (
+                      {req.quote_responses.map((r: { id: string; content: string; price_offer?: string | null }) => (
                         <div key={r.id} className="bg-[#ebf1f7] rounded-lg p-2 text-xs text-[#3b6b9c] mb-1">
                           {r.content}{r.price_offer && ` — ${r.price_offer}`}
                         </div>

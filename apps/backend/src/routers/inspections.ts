@@ -1,6 +1,12 @@
 import { z } from 'zod'
 import { router, protectedProcedure } from '../middleware/auth'
 import { TRPCError } from '@trpc/server'
+import { SupabaseClient } from '@supabase/supabase-js'
+
+interface ProtectedCtx {
+  supabase: SupabaseClient
+  user: { id: string }
+}
 
 const InspectionTypeEnum = z.enum([
   'architectural_feasibility', 'planning_check', 'cluster_feasibility', 'constraints_check',
@@ -107,8 +113,15 @@ const AnyInspectionInput = z.discriminatedUnion('inspectionType', [
   CommercialAppraisalInput,
 ])
 
+type AnyInspection = z.infer<typeof AnyInspectionInput>
+
+/** Safely extract optional field from discriminated union input */
+function field<K extends string>(input: AnyInspection, key: K): unknown {
+  return (input as Record<string, unknown>)[key]
+}
+
 // ── helpers ────────────────────────────────────────────────
-async function requireProviderRole(ctx: any) {
+async function requireProviderRole(ctx: ProtectedCtx) {
   const { data: profile } = await ctx.supabase
     .from('profiles').select('role').eq('id', ctx.user.id).single()
   if (!profile || !['provider', 'architect', 'appraiser', 'admin'].includes(profile.role)) {
@@ -117,7 +130,7 @@ async function requireProviderRole(ctx: any) {
   return profile
 }
 
-async function checkSlotAvailability(ctx: any, projectId: string, inspectionType: string) {
+async function checkSlotAvailability(ctx: ProtectedCtx, projectId: string, inspectionType: string) {
   const { data, error } = await ctx.supabase
     .from('inspections')
     .select('id, slot_number')
@@ -186,9 +199,9 @@ export const inspectionsRouter = router({
       const { data } = await q.order('created_at', { ascending: false })
 
       // Add slot info per project
-      const projects = (data ?? []).map((p: any) => {
+      const projects = (data ?? []).map((p: Record<string, unknown> & { inspections?: { inspection_type: string; status: string }[] }) => {
         const slotsByType: Record<string, number> = {}
-        ;(p.inspections ?? []).forEach((i: any) => {
+        ;(p.inspections ?? []).forEach((i) => {
           if (i.status !== 'rejected') {
             slotsByType[i.inspection_type] = (slotsByType[i.inspection_type] ?? 0) + 1
           }
@@ -230,42 +243,42 @@ export const inspectionsRouter = router({
           provider_id: ctx.user.id,
           inspection_type: input.inspectionType,
           status: 'draft',
-          conclusion: (input as any).conclusion,
+          conclusion: field(input, 'conclusion'),
           building_address: input.buildingAddress,
           apartment_count: input.apartmentCount,
           floor_count: input.floorCount,
           notes: input.notes,
           // Architect fields
-          relevant_plan: (input as any).relevantPlan,
-          building_rights: (input as any).buildingRights,
-          height_restriction: (input as any).heightRestriction,
-          heritage_site: (input as any).heritageSite,
-          antiquities: (input as any).antiquities,
-          parking_notes: (input as any).parkingNotes,
-          infrastructure_notes: (input as any).infrastructureNotes,
-          plan_number: (input as any).planNumber,
-          land_use: (input as any).landUse,
-          building_coverage_pct: (input as any).buildingCoveragePct,
-          planning_limitations: (input as any).planningLimitations,
-          suitable_standalone: (input as any).suitableStandalone,
-          recommended_cluster_count: (input as any).recommendedClusterCount,
-          cluster_notes: (input as any).clusterNotes,
-          heritage_constraint: (input as any).heritageConstraint,
-          antiquities_constraint: (input as any).antiquitiesConstraint,
-          infrastructure_constraint: (input as any).infrastructureConstraint,
-          street_width_constraint: (input as any).streetWidthConstraint,
+          relevant_plan: field(input, 'relevantPlan'),
+          building_rights: field(input, 'buildingRights'),
+          height_restriction: field(input, 'heightRestriction'),
+          heritage_site: field(input, 'heritageSite'),
+          antiquities: field(input, 'antiquities'),
+          parking_notes: field(input, 'parkingNotes'),
+          infrastructure_notes: field(input, 'infrastructureNotes'),
+          plan_number: field(input, 'planNumber'),
+          land_use: field(input, 'landUse'),
+          building_coverage_pct: field(input, 'buildingCoveragePct'),
+          planning_limitations: field(input, 'planningLimitations'),
+          suitable_standalone: field(input, 'suitableStandalone'),
+          recommended_cluster_count: field(input, 'recommendedClusterCount'),
+          cluster_notes: field(input, 'clusterNotes'),
+          heritage_constraint: field(input, 'heritageConstraint'),
+          antiquities_constraint: field(input, 'antiquitiesConstraint'),
+          infrastructure_constraint: field(input, 'infrastructureConstraint'),
+          street_width_constraint: field(input, 'streetWidthConstraint'),
           // Appraiser fields
-          existing_units: (input as any).existingUnits,
-          avg_sqm: (input as any).avgSqm,
-          current_unit_value: (input as any).currentUnitValue,
-          new_unit_value: (input as any).newUnitValue,
-          construction_cost_per_sqm: (input as any).constructionCostPerSqm,
-          avg_property_value: (input as any).avgPropertyValue,
-          floor_variance_pct: (input as any).floorVariancePct,
-          avg_monthly_rent: (input as any).avgMonthlyRent,
-          evacuation_period_months: (input as any).evacuationPeriodMonths,
-          commercial_use_type: (input as any).commercialUseType,
-          commercial_value: (input as any).commercialValue,
+          existing_units: field(input, 'existingUnits'),
+          avg_sqm: field(input, 'avgSqm'),
+          current_unit_value: field(input, 'currentUnitValue'),
+          new_unit_value: field(input, 'newUnitValue'),
+          construction_cost_per_sqm: field(input, 'constructionCostPerSqm'),
+          avg_property_value: field(input, 'avgPropertyValue'),
+          floor_variance_pct: field(input, 'floorVariancePct'),
+          avg_monthly_rent: field(input, 'avgMonthlyRent'),
+          evacuation_period_months: field(input, 'evacuationPeriodMonths'),
+          commercial_use_type: field(input, 'commercialUseType'),
+          commercial_value: field(input, 'commercialValue'),
         }, { onConflict: 'project_id,inspection_type,provider_id' })
         .select().single()
 
@@ -387,7 +400,7 @@ export const inspectionsRouter = router({
 
       if (!proProviders?.length) return { sent: 0 }
 
-      const notifications = proProviders.map((pp: any) => ({
+      const notifications = proProviders.map((pp: { id: string }) => ({
         provider_id: pp.id,
         project_id: input.projectId,
         notification_type: input.notificationType,

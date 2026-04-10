@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
+import { Toaster } from 'sonner'
 import LoadingScreen from './components/LoadingScreen'
+import ErrorBoundary from './components/ErrorBoundary'
+import NotFoundPage from './pages/NotFoundPage'
 import VotesTracker from './pages/VotesTracker'
 import { useEffect } from 'react'
 import Landing from './pages/Landing'
@@ -78,7 +81,7 @@ export default function App() {
   })
 
   return (
-    <>
+    <ErrorBoundary>
       {showLoader && <LoadingScreen onDone={() => setShowLoader(false)} />}
       <Routes>
         <Route path="/" element={<Landing />} />
@@ -115,9 +118,18 @@ export default function App() {
         <Route path="/timeline" element={<TimelinePage />} />
         <Route path="/validation" element={<ValidationPage />} />
         <Route path="/learn" element={<LearningPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <FaqBot />
       <AccessibilityWidget />
-    </>
+      <Toaster
+        position="top-center"
+        dir="rtl"
+        toastOptions={{
+          style: { fontFamily: 'inherit' },
+          duration: 4000,
+        }}
+      />
+    </ErrorBoundary>
   )
 }

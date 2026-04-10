@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure } from '../middleware/auth'
 
 export const managerRouter = router({
@@ -15,7 +16,7 @@ export const managerRouter = router({
       if (!project) return null
       const { count: signedCount } = await ctx.supabase.from('signatures')
         .select('*', { count: 'exact', head: true })
-        .in('document_id', ctx.supabase.from('documents').select('id').eq('project_id', input) as any)
+        .in('document_id', ctx.supabase.from('documents').select('id').eq('project_id', input) as unknown as string[])
       return { ...project, signedCount }
     }),
 
@@ -23,7 +24,7 @@ export const managerRouter = router({
     .input(z.object({ name: z.string(), type: z.enum(['PINUY_BINUY','TAMA_38_1','TAMA_38_2','IBUY_BINUY']), description: z.string().optional() }))
     .mutation(async ({ ctx, input }) => {
       const { data, error } = await ctx.supabase.from('projects').insert({ ...input, manager_id: ctx.user.id, status: 'INITIAL' }).select().single()
-      if (error) throw error
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
       return data
     }),
 
@@ -32,7 +33,7 @@ export const managerRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { id, ...rest } = input
       const { error } = await ctx.supabase.from('projects').update(rest).eq('id', id).eq('manager_id', ctx.user.id)
-      if (error) throw error
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
       return { success: true }
     }),
 
@@ -41,7 +42,7 @@ export const managerRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { projectId, ...rest } = input
       const { data, error } = await ctx.supabase.from('buildings').insert({ project_id: projectId, units_count: rest.unitsCount, ...rest }).select().single()
-      if (error) throw error
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
       return data
     }),
 
@@ -63,7 +64,7 @@ export const managerRouter = router({
         role: input.role, created_by: ctx.user.id,
         project_id: (await ctx.supabase.from('buildings').select('project_id').eq('id', input.buildingId).single()).data?.project_id
       }).select().single()
-      if (error) throw error
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
       return { ...data, url: `https://urbanflow.byclick.co.il/join/${token}` }
     }),
 
@@ -75,7 +76,7 @@ export const managerRouter = router({
         description: input.description, service_type: input.serviceType,
         created_by: ctx.user.id, status: 'OPEN'
       }).select().single()
-      if (error) throw error
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
       return data
     }),
 

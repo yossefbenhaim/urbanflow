@@ -32,19 +32,20 @@ export default function LearningPage() {
 
   const completedIds = new Set(
     (progress.data?.progress ?? [])
-      .filter((p: any) => p.completed)
-      .map((p: any) => p.content_id)
+      .filter((p: { completed?: boolean; content_id?: string }) => p.completed)
+      .map((p: { completed?: boolean; content_id?: string }) => p.content_id)
   )
 
   const items = content.data ?? []
 
   // Group by stage
-  const grouped: Record<string, any[]> = items.reduce((acc: Record<string, any[]>, item: any) => {
-    const stage = item.stage || 'other'
+  type LearningItem = (typeof items)[number]
+  const grouped: Record<string, LearningItem[]> = items.reduce((acc: Record<string, LearningItem[]>, item) => {
+    const stage = (item as { stage?: string }).stage || 'other'
     if (!acc[stage]) acc[stage] = []
     acc[stage].push(item)
     return acc
-  }, {} as Record<string, any[]>)
+  }, {} as Record<string, LearningItem[]>)
 
   const completedCount = progress.data?.completed ?? 0
   const totalCount = progress.data?.total ?? items.length
@@ -103,7 +104,7 @@ export default function LearningPage() {
                 {STAGE_LABELS[stage] || stage}
               </h2>
               <div className="grid gap-4 sm:grid-cols-2">
-                {stageItems.map((item: any) => {
+                {stageItems.map((item) => {
                   const isCompleted = completedIds.has(item.id)
                   return (
                     <div

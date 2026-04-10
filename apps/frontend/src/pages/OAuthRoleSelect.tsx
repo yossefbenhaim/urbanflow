@@ -17,7 +17,7 @@ export default function OAuthRoleSelect() {
   const token = localStorage.getItem('sb-token')
   const { data: me, isLoading } = trpc.auth.me.useQuery(undefined, { enabled: !!token })
 
-  const googleName = (me as any)?.user_metadata?.full_name ?? (me as any)?.user_metadata?.name ?? ''
+  const googleName = (me as { user_metadata?: { full_name?: string; name?: string } } | undefined)?.user_metadata?.full_name ?? (me as { user_metadata?: { full_name?: string; name?: string } } | undefined)?.user_metadata?.name ?? ''
   const needsName = !isLoading && !googleName
 
   useEffect(() => {

@@ -37,7 +37,7 @@ export default function NewInspectionPage() {
   const meta = TYPE_META[inspectionType as InspectionType]
   const isArchitect = meta?.isArchitect
 
-  const [form, setForm] = useState<Record<string, any>>({})
+  const [form, setForm] = useState<Record<string, string | number | boolean>>({})
   const [error, setError] = useState('')
   const [step, setStep] = useState<'form' | 'files'>('form')
   const [savedId, setSavedId] = useState<string | null>(null)
@@ -47,10 +47,10 @@ export default function NewInspectionPage() {
   const submitInspection = trpc.inspections.submit.useMutation()
   const { data: slotData } = trpc.inspections.getSlotCount.useQuery({
     projectId: projectId!,
-    inspectionType: inspectionType as any,
+    inspectionType: inspectionType as InspectionType,
   })
 
-  const set = (field: string, value: any) => setForm(f => ({ ...f, [field]: value }))
+  const set = (field: string, value: string | number | boolean) => setForm(f => ({ ...f, [field]: value }))
 
   const handleSave = async () => {
     setError('')
@@ -58,13 +58,13 @@ export default function NewInspectionPage() {
     try {
       const data = await saveDraft.mutateAsync({
         projectId: projectId!,
-        inspectionType: inspectionType as any,
+        inspectionType: inspectionType as InspectionType,
         ...form,
-      } as any)
-      setSavedId((data as any).id)
+      } as never)
+      setSavedId((data as Record<string, unknown>).id as string)
       setStep('files')
-    } catch (e: any) {
-      setError(e.message ?? 'שגיאה בשמירה')
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'שגיאה בשמירה')
     }
   }
 
@@ -73,8 +73,8 @@ export default function NewInspectionPage() {
     try {
       await submitInspection.mutateAsync({ inspectionId: savedId })
       navigate('/provider-dashboard', { state: { successMsg: '✅ הבדיקה הוגשה בהצלחה!' } })
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'שגיאה בהגשה')
     }
   }
 
@@ -314,7 +314,7 @@ function FilesStep({ inspectionId, inspectionType, isArchitect, onSubmit, isSubm
     const mockUrl = `https://supabase.byclick.co.il/storage/v1/object/inspections/${inspectionId}/${file.name}`
     await addFile.mutateAsync({
       inspectionId,
-      fileType: fileTypeKey as any,
+      fileType: fileTypeKey as 'map' | 'other' | 'report_pdf' | 'sketch' | 'blueprint' | 'photo' | 'tama_doc' | 'cluster_map' | 'valuation_report' | 'rent_table' | 'commercial_report',
       fileName: file.name,
       fileUrl: mockUrl,
       fileSizeBytes: file.size,
@@ -389,22 +389,22 @@ function Row({ children }: { children: React.ReactNode }) {
 }
 
 function Field({ label, value, onChange, type = 'text', textarea = false, placeholder }: {
-  label: string; value: any; onChange: (v: string) => void;
+  label: string; value: string | number | boolean | undefined; onChange: (v: string) => void;
   type?: string; textarea?: boolean; placeholder?: string
 }) {
   return (
     <div>
       <label className="block text-xs text-[#5a5a6e] mb-1">{label}</label>
       {textarea ? (
-        <textarea value={value ?? ''} onChange={e => onChange(e.target.value)} rows={3} placeholder={placeholder} className="sc-input resize-none" />
+        <textarea value={String(value ?? '')} onChange={e => onChange(e.target.value)} rows={3} placeholder={placeholder} className="sc-input resize-none" />
       ) : (
-        <input type={type} value={value ?? ''} onChange={e => onChange(e.target.value)} placeholder={placeholder} className="sc-input" />
+        <input type={type} value={String(value ?? '')} onChange={e => onChange(e.target.value)} placeholder={placeholder} className="sc-input" />
       )}
     </div>
   )
 }
 
-function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ label, value, onChange }: { label: string; value: string | number | boolean | undefined; onChange: (v: boolean) => void }) {
   return (
     <div className="flex items-center justify-between">
       <span className="text-sm text-[#212121]">{label}</span>

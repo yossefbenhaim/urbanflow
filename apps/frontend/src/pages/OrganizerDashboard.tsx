@@ -108,7 +108,7 @@ function GroupChat({ projectId, myId }: { projectId: string; myId: string }) {
         {messages.length === 0 && (
           <p className="text-center text-[#5a5a6e] text-sm pt-8">אין הודעות עדיין</p>
         )}
-        {messages.map((m: any) => {
+        {messages.map((m: { id: string; sender_id: string; content: string; sender?: { full_name?: string } }) => {
           const isMe = m.sender_id === myId
           return (
             <div key={m.id} className={`flex ${isMe ? 'justify-start' : 'justify-end'}`}>
@@ -141,7 +141,7 @@ function GroupChat({ projectId, myId }: { projectId: string; myId: string }) {
   )
 }
 
-function ContractTab({ project, onSaved }: { project: any; onSaved: () => void }) {
+function ContractTab({ project, onSaved }: { project: Record<string, string | undefined> & { id: string }; onSaved: () => void }) {
   const [startDate, setStartDate] = useState(project.contract_start_date ?? '')
   const [endDate, setEndDate] = useState(project.contract_end_date ?? '')
   const [fileUrl, setFileUrl] = useState(project.contract_file_url ?? '')
@@ -219,7 +219,12 @@ function StageRequirementsTab({ projectId }: { projectId: string }) {
   if (isLoading) return <div className="flex justify-center py-12"><BuildingLoader size="md" /></div>
   if (!data) return <p className="text-center text-[#5a5a6e] py-8">אין נתוני שלבים לפרויקט זה</p>
 
-  const { currentStage, nextStage, requirements, canAdvance } = data as any
+  const { currentStage, nextStage, requirements, canAdvance } = data as {
+    currentStage: string
+    nextStage?: string
+    requirements: { id: string; type: string; isMet: boolean; value?: string }[]
+    canAdvance: boolean
+  }
 
   const STAGE_LABELS: Record<string, string> = {
     initial: 'התחלה',
@@ -251,7 +256,7 @@ function StageRequirementsTab({ projectId }: { projectId: string }) {
         <div className="sc-card p-6">
           <h3 className="font-semibold text-[#212121] mb-4">דרישות למעבר שלב</h3>
           <div className="space-y-3">
-            {requirements.map((req: any) => (
+            {requirements.map((req) => (
               <div key={req.id} className={`flex items-center gap-3 p-3 rounded-xl ${req.isMet ? 'bg-[#4a8c5c]/10' : 'bg-red-500/10'}`}>
                 <span className="text-xl">{req.isMet ? '✅' : '❌'}</span>
                 <div className="flex-1">
@@ -279,7 +284,7 @@ function StageRequirementsTab({ projectId }: { projectId: string }) {
                 disabled={advance.isPending}
                 className="sc-btn-primary w-full py-3 text-base font-bold disabled:opacity-50"
               >
-                {advance.isPending ? 'מתקדם...' : `🚀 התקדם ל${STAGE_LABELS[nextStage] ?? nextStage}`}
+                {advance.isPending ? 'מתקדם...' : `🚀 התקדם ל${nextStage ? STAGE_LABELS[nextStage] ?? nextStage : ''}`}
               </button>
             ) : (
               <div className="bg-[#8b6f47]/10 border border-sc-gold/20 rounded-xl p-4 text-center">
@@ -293,7 +298,7 @@ function StageRequirementsTab({ projectId }: { projectId: string }) {
             )}
             {advance.isError && (
               <p className="text-red-500 text-sm mt-2 text-center">
-                {(advance.error as any)?.message ?? 'שגיאה בהתקדמות'}
+                {advance.error?.message ?? 'שגיאה בהתקדמות'}
               </p>
             )}
           </div>
@@ -332,7 +337,7 @@ function TenantsTab({ projectId }: { projectId: string }) {
       {(!tenants || tenants.length === 0) && (
         <p className="text-center text-[#5a5a6e] py-8">אין דיירים רשומים עדיין</p>
       )}
-      {tenants?.map((t: any) => {
+      {tenants?.map((t: { tenant_id: string; profiles?: { id: string; full_name?: string; email?: string; phone?: string; is_building_representative?: boolean } }) => {
         const p = t.profiles
         if (!p) return null
         return (
@@ -387,7 +392,7 @@ export default function OrganizerDashboard() {
 
   // Get current user id from token
   const meQ = trpc.auth.me.useQuery(undefined, { retry: false })
-  const myId = (meQ.data as any)?.id ?? ''
+  const myId = (meQ.data as { id?: string } | undefined)?.id ?? ''
 
   useEffect(() => {
     if (projects && projects.length > 0 && !selectedProjectId) {
@@ -401,7 +406,7 @@ export default function OrganizerDashboard() {
     if (!token) { navigate('/login'); return }
   }, [])
 
-  const selectedProject = projects?.find((p: any) => p.id === selectedProjectId)
+  const selectedProject = projects?.find((p) => p.id === selectedProjectId)
 
   const copyInviteLink = (code: string) => {
     const url = `https://urbanflow.byclick.co.il/join/${code}`
@@ -409,7 +414,7 @@ export default function OrganizerDashboard() {
     alert('הקישור הועתק!')
   }
 
-  const shareWhatsApp = (project: any) => {
+  const shareWhatsApp = (project: { name: string; invite_code?: string }) => {
     const url = `https://urbanflow.byclick.co.il/join/${project.invite_code}`
     const text = encodeURIComponent(`שלום! הוזמנת לפרויקט "${project.name}" בפלטפורמת Silver Castle. להצטרפות לחץ: ${url}`)
     window.open(`https://wa.me/?text=${text}`, '_blank')

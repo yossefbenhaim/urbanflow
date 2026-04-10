@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useUser, ROLE_LABELS } from '../hooks/useUser'
+import { useUser, ROLE_LABELS, type UserProfile } from '../hooks/useUser'
 import { trpc } from '../lib/trpc'
 
 // ── Notification Bell ─────────────────────────────────────────────────────────
+type Notification = { id: string; is_read: boolean; type?: string; title?: string; message?: string; created_at: string; action_url?: string }
+
 function NotificationBell() {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -16,7 +18,7 @@ function NotificationBell() {
     staleTime: 10000,
   })
   const markRead = trpc.tenant.markNotificationsRead.useMutation({ onSuccess: () => refetch() })
-  const unread = (notifications as any[]).filter((n: any) => !n.is_read).length
+  const unread = (notifications as Notification[]).filter(n => !n.is_read).length
 
   useEffect(() => {
     const h = (e: Event) => { if (!ref.current?.contains(e.target as Node)) setOpen(false) }
@@ -45,12 +47,12 @@ function NotificationBell() {
             🔔 התראות {unread > 0 && <span className="text-[#5a5a6e] font-normal text-[11px]">({unread} חדשות)</span>}
           </div>
           <div className="max-h-80 overflow-y-auto">
-            {(notifications as any[]).length === 0 ? (
+            {(notifications as Notification[]).length === 0 ? (
               <div className="py-5 px-4 text-center text-[#8e8e9e] text-[13px]">
                 🎉 אין התראות חדשות
               </div>
             ) : (
-              (notifications as any[]).map((n: any) => (
+              (notifications as Notification[]).map((n) => (
                 <div key={n.id}
                   onClick={() => { if (n.action_url) { setOpen(false); navigate(n.action_url) } }}
                   className={`px-3.5 py-2.5 border-b border-[#eeeeee]/50 ${n.is_read ? 'bg-white' : 'bg-[#ebf1f7]'} ${n.action_url ? 'cursor-pointer' : 'cursor-default'}`}
@@ -80,7 +82,7 @@ function NotificationBell() {
 // ── Right Drawer (Mobile) ─────────────────────────────────────────────────────
 function RightDrawer({ open, onClose, profile, isRepresentative, signOut }: {
   open: boolean; onClose: () => void
-  profile: any; isRepresentative: boolean
+  profile: UserProfile | null; isRepresentative: boolean
   signOut: () => void
 }) {
   const location = useLocation()
@@ -173,7 +175,7 @@ export default function Navbar() {
   const { data: myRole } = trpc.tenant.getMyRole.useQuery(undefined, {
     enabled: !!token && profile?.role === 'tenant',
   })
-  const isRepresentative = (myRole as any)?.isRepresentative || false
+  const isRepresentative = (myRole as { isRepresentative?: boolean } | undefined)?.isRepresentative || false
 
   const dashLink =
     profile?.role === 'organizer' ? '/organizer' :

@@ -1,8 +1,43 @@
 import { z } from 'zod'
 import { router, protectedProcedure } from '../middleware/auth'
 import { TRPCError } from '@trpc/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { logger } from '../logger'
 
-async function findOrCreateBuilding(supabase: any, city: string, street: string, buildingNumber: string) {
+// ── Supabase response types for joined / nested data ───────
+// Note: Supabase .select() with joins may return arrays or single objects
+// depending on the relationship. We use permissive types here to accommodate both.
+interface TenantUser { user_id: string }
+interface BuildingGroupRecord { id: string; building_id?: string }
+interface BuildingGroupRef { building_id: string }
+interface PollRecord {
+  id: string; group_id: string; question: string; poll_type: string
+  status: string; threshold_pct: number; result_value?: string
+  result_user_id?: string; building_groups?: BuildingGroupRef | BuildingGroupRef[]
+  options?: string[]; is_anonymous?: boolean; close_at?: string; created_at?: string
+}
+interface ProfileRecord { full_name?: string; avatar_url?: string; is_building_representative?: boolean; representative_building_id?: string; id?: string }
+interface GroupMember { user_id: string; group_id?: string; profiles?: ProfileRecord | ProfileRecord[] }
+interface PollVote { poll_id: string; value: string; voter_id?: string }
+interface UnitBuilding { building?: { project_id?: string; project?: Record<string, unknown> } }
+interface TenantProfileRow {
+  user_id?: string; building_id?: string; is_onboarded?: boolean
+  id_number?: string; phone?: string; floor?: number; apartment_sqm?: number
+  apartment_number?: string; tabu_file_url?: string; tabu_uploaded_at?: string
+  tabu_locked?: boolean; unit?: UnitBuilding
+  [key: string]: unknown
+}
+interface SignatureRow { user_id: string; signed_at?: string }
+interface DocumentRow { id: string; title?: string; signatures?: SignatureRow[]; [key: string]: unknown }
+interface ProjectTenantRow { project_id: string; projects?: Record<string, unknown> | Record<string, unknown>[]; [key: string]: unknown }
+interface NotificationTarget { user_id: string }
+
+/** Helper to extract first element from Supabase join result (which may be array or object) */
+function unwrapJoin<T>(val: T | T[] | undefined): T | undefined {
+  return Array.isArray(val) ? val[0] : val
+}
+
+async function findOrCreateBuilding(supabase: SupabaseClient, city: string, street: string, buildingNumber: string) {
   const { data: existing } = await supabase
     .from('buildings')
     .select('id')
@@ -24,9 +59,9 @@ async function findOrCreateBuilding(supabase: any, city: string, street: string,
   return newBuilding.id
 }
 
-async function handleBuildingGroup(supabase: any, buildingId: string, userId: string) {
+async function handleBuildingGroup(supabase: SupabaseClient, buildingId: string, userId: string) {
   const { data: tenants } = await supabase.from('tenant_profiles').select('user_id').eq('building_id', buildingId)
-  const tenantIds: string[] = (tenants ?? []).map((t: any) => t.user_id)
+  const tenantIds: string[] = ((tenants ?? []) as TenantUser[]).map((t) => t.user_id)
   if (tenantIds.length < 2) return
 
   const { data: existingGroup } = await supabase.from('building_groups').select('id').eq('building_id', buildingId).maybeSingle()
@@ -37,6 +72,7 @@ async function handleBuildingGroup(supabase: any, buildingId: string, userId: st
     await supabase.from('building_group_members').upsert({ group_id: groupId, user_id: userId }, { onConflict: 'group_id,user_id' })
   } else {
     const { data: bg } = await supabase.from('building_groups').insert({ building_id: buildingId, name: 'קבוצת הבניין' }).select('id').single()
+    if (!bg) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create building group' })
     groupId = bg.id
     const members = tenantIds.map((uid: string) => ({ group_id: groupId, user_id: uid }))
     await supabase.from('building_group_members').insert(members)
@@ -44,6 +80,7 @@ async function handleBuildingGroup(supabase: any, buildingId: string, userId: st
     const { data: poll1 } = await supabase.from('polls').insert({ group_id: groupId, question: 'כמה דירות יש בבניין שלך?', poll_type: 'apartment_count', threshold_pct: 60 }).select('id').single()
     const { data: poll2 } = await supabase.from('polls').insert({ group_id: groupId, question: 'מי יהיה נציג הוועד?', poll_type: 'representative_election', threshold_pct: 51 }).select('id').single()
     const { data: poll3 } = await supabase.from('polls').insert({ group_id: groupId, question: 'האם אתה מסכים להצטרף לפרויקט הפינוי-בינוי?', poll_type: 'project_approval', threshold_pct: 66 }).select('id').single()
+    if (!poll1 || !poll2 || !poll3) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create polls' })
     await supabase.from('group_messages').insert([
       { group_id: groupId, sender_id: userId, content: 'כמה דירות יש בבניין שלך?', message_type: 'poll', poll_id: poll1.id },
       { group_id: groupId, sender_id: userId, content: 'מי יהיה נציג הוועד?', message_type: 'poll', poll_id: poll2.id },
@@ -52,10 +89,12 @@ async function handleBuildingGroup(supabase: any, buildingId: string, userId: st
   }
 }
 
-async function processVote(supabase: any, pollId: string, buildingId: string) {
-  const { data: poll } = await supabase.from('polls').select('*, building_groups(building_id)').eq('id', pollId).single()
+async function processVote(supabase: SupabaseClient, pollId: string, buildingId: string) {
+  const { data: rawPoll } = await supabase.from('polls').select('*, building_groups(building_id)').eq('id', pollId).single()
+  const poll = rawPoll as PollRecord | null
   if (!poll || poll.status !== 'open') return
-  const resolvedBuildingId = buildingId || (poll.building_groups as any)?.building_id
+  const bgRef = unwrapJoin(poll.building_groups)
+  const resolvedBuildingId = buildingId || bgRef?.building_id
 
   const { data: tenants } = await supabase.from('tenant_profiles').select('user_id').eq('building_id', resolvedBuildingId)
   const totalTenants = (tenants ?? []).length
@@ -83,11 +122,12 @@ async function processVote(supabase: any, pollId: string, buildingId: string) {
 
     // Notify all building members about elected representative
     const { data: repProfile } = await supabase.from('profiles').select('full_name').eq('id', resultValue).single()
-    const repName = (repProfile as any)?.full_name ?? 'הנציג שנבחר'
+    const repName = (repProfile as ProfileRecord | null)?.full_name ?? 'הנציג שנבחר'
     const { data: groupMembers } = await supabase.from('building_group_members').select('user_id').eq('group_id', poll.group_id)
-    if (groupMembers && groupMembers.length > 0) {
+    const members = (groupMembers ?? []) as NotificationTarget[]
+    if (members.length > 0) {
       await supabase.from('notifications').insert(
-        groupMembers.map((m: any) => ({
+        members.map((m) => ({
           user_id: m.user_id,
           type: 'representative_elected',
           title: '🎉 נבחר נציג דיירים!',
@@ -104,9 +144,10 @@ async function processVote(supabase: any, pollId: string, buildingId: string) {
     }
   } else if (poll.poll_type === 'project_approval') {
     const { data: groupMembers } = await supabase.from('building_group_members').select('user_id').eq('group_id', poll.group_id)
-    if (groupMembers && groupMembers.length > 0) {
+    const approvalMembers = (groupMembers ?? []) as NotificationTarget[]
+    if (approvalMembers.length > 0) {
       await supabase.from('notifications').insert(
-        groupMembers.map((m: any) => ({
+        approvalMembers.map((m) => ({
           user_id: m.user_id,
           type: 'project_approved',
           title: '✅ הפרויקט אושר!',
@@ -116,7 +157,7 @@ async function processVote(supabase: any, pollId: string, buildingId: string) {
       )
       await supabase.from('group_messages').insert({
         group_id: poll.group_id,
-        sender_id: (groupMembers[0] as any).user_id,
+        sender_id: approvalMembers[0].user_id,
         content: `✅ הושגה הסכמה של ${pct}% מבעלי הדירות! הפרויקט אושר.`,
         message_type: 'text',
       })
@@ -133,7 +174,7 @@ export const tenantRouter = router({
   getMyProject: protectedProcedure.query(async ({ ctx }) => {
     const { data: pt } = await ctx.supabase.from('project_tenants').select('project_id, projects(id, name, address, invite_code, status, created_at)').eq('tenant_id', ctx.user.id).single()
     if (!pt) return null
-    const project = (pt as any).projects
+    const project = unwrapJoin((pt as unknown as ProjectTenantRow).projects as Record<string, unknown>[] | Record<string, unknown> | undefined)
     if (!project) return null
     const { data: milestones } = await ctx.supabase.from('milestones').select('*').eq('project_id', project.id).order('order_num')
     return { ...project, milestones: milestones ?? [] }
@@ -145,7 +186,7 @@ export const tenantRouter = router({
     let projectId = pt?.project_id
     if (!projectId) {
       const { data: tp } = await ctx.supabase.from('tenant_profiles').select('unit:units(building:buildings(project_id))').eq('user_id', ctx.user.id).single()
-      projectId = (tp?.unit as any)?.building?.project_id
+      projectId = ((tp as TenantProfileRow | null)?.unit as UnitBuilding | undefined)?.building?.project_id
     }
     if (!projectId) return []
     const { data: docs } = await ctx.supabase.from('documents').select('*, signatures(signed_at)').eq('project_id', projectId).in('type', ['SIGN_REQUIRED', 'INFO_ONLY'])
@@ -154,7 +195,7 @@ export const tenantRouter = router({
 
   getTimeline: protectedProcedure.query(async ({ ctx }) => {
     const { data: tp } = await ctx.supabase.from('tenant_profiles').select('unit:units(building:buildings(project_id))').eq('user_id', ctx.user.id).single()
-    const projectId = (tp?.unit as any)?.building?.project_id
+    const projectId = ((tp as TenantProfileRow | null)?.unit as UnitBuilding | undefined)?.building?.project_id
     if (!projectId) return []
     const { data } = await ctx.supabase.from('milestones').select('*').eq('project_id', projectId).order('order_num')
     return data ?? []
@@ -162,14 +203,14 @@ export const tenantRouter = router({
 
   getLeadership: protectedProcedure.query(async ({ ctx }) => {
     const { data: tp } = await ctx.supabase.from('tenant_profiles').select('unit:units(building:buildings(project:projects(*,manager:profiles(*))))').eq('user_id', ctx.user.id).single()
-    return (tp?.unit as any)?.building?.project ?? null
+    return ((tp as TenantProfileRow | null)?.unit as UnitBuilding | undefined)?.building?.project ?? null
   }),
 
   updateProfile: protectedProcedure
     .input(z.object({ fullName: z.string().optional(), phone: z.string().optional(), idNumber: z.string().optional() }))
     .mutation(async ({ ctx, input }) => {
       const { error } = await ctx.supabase.from('profiles').update({ full_name: input.fullName, phone: input.phone, id_number: input.idNumber }).eq('id', ctx.user.id)
-      if (error) throw error
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
       return { success: true }
     }),
 
@@ -185,7 +226,7 @@ export const tenantRouter = router({
     .input(z.object({ docId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const { error } = await ctx.supabase.from('signatures').insert({ document_id: input.docId, user_id: ctx.user.id, verified_otp: true })
-      if (error) throw error
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
       return { success: true, signedAt: new Date().toISOString() }
     }),
 
@@ -207,7 +248,7 @@ export const tenantRouter = router({
 
   getProjectMembership: protectedProcedure.query(async ({ ctx }) => {
     const { data } = await ctx.supabase.from('project_tenants').select('*, projects(id, name, address, invite_code)').eq('tenant_id', ctx.user.id).single()
-    return (data as any)?.projects ?? null
+    return (data as ProjectTenantRow | null)?.projects ?? null
   }),
 
   updateApartmentProfile: protectedProcedure
@@ -248,7 +289,7 @@ export const tenantRouter = router({
         has_special_advantage: input.hasSpecialAdvantage ?? false,
       }, { onConflict: 'user_id' })
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
-      try { await handleBuildingGroup(ctx.supabase, buildingId, ctx.user.id) } catch (e) { console.error('[buildingGroup]', e) }
+      try { await handleBuildingGroup(ctx.supabase, buildingId, ctx.user.id) } catch (e) { logger.error({ err: e }, '[buildingGroup] failed to create group') }
       return { ok: true }
     }),
 
@@ -257,7 +298,7 @@ export const tenantRouter = router({
       ctx.supabase.from('project_tenants').select('project_id').eq('tenant_id', ctx.user.id).single(),
       ctx.supabase.from('tenant_profiles').select('apartment_number, is_onboarded, id_number, phone, floor, apartment_sqm').eq('user_id', ctx.user.id).single(),
     ])
-    const profile = tp as any
+    const profile = tp as TenantProfileRow | null
     return {
       hasProject: !!pt?.project_id, isOnboarded: !!profile?.is_onboarded,
       steps: { personal: !!(profile?.id_number && profile?.phone), address: !!(profile?.apartment_number || profile?.floor), apartment: !!(profile?.apartment_sqm) }
@@ -267,16 +308,16 @@ export const tenantRouter = router({
   getMyRole: protectedProcedure.query(async ({ ctx }) => {
     const { data: profile } = await ctx.supabase.from('profiles').select('is_building_representative, representative_building_id, full_name').eq('id', ctx.user.id).single()
     return {
-      isRepresentative: (profile as any)?.is_building_representative || false,
-      buildingId: (profile as any)?.representative_building_id ?? null,
-      fullName: (profile as any)?.full_name ?? null,
+      isRepresentative: (profile as ProfileRecord | null)?.is_building_representative || false,
+      buildingId: (profile as ProfileRecord | null)?.representative_building_id ?? null,
+      fullName: (profile as ProfileRecord | null)?.full_name ?? null,
     }
   }),
 
   getMyBuildingGroup: protectedProcedure.query(async ({ ctx }) => {
     const { data: tp } = await ctx.supabase.from('tenant_profiles').select('building_id').eq('user_id', ctx.user.id).single()
-    if (!(tp as any)?.building_id) return null
-    const { data: group } = await ctx.supabase.from('building_groups').select('id, name').eq('building_id', (tp as any).building_id).maybeSingle()
+    if (!(tp as TenantProfileRow | null)?.building_id) return null
+    const { data: group } = await ctx.supabase.from('building_groups').select('id, name').eq('building_id', (tp as TenantProfileRow).building_id).maybeSingle()
     return group ?? null
   }),
 
@@ -304,27 +345,29 @@ export const tenantRouter = router({
   getPollDetails: protectedProcedure
     .input(z.object({ pollId: z.string() }))
     .query(async ({ ctx, input }) => {
-      const { data: poll } = await ctx.supabase.from('polls').select('id, question, poll_type, status, result_value, result_user_id, threshold_pct, created_at, group_id, options, is_anonymous, close_at').eq('id', input.pollId).single()
-      if (!poll) throw new TRPCError({ code: 'NOT_FOUND' })
-      const { data: member } = await ctx.supabase.from('building_group_members').select('user_id').eq('group_id', (poll as any).group_id).eq('user_id', ctx.user.id).maybeSingle()
+      const { data: rawPoll } = await ctx.supabase.from('polls').select('id, question, poll_type, status, result_value, result_user_id, threshold_pct, created_at, group_id, options, is_anonymous, close_at').eq('id', input.pollId).single()
+      if (!rawPoll) throw new TRPCError({ code: 'NOT_FOUND' })
+      const poll = rawPoll as unknown as PollRecord
+      const { data: member } = await ctx.supabase.from('building_group_members').select('user_id').eq('group_id', poll.group_id).eq('user_id', ctx.user.id).maybeSingle()
       if (!member) throw new TRPCError({ code: 'FORBIDDEN' })
       const { data: myVote } = await ctx.supabase.from('poll_votes').select('value').eq('poll_id', input.pollId).eq('voter_id', ctx.user.id).maybeSingle()
       const { count: voteCount } = await ctx.supabase.from('poll_votes').select('*', { count: 'exact', head: true }).eq('poll_id', input.pollId)
-      const { count: memberCount } = await ctx.supabase.from('building_group_members').select('*', { count: 'exact', head: true }).eq('group_id', (poll as any).group_id)
-      let candidates: any[] = []
-      if ((poll as any).poll_type === 'representative_election') {
-        const { data: members } = await ctx.supabase.from('building_group_members').select('user_id, profiles(id, full_name, avatar_url)').eq('group_id', (poll as any).group_id)
-        candidates = (members ?? []).map((m: any) => m.profiles)
+      const { count: memberCount } = await ctx.supabase.from('building_group_members').select('*', { count: 'exact', head: true }).eq('group_id', poll.group_id)
+      let candidates: ProfileRecord[] = []
+      if (poll.poll_type === 'representative_election') {
+        const { data: members } = await ctx.supabase.from('building_group_members').select('user_id, profiles(id, full_name, avatar_url)').eq('group_id', poll.group_id)
+        candidates = ((members ?? []) as unknown as GroupMember[]).map((m) => unwrapJoin(m.profiles) as ProfileRecord).filter(Boolean)
       }
-      return { ...poll, myVote: myVote?.value ?? null, voteCount: voteCount ?? 0, memberCount: memberCount ?? 0, votePercent: memberCount ? Math.round(((voteCount ?? 0) / memberCount) * 100) : 0, candidates }
+      return { ...rawPoll, myVote: myVote?.value ?? null, voteCount: voteCount ?? 0, memberCount: memberCount ?? 0, votePercent: memberCount ? Math.round(((voteCount ?? 0) / memberCount) * 100) : 0, candidates }
     }),
 
   castVote: protectedProcedure
     .input(z.object({ pollId: z.string(), value: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const { data: poll } = await ctx.supabase.from('polls').select('id, group_id, status, poll_type, building_groups(building_id)').eq('id', input.pollId).single()
-      if (!poll || (poll as any).status !== 'open') throw new TRPCError({ code: 'BAD_REQUEST', message: 'הסקר סגור' })
-      const { data: member } = await ctx.supabase.from('building_group_members').select('user_id').eq('group_id', (poll as any).group_id).eq('user_id', ctx.user.id).maybeSingle()
+      const { data: rawPoll } = await ctx.supabase.from('polls').select('id, group_id, status, poll_type, building_groups(building_id)').eq('id', input.pollId).single()
+      const castPoll = rawPoll as unknown as PollRecord | null
+      if (!castPoll || castPoll.status !== 'open') throw new TRPCError({ code: 'BAD_REQUEST', message: 'הסקר סגור' })
+      const { data: member } = await ctx.supabase.from('building_group_members').select('user_id').eq('group_id', castPoll.group_id).eq('user_id', ctx.user.id).maybeSingle()
       if (!member) throw new TRPCError({ code: 'FORBIDDEN' })
       // upsert — allows changing vote
       const { error } = await ctx.supabase.from('poll_votes').upsert(
@@ -332,7 +375,8 @@ export const tenantRouter = router({
         { onConflict: 'poll_id,voter_id' }
       )
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
-      const buildingId = ((poll as any).building_groups as any)?.building_id
+      const bgRefVote = unwrapJoin(castPoll.building_groups)
+      const buildingId = bgRefVote?.building_id ?? ''
       await processVote(ctx.supabase, input.pollId, buildingId)
       return { ok: true }
     }),
@@ -361,7 +405,7 @@ export const tenantRouter = router({
     .mutation(async ({ ctx, input }) => {
       // Check if already locked
       const { data: existing } = await ctx.supabase.from('tenant_profiles').select('tabu_locked').eq('user_id', ctx.user.id).single()
-      if ((existing as any)?.tabu_locked) throw new TRPCError({ code: 'FORBIDDEN', message: 'נסח הטאבו ננעל ואינו ניתן לעדכון' })
+      if ((existing as TenantProfileRow | null)?.tabu_locked) throw new TRPCError({ code: 'FORBIDDEN', message: 'נסח הטאבו ננעל ואינו ניתן לעדכון' })
       const { error } = await ctx.supabase.from('tenant_profiles').update({
         tabu_file_url: input.fileUrl,
         tabu_uploaded_at: new Date().toISOString(),
@@ -374,7 +418,7 @@ export const tenantRouter = router({
   getTabuStatus: protectedProcedure.query(async ({ ctx }) => {
     const { data } = await ctx.supabase.from('tenant_profiles').select('tabu_file_url, tabu_uploaded_at, tabu_locked').eq('user_id', ctx.user.id).single()
     if (!data) return { uploaded: false, locked: false, url: null, uploadedAt: null }
-    const d = data as any
+    const d = data as TenantProfileRow
     // Auto-lock after 1 hour
     if (d.tabu_uploaded_at && !d.tabu_locked) {
       const elapsed = Date.now() - new Date(d.tabu_uploaded_at).getTime()
@@ -398,7 +442,7 @@ export const tenantRouter = router({
       const { data: tp } = await ctx.supabase.from('tenant_profiles').select('building_id').eq('user_id', ctx.user.id).single()
       const { data, error } = await ctx.supabase.from('ownership_documents').insert({
         user_id: ctx.user.id,
-        building_id: (tp as any)?.building_id ?? null,
+        building_id: (tp as TenantProfileRow | null)?.building_id ?? null,
         file_url: input.fileUrl,
         file_name: input.fileName,
         document_type: input.documentType,
@@ -636,7 +680,7 @@ export const tenantRouter = router({
       // Alert for 80+ tenants — notify project manager
       if (isOver80) {
         const { data: tp } = await ctx.supabase.from('tenant_profiles').select('unit:units(building:buildings(project:projects(id, manager_id)))').eq('user_id', ctx.user.id).single()
-        const project = (tp?.unit as any)?.building?.project
+        const project = ((tp as TenantProfileRow | null)?.unit as UnitBuilding | undefined)?.building?.project
         if (project?.manager_id) {
           await ctx.supabase.from('notifications').insert({
             user_id: project.manager_id,
@@ -667,7 +711,7 @@ export const tenantRouter = router({
         .single()
       if (error || !doc) throw new TRPCError({ code: 'NOT_FOUND', message: 'מסמך לא נמצא' })
       // Check if current user already signed
-      const mySig = ((doc as any).signatures ?? []).find((s: any) => s.user_id === ctx.user.id)
+      const mySig = ((doc as DocumentRow).signatures ?? []).find((s: SignatureRow) => s.user_id === ctx.user.id)
       return { ...doc, mySig: mySig ?? null }
     }),
 
@@ -686,7 +730,7 @@ export const tenantRouter = router({
         .eq('slug', input.docId)
         .single()
       if (!doc) throw new TRPCError({ code: 'NOT_FOUND', message: 'מסמך לא נמצא' })
-      const documentId = (doc as any).id
+      const documentId = (doc as DocumentRow).id
 
       // Check not already signed
       const { data: existing } = await ctx.supabase
@@ -712,37 +756,38 @@ export const tenantRouter = router({
   getNextStep: protectedProcedure.query(async ({ ctx }) => {
     // Check profile completion
     const { data: tp } = await ctx.supabase.from('tenant_profiles').select('is_onboarded, tabu_file_url').eq('user_id', ctx.user.id).single()
-    if (!tp || !(tp as any).is_onboarded) {
+    if (!tp || !(tp as TenantProfileRow).is_onboarded) {
       return { action: 'complete_profile', text: 'השלם את הפרופיל שלך', link: '/onboarding', icon: '📋' }
     }
     // Check tabu upload
-    if (!(tp as any).tabu_file_url) {
+    if (!(tp as TenantProfileRow).tabu_file_url) {
       return { action: 'upload_tabu', text: 'העלה נסח טאבו', link: '/profile', icon: '📄' }
     }
     // Check open polls
     const { data: bgm } = await ctx.supabase.from('building_group_members').select('group_id').eq('user_id', ctx.user.id)
     if (bgm && bgm.length > 0) {
-      const groupIds = bgm.map((m: any) => m.group_id)
+      const groupIds = (bgm as Array<{ group_id: string }>).map((m) => m.group_id)
       const { data: polls } = await ctx.supabase.from('polls').select('id, question').in('group_id', groupIds).eq('status', 'open')
       if (polls && polls.length > 0) {
         // Check if user voted
-        const { data: votes } = await ctx.supabase.from('poll_votes').select('poll_id').eq('voter_id', ctx.user.id).in('poll_id', polls.map((p: any) => p.id))
-        const votedIds = new Set((votes ?? []).map((v: any) => v.poll_id))
-        const unvoted = polls.find((p: any) => !votedIds.has(p.id))
+        const pollIds = (polls as Array<{ id: string; question: string }>).map((p) => p.id)
+        const { data: votes } = await ctx.supabase.from('poll_votes').select('poll_id').eq('voter_id', ctx.user.id).in('poll_id', pollIds)
+        const votedIds = new Set((votes as Array<{ poll_id: string }> ?? []).map((v) => v.poll_id))
+        const unvoted = (polls as Array<{ id: string; question: string }>).find((p) => !votedIds.has(p.id))
         if (unvoted) {
-          return { action: 'vote', text: `הצבע בהצבעה: ${(unvoted as any).question}`, link: '/building-chat', icon: '🗳️' }
+          return { action: 'vote', text: `הצבע בהצבעה: ${unvoted.question}`, link: '/building-chat', icon: '🗳️' }
         }
       }
     }
     // Check unsigned documents
     const { data: tpUnit } = await ctx.supabase.from('tenant_profiles').select('unit:units(building:buildings(project_id))').eq('user_id', ctx.user.id).single()
-    const projectId = (tpUnit?.unit as any)?.building?.project_id
+    const projectId = ((tpUnit as TenantProfileRow | null)?.unit as UnitBuilding | undefined)?.building?.project_id
     if (projectId) {
       const { data: docs } = await ctx.supabase.from('documents').select('id, title, signatures(signed_at)').eq('project_id', projectId).eq('type', 'SIGN_REQUIRED')
       if (docs) {
-        const unsigned = docs.find((d: any) => !d.signatures || d.signatures.length === 0)
+        const unsigned = docs.find((d) => !d.signatures || d.signatures.length === 0)
         if (unsigned) {
-          return { action: 'sign_document', text: `חתום על מסמך: ${(unsigned as any).title}`, link: '/documents', icon: '✍️' }
+          return { action: 'sign_document', text: `חתום על מסמך: ${unsigned.title}`, link: '/documents', icon: '✍️' }
         }
       }
     }

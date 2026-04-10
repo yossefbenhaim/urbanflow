@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import { trpc } from '../lib/trpc'
 import PageLayout, { PageTitle } from '../components/PageLayout'
 import BuildingLoader from '../components/BuildingLoader'
@@ -90,7 +91,7 @@ function PollWizard({ groupId, onSuccess }: { groupId: string; onSuccess: () => 
             <label className="block text-sm font-medium text-[#212121] mb-1">סוג הסקר</label>
             <div className="flex gap-2">
               {[{ v: 'single', l: '⚪ בחירה יחידה' }, { v: 'multiple', l: '☑️ ריבוי בחירות' }].map(({ v, l }) => (
-                <button key={v} onClick={() => setPollType(v as any)}
+                <button key={v} onClick={() => setPollType(v as 'single' | 'multiple')}
                   className={`flex-1 py-2 px-3 rounded-xl border text-sm font-medium transition-colors active:scale-95 ${pollType === v ? 'border-[#3b6b9c] bg-[#ebf1f7] text-[#3b6b9c]' : 'border-[#eeeeee] text-[#5a5a6e]'}`}>
                   {l}
                 </button>
@@ -234,8 +235,8 @@ function DocumentUpload({ buildingId, groupId, onSuccess }: { buildingId: string
       }
       const fileUrl = `https://supabase.byclick.co.il/storage/v1/object/public/documents/${path}`
       await uploadDoc.mutateAsync({ name, docType, fileUrl, description: description || undefined, shareToGroup, buildingId, groupId: groupId || undefined })
-    } catch (err: any) {
-      setErrors({ submit: err.message })
+    } catch (err: unknown) {
+      setErrors({ submit: err instanceof Error ? err.message : String(err) })
     } finally {
       setUploading(false)
     }
@@ -252,7 +253,7 @@ function DocumentUpload({ buildingId, groupId, onSuccess }: { buildingId: string
       </div>
       <div>
         <label className="block text-sm font-medium text-[#212121] mb-1">סוג המסמך</label>
-        <select value={docType} onChange={e => setDocType(e.target.value as any)}
+        <select value={docType} onChange={e => setDocType(e.target.value as 'contract' | 'protocol' | 'letter' | 'other')}
           className="sc-input">
           <option value="contract">📜 חוזה</option>
           <option value="protocol">📋 פרוטוקול</option>
@@ -431,7 +432,7 @@ function SignatureForm({ buildingId, groupId, onSuccess }: { buildingId: string;
   const tenants = trpc.committee.getBuildingTenants.useQuery()
   const requestSig = trpc.committee.requestSignatures.useMutation({ onSuccess })
 
-  const allTenantIds = (tenants.data ?? []).map((t: any) => t.userId)
+  const allTenantIds = (tenants.data ?? []).map((t: { userId: string }) => t.userId)
 
   const validate = () => {
     const e: Record<string, string> = {}
@@ -452,7 +453,7 @@ function SignatureForm({ buildingId, groupId, onSuccess }: { buildingId: string;
           <select value={documentId} onChange={e => setDocumentId(e.target.value)}
             className={`sc-input ${errors.doc ? 'border-sc-error' : ''}`}>
             <option value="">— בחר מסמך —</option>
-            {(docs.data ?? []).map((d: any) => <option key={d.id} value={d.id}>{d.title}</option>)}
+            {(docs.data ?? []).map((d: { id: string; title: string }) => <option key={d.id} value={d.id}>{d.title}</option>)}
           </select>
         )}
         {errors.doc && <p className="text-red-500 text-xs mt-1">{errors.doc}</p>}
@@ -474,7 +475,7 @@ function SignatureForm({ buildingId, groupId, onSuccess }: { buildingId: string;
         {errors.tenants && <p className="text-red-500 text-xs mb-2">{errors.tenants}</p>}
         {tenants.isLoading ? <p className="text-sm text-[#5a5a6e]">טוען דיירים...</p> : (
           <div className="space-y-1 max-h-40 overflow-y-auto border border-[#eeeeee] rounded-xl p-2">
-            {(tenants.data ?? []).map((t: any) => (
+            {(tenants.data ?? []).map((t: { userId: string; name: string }) => (
               <label key={t.userId} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-[#f8f9fa] cursor-pointer">
                 <input type="checkbox" checked={selectedTenants.includes(t.userId)} onChange={() => toggleTenant(t.userId)} className="w-4 h-4 accent-sc-primary" />
                 <span className="text-sm text-[#212121]">{t.name}</span>
@@ -494,11 +495,18 @@ function SignatureForm({ buildingId, groupId, onSuccess }: { buildingId: string;
 }
 
 // ── Building Status ────────────────────────────────────────────────────────────
-function BuildingStatus({ status }: { status: any }) {
+interface BuildingStatusData {
+  building?: { total_units?: number; address?: string; street?: string; number?: string; id?: string }
+  tenants?: Array<{ id: string; is_onboarded: boolean; profile?: { full_name?: string; email?: string; is_building_representative?: boolean }; signatures?: unknown[] }>
+  documents?: Array<{ id: string; title: string; file_url?: string }>
+  upcomingMeetings?: Array<{ id: string; title?: string; date?: string }>
+}
+
+function BuildingStatus({ status }: { status: BuildingStatusData | undefined }) {
   if (!status) return null
   const { building, tenants, documents, upcomingMeetings } = status
   const totalUnits = building?.total_units ?? 0
-  const onboarded = (tenants ?? []).filter((t: any) => t.is_onboarded).length
+  const onboarded = (tenants ?? []).filter((t) => t.is_onboarded).length
   const progress = totalUnits > 0 ? Math.round((onboarded / totalUnits) * 100) : 0
 
   return (
@@ -534,10 +542,10 @@ function BuildingStatus({ status }: { status: any }) {
       </div>
 
       {/* Upcoming meetings */}
-      {upcomingMeetings?.length > 0 && (
+      {(upcomingMeetings?.length ?? 0) > 0 && (
         <div className="mb-3">
           <p className="text-xs font-semibold text-[#5a5a6e] mb-1">📅 ישיבות קרובות</p>
-          {upcomingMeetings.map((m: any) => (
+          {upcomingMeetings!.map((m) => (
             <div key={m.id} className="flex items-center gap-2 text-xs text-[#5a5a6e] py-1">
               <span className="w-1.5 h-1.5 rounded-full bg-[#4a8c5c] flex-shrink-0" />
               <span className="font-medium">{m.title || 'ישיבה'}</span>
@@ -548,10 +556,10 @@ function BuildingStatus({ status }: { status: any }) {
       )}
 
       {/* Recent docs */}
-      {documents?.length > 0 && (
+      {(documents?.length ?? 0) > 0 && (
         <div>
           <p className="text-xs font-semibold text-[#5a5a6e] mb-1">📄 מסמכים אחרונים</p>
-          {documents.map((d: any) => (
+          {documents!.map((d) => (
             <div key={d.id} className="flex items-center gap-2 text-xs text-[#5a5a6e] py-1">
               <span className="w-1.5 h-1.5 rounded-full bg-[#8b6f47] flex-shrink-0" />
               <span>{d.title}</span>
@@ -605,9 +613,9 @@ function InviteForm({ buildingId, senderName }: { buildingId: string; senderName
             <button
               onClick={async () => {
                 try {
-                  const contacts = await (navigator as any).contacts.select(['name', 'tel'], { multiple: false })
-                  if (contacts && contacts.length > 0 && contacts[0].tel?.length > 0) {
-                    setContact(contacts[0].tel[0])
+                  const contacts = await (navigator as unknown as { contacts: { select: (props: string[], opts: { multiple: boolean }) => Promise<Array<{ name?: string[]; tel?: string[] }>> } }).contacts.select(['name', 'tel'], { multiple: false })
+                  if (contacts && contacts.length > 0 && (contacts[0].tel?.length ?? 0) > 0) {
+                    setContact(contacts[0].tel![0])
                   }
                 } catch {}
               }}
@@ -668,10 +676,10 @@ function InviteForm({ buildingId, senderName }: { buildingId: string; senderName
 export default function CommitteeActions() {
   const navigate = useNavigate()
   const [modal, setModal] = useState<ModalType>(null)
-  const [success, setSuccess] = useState('')
+  const [success, setSuccess] = useState('') // kept for backwards compat, now also fires toast
 
   const { data: profile, isLoading } = trpc.auth.me.useQuery()
-  const isRep = (profile as any)?.isBuildingRepresentative
+  const isRep = (profile as Record<string, unknown> | undefined)?.isBuildingRepresentative
 
   const statusQuery = trpc.committee.getBuildingStatus.useQuery(undefined, { enabled: !!isRep })
   const groupQuery = trpc.committee.getMyBuildingGroup.useQuery(undefined, { enabled: !!isRep })
@@ -685,6 +693,7 @@ export default function CommitteeActions() {
     setModal(null)
     setSuccess(msg)
     setTimeout(() => setSuccess(''), 3000)
+    toast.success(msg)
     statusQuery.refetch()
   }
 
@@ -749,7 +758,7 @@ export default function CommitteeActions() {
         )}
 
         {/* Building Status */}
-        <BuildingStatus status={statusQuery.data} />
+        <BuildingStatus status={statusQuery.data ?? undefined} />
 
         {/* Action cards */}
         <h2 className="text-[16px] font-bold text-[#212121] mb-3">פעולות מהירות</h2>
@@ -776,7 +785,7 @@ export default function CommitteeActions() {
               <h2 className="font-bold text-[#212121] text-sm">👥 דיירי הבניין</h2>
             </div>
             <div className="divide-y divide-sc-bg">
-              {statusQuery.data.tenants.slice(0, 8).map((t: any) => (
+              {statusQuery.data.tenants.slice(0, 8).map((t: { id: string; is_onboarded: boolean; profile?: { full_name?: string; email?: string; is_building_representative?: boolean }; signatures?: unknown[] }) => (
                 <div key={t.id} className="flex items-center gap-3 px-4 py-3">
                   <div className="w-8 h-8 bg-[#ebf1f7] rounded-full flex items-center justify-center text-[#3b6b9c] text-sm font-bold flex-shrink-0">
                     {t.profile?.full_name?.[0] ?? '?'}
@@ -789,7 +798,7 @@ export default function CommitteeActions() {
                     {t.profile?.is_building_representative && (
                       <span className="sc-badge bg-[#ebf1f7] text-[#3b6b9c]">ועד</span>
                     )}
-                    {t.signatures?.length > 0 && (
+                    {(t.signatures?.length ?? 0) > 0 && (
                       <span className="sc-badge bg-[#4a8c5c]/15 text-[#4a8c5c]">חתם</span>
                     )}
                   </div>

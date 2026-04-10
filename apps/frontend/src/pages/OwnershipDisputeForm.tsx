@@ -46,7 +46,7 @@ export default function OwnershipDisputeForm() {
               <div className="flex flex-col gap-2">
                 {DISPUTE_TYPES.map(t => (
                   <button key={t.value} type="button"
-                    onClick={() => setForm(f => ({ ...f, disputeType: t.value as any }))}
+                    onClick={() => setForm(f => ({ ...f, disputeType: t.value as 'inheritance' | 'divorce' | 'unclear' | 'other' }))}
                     className={`p-3 rounded-xl border-2 text-right transition-all ${
                       form.disputeType === t.value
                         ? 'border-[#3b6b9c] bg-[#ebf1f7]'
@@ -132,7 +132,7 @@ export default function OwnershipDisputeForm() {
           <div>
             <h3 className="text-[15px] font-bold text-[#212121] mb-3">סכסוכים קיימים</h3>
             <div className="flex flex-col gap-2.5">
-              {disputes.map((d: any) => (
+              {disputes.map((d: { id: string; dispute_type: string; status: string; description: string; parties?: string[] }) => (
                 <div key={d.id} className="sc-card p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-semibold text-[#212121]">
@@ -143,8 +143,8 @@ export default function OwnershipDisputeForm() {
                     </span>
                   </div>
                   <p className="text-xs text-[#5a5a6e]">{d.description}</p>
-                  {d.parties?.length > 0 && (
-                    <p className="text-xs text-[#5a5a6e] mt-1">צדדים: {d.parties.join(', ')}</p>
+                  {(d.parties?.length ?? 0) > 0 && (
+                    <p className="text-xs text-[#5a5a6e] mt-1">צדדים: {d.parties!.join(', ')}</p>
                   )}
                 </div>
               ))}

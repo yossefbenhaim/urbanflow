@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import PageLayout, { PageTitle } from '../components/PageLayout'
 import { useUser, ROLE_LABELS } from '../hooks/useUser'
 import { trpc } from '../lib/trpc'
@@ -60,21 +61,22 @@ export default function Profile() {
 
   useEffect(() => {
     if (tenantProfile) {
-      const tp = tenantProfile as any
+      const tp = tenantProfile as Record<string, unknown>
       setForm(f => ({
         ...f,
-        idNumber: tp.id_number || '',
-        phone: tp.phone || f.phone,
+        idNumber: (tp.id_number as string) || '',
+        phone: (tp.phone as string) || f.phone,
         floor: tp.floor?.toString() || '',
-        apartmentNumber: tp.apartment_number || '',
+        apartmentNumber: (tp.apartment_number as string) || '',
         apartmentSqm: tp.apartment_sqm?.toString() || '',
-        isOwner: tp.is_owner ?? true,
+        isOwner: (tp.is_owner as boolean) ?? true,
         moveInYear: tp.move_in_year?.toString() || '',
       }))
       // Parse address from stored string or fields
       if (tp.address) {
         // address format: "street buildingNumber, city"
-        const parts = tp.address.split(',')
+        const addrStr = tp.address as string
+        const parts = addrStr.split(',')
         const city = parts[1]?.trim() || ''
         const streetParts = parts[0]?.trim().split(' ') || []
         const buildingNumber = streetParts.pop() || ''
@@ -85,10 +87,12 @@ export default function Profile() {
   }, [tenantProfile])
 
   const saveProfile = trpc.tenant.saveProfile.useMutation({
-    onSuccess: () => { setSaved(true); refetch(); setTimeout(() => setSaved(false), 3000) },
+    onSuccess: () => { setSaved(true); refetch(); setTimeout(() => setSaved(false), 3000); toast.success('הפרופיל עודכן בהצלחה') },
+    onError: () => { toast.error('שגיאה בשמירת הפרופיל') },
   })
   const updateBasic = trpc.tenant.updateProfile.useMutation({
-    onSuccess: () => { setSaved(true); setTimeout(() => setSaved(false), 3000) },
+    onSuccess: () => { setSaved(true); setTimeout(() => setSaved(false), 3000); toast.success('הפרופיל עודכן בהצלחה') },
+    onError: () => { toast.error('שגיאה בשמירת הפרופיל') },
   })
 
   const handleSave = () => {

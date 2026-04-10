@@ -91,7 +91,7 @@ export default function InspectionsPage() {
             ['my-inspections', 'הבדיקות שלי', '📄'],
             ['notifications', `התראות${unreadCount > 0 ? ` (${unreadCount})` : ''}`, '🔔'],
           ] as [string, string, string][]).map(([v, l, icon]) => (
-            <button key={v} onClick={() => setActiveTab(v as any)}
+            <button key={v} onClick={() => setActiveTab(v as 'projects' | 'my-inspections' | 'notifications')}
               className={`flex-1 py-3 text-xs font-medium border-b-2 transition-colors flex items-center justify-center gap-1
                 ${activeTab === v ? 'border-[#3b6b9c] text-[#3b6b9c]' : 'border-transparent text-[#5a5a6e]'}`}>
               <span>{icon}</span> {l}
@@ -124,7 +124,7 @@ export default function InspectionsPage() {
                     <div className="text-4xl mb-2">🏗️</div>
                     <p>אין פרויקטים פתוחים כרגע</p>
                   </div>
-                ) : (projectsData?.projects ?? []).map((project: any) => (
+                ) : ((projectsData?.projects ?? []) as ProjectData[]).map((project) => (
                   <ProjectCard
                     key={project.id}
                     project={project}
@@ -144,7 +144,7 @@ export default function InspectionsPage() {
                 <div className="text-4xl mb-2">📄</div>
                 <p>עדיין לא הגשת בדיקות</p>
               </div>
-            ) : (myInspections ?? []).map((insp: any) => (
+            ) : (myInspections ?? []).map((insp: { id: string; inspection_type: string; project?: { city?: string; street?: string }; status: string; conclusion?: string; files?: unknown[]; slot_number?: number; is_useful?: boolean }) => (
               <div key={insp.id} className="sc-card p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div>
@@ -179,7 +179,7 @@ export default function InspectionsPage() {
                 <div className="text-4xl mb-2">🔔</div>
                 <p>אין התראות</p>
               </div>
-            ) : (notifications ?? []).map((notif: any) => (
+            ) : (notifications ?? []).map((notif: { id: string; is_read: boolean; notification_type: string; title: string; body: string; created_at: string; action_url?: string }) => (
               <div
                 key={notif.id}
                 onClick={() => { markRead.mutate(notif.id); if (notif.action_url) navigate(notif.action_url) }}
@@ -211,7 +211,17 @@ export default function InspectionsPage() {
 }
 
 // ── Project Card ──────────────────────────────────────────
-function ProjectCard({ project, onStartInspection }: { project: any; onStartInspection: (type: InspectionType) => void }) {
+interface ProjectData {
+  id: string
+  street?: string
+  building_number?: string
+  city?: string
+  apartment_count?: number
+  availableSlots?: Record<string, number>
+  [key: string]: unknown
+}
+
+function ProjectCard({ project, onStartInspection }: { project: ProjectData; onStartInspection: (type: InspectionType) => void }) {
   const [expanded, setExpanded] = useState(false)
 
   const allTypes = [...ARCHITECT_TYPES, ...APPRAISER_TYPES]

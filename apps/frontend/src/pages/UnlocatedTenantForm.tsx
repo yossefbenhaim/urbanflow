@@ -42,11 +42,11 @@ export default function UnlocatedTenantForm() {
                   { key: 'attemptedVisit', label: '🚪 ביקור בדירה', icon: '🚪' },
                 ].map(opt => (
                   <label key={opt.key} className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                    (form as any)[opt.key]
+                    (form[opt.key as keyof typeof form])
                       ? 'border-[#3b6b9c] bg-[#ebf1f7]'
                       : 'border-[#eeeeee] bg-white'
                   }`}>
-                    <input type="checkbox" checked={(form as any)[opt.key]}
+                    <input type="checkbox" checked={!!form[opt.key as keyof typeof form]}
                       onChange={e => setForm(f => ({ ...f, [opt.key]: e.target.checked }))}
                       className="w-4 h-4" />
                     <span className="text-sm text-[#212121]">{opt.label}</span>
@@ -88,7 +88,7 @@ export default function UnlocatedTenantForm() {
           <div>
             <h3 className="text-[15px] font-bold text-[#212121] mb-3">דיווחים קודמים</h3>
             <div className="flex flex-col gap-2.5">
-              {reports.map((r: any) => (
+              {reports.map((r: { id: string; created_at: string; status: string; attempted_phone?: boolean; attempted_email?: boolean; attempted_visit?: boolean; notes?: string }) => (
                 <div key={r.id} className="sc-card p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-[#5a5a6e]">{new Date(r.created_at).toLocaleDateString('he-IL')}</span>

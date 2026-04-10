@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
   footer: { marginTop: 30, borderTop: '1px solid #eeeeee', paddingTop: 15 },
   footerRow: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' },
   footerText: { fontSize: 9, color: '#5a5a6e', textAlign: 'right' },
-  signatureImage: { width: 150, height: 60, objectFit: 'contain' as any },
+  signatureImage: { width: 150, height: 60, objectFit: 'contain' },
   digitalBadge: { fontSize: 8, color: '#4a8c5c', marginTop: 4, textAlign: 'right' },
 })
 

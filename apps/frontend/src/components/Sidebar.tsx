@@ -4,6 +4,8 @@ import { useUser, ROLE_LABELS, clearTokens } from '../hooks/useUser'
 import { trpc } from '../lib/trpc'
 
 // ── Bell / Notifications ──────────────────────────────────────────────────────
+type Notification = { id: string; is_read: boolean; type?: string; title?: string; message?: string; created_at: string }
+
 function NotificationBell() {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -15,7 +17,7 @@ function NotificationBell() {
     staleTime: 10000,
   })
   const markRead = trpc.tenant.markNotificationsRead.useMutation({ onSuccess: () => refetch() })
-  const unread = (notifications as any[]).filter(n => !n.is_read).length
+  const unread = (notifications as Notification[]).filter(n => !n.is_read).length
 
   useEffect(() => {
     const h = (e: Event) => { if (!ref.current?.contains(e.target as Node)) setOpen(false) }
@@ -46,13 +48,13 @@ function NotificationBell() {
             {unread > 0 && <span className="text-[11px] text-[#8e8e9e]">{unread} חדשות</span>}
           </div>
           <div className="max-h-[340px] overflow-y-auto">
-            {(notifications as any[]).length === 0 ? (
+            {(notifications as Notification[]).length === 0 ? (
               <div className="py-6 px-4 text-center text-[#8e8e9e]">
                 <div className="text-[28px] mb-2">🎉</div>
                 <p className="text-[13px] m-0">אין התראות חדשות</p>
               </div>
             ) : (
-              (notifications as any[]).map((n: any) => (
+              (notifications as Notification[]).map((n) => (
                 <div key={n.id} className={`px-4 py-3 border-b border-[#eeeeee]/50 transition-colors ${n.is_read ? 'bg-white' : 'bg-[#ebf1f7]'}`}>
                   <div className="flex gap-2.5 items-start">
                     <span className="text-lg flex-shrink-0">
@@ -142,7 +144,7 @@ export default function Sidebar({ overrideItems }: { overrideItems?: NavItem[] }
   const { data: myRole } = trpc.tenant.getMyRole.useQuery(undefined, {
     enabled: !!token && profile?.role === 'tenant',
   })
-  const isRepresentative = (myRole as any)?.isRepresentative || false
+  const isRepresentative = (myRole as { isRepresentative?: boolean } | undefined)?.isRepresentative || false
 
   if (loading || !profile) return null
 

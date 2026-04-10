@@ -18,11 +18,42 @@ Types: feat, fix, chore, test, docs, refactor
 
 ## Testing
 ```bash
-npm test -w apps/frontend   # Vitest
-npm test -w apps/backend    # Jest
+# Run all tests
+npm test
+
+# Run frontend tests only
+npm test -w apps/frontend
+
+# Run backend tests only
+npm test -w apps/backend
+
+# Run tests in watch mode
+npm test -w apps/frontend -- --watch
 ```
+
+Both frontend and backend use **Vitest**.
+
+- Frontend: 142 tests (components, utils, templates)
+- Backend: 198 tests (routers, middleware, validation)
+
+## Build
+```bash
+# Full build (shared → frontend → backend)
+npm run build
+
+# TypeScript check only (no emit)
+cd apps/frontend && npx tsc --noEmit
+cd apps/backend && npx tsc --noEmit
+```
+
+## CI
+GitHub Actions runs on every push/PR to `main`:
+1. TypeScript type check (frontend + backend)
+2. All tests (frontend + backend)
+3. Full production build
 
 ## Pull Request flow
 1. Work on your worktree branch
-2. Team Lead reviews & merges to main
-3. Deploy via Coolify
+2. Ensure CI passes (tests + build + type check)
+3. Team Lead reviews & merges to main
+4. Deploy via Coolify

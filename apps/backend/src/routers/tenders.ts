@@ -103,7 +103,7 @@ export const tendersRouter = router({
       // Notify building tenants if organizer tender was awarded
       if (tender.tender_type === 'organizer') {
         const { data: winnerProfile } = await ctx.supabase.from('profiles').select('full_name').eq('id', input.winnerId).single()
-        const winnerName = (winnerProfile as any)?.full_name ?? 'המארגן שנבחר'
+        const winnerName = (winnerProfile as { full_name?: string } | null)?.full_name ?? 'המארגן שנבחר'
         // Get all tenants in the project
         const { data: projectTenants } = await ctx.supabase
           .from('project_tenants')
@@ -111,7 +111,7 @@ export const tendersRouter = router({
           .eq('project_id', tender.project_id)
         if (projectTenants && projectTenants.length > 0) {
           await ctx.supabase.from('notifications').insert(
-            projectTenants.map((t: any) => ({
+            projectTenants.map((t: { tenant_id: string }) => ({
               user_id: t.tenant_id,
               type: 'organizer_selected',
               title: '🎉 נבחר מארגן/מנהלת!',
@@ -408,7 +408,7 @@ export const tendersRouter = router({
         user_id: input.targetUserId,
         type: 'match_proposal',
         title: '🤝 הצעת התאמה חדשה!',
-        body: `${(senderProfile as any)?.full_name ?? 'משתמש'} שלח/ה לך הצעת התאמה למכרז`,
+        body: `${(senderProfile as { full_name?: string } | null)?.full_name ?? 'משתמש'} שלח/ה לך הצעת התאמה למכרז`,
         is_read: false,
       })
       return data
@@ -495,7 +495,7 @@ export const tendersRouter = router({
         user_id: input.counterpartId,
         type: 'meeting_scheduled',
         title: '📅 פגישה נקבעה!',
-        body: `${(reporter as any)?.full_name ?? 'משתמש'} דיווח/ה על פגישה ב-${new Date(input.scheduledAt).toLocaleDateString('he-IL')}`,
+        body: `${(reporter as { full_name?: string } | null)?.full_name ?? 'משתמש'} דיווח/ה על פגישה ב-${new Date(input.scheduledAt).toLocaleDateString('he-IL')}`,
         is_read: false,
       })
       return data
@@ -507,14 +507,15 @@ export const tendersRouter = router({
       const { data: meeting } = await ctx.supabase
         .from('tender_meetings').select('*').eq('id', input.meetingId).single()
       if (!meeting) throw new TRPCError({ code: 'NOT_FOUND' })
-      const isReporter = (meeting as any).reporter_id === ctx.user.id
-      const isCounterpart = (meeting as any).counterpart_id === ctx.user.id
+      const meetingData = meeting as { reporter_id: string; counterpart_id: string }
+      const isReporter = meetingData.reporter_id === ctx.user.id
+      const isCounterpart = meetingData.counterpart_id === ctx.user.id
       if (!isReporter && !isCounterpart) throw new TRPCError({ code: 'FORBIDDEN' })
       const updateField = isReporter ? { reporter_confirmed: true } : { counterpart_confirmed: true }
       const { data, error } = await ctx.supabase
         .from('tender_meetings').update(updateField).eq('id', input.meetingId).select().single()
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
-      const d = data as any
+      const d = data as { reporter_confirmed?: boolean; counterpart_confirmed?: boolean }
       if (d.reporter_confirmed && d.counterpart_confirmed) {
         await ctx.supabase.from('tender_meetings').update({ status: 'confirmed' }).eq('id', input.meetingId)
       }

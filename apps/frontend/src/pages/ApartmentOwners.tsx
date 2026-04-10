@@ -8,13 +8,15 @@ const OWNERSHIP_TYPES = [
   { value: 'divorced', label: '⚖️ גרוש/ה' },
   { value: 'proxy', label: '📋 מיופה כוח' },
   { value: 'abroad', label: '✈️ בעלים בחו"ל' },
-]
+] as const
+
+type OwnershipType = (typeof OWNERSHIP_TYPES)[number]['value']
 
 export default function ApartmentOwners({ apartmentId }: { apartmentId: string }) {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({
     userId: '',
-    ownershipType: 'owner' as 'owner' | 'heir' | 'divorced' | 'proxy' | 'abroad',
+    ownershipType: 'owner' as OwnershipType,
     ownershipPct: 100,
     hasProxy: false,
     proxyUserId: '',
@@ -42,7 +44,7 @@ export default function ApartmentOwners({ apartmentId }: { apartmentId: string }
 
       {/* Owners List */}
       <div className="flex flex-col gap-2.5 mb-4">
-        {(owners ?? []).map((o: any) => (
+        {(owners ?? []).map((o) => (
           <div key={o.id} className="flex items-center gap-3 p-3 bg-[#f8f9fa] rounded-xl border border-[#eeeeee]">
             <div className="w-9 h-9 rounded-full bg-[#ebf1f7] flex items-center justify-center text-lg">
               {OWNERSHIP_TYPES.find(t => t.value === o.ownership_type)?.label?.split(' ')[0] ?? '👤'}
@@ -84,7 +86,7 @@ export default function ApartmentOwners({ apartmentId }: { apartmentId: string }
               <div className="grid grid-cols-2 gap-2">
                 {OWNERSHIP_TYPES.map(t => (
                   <button key={t.value} type="button"
-                    onClick={() => setForm(f => ({ ...f, ownershipType: t.value as any }))}
+                    onClick={() => setForm(f => ({ ...f, ownershipType: t.value }))}
                     className={`p-2.5 rounded-xl border-2 text-[13px] text-right transition-all ${
                       form.ownershipType === t.value
                         ? 'border-[#3b6b9c] bg-[#ebf1f7] text-[#3b6b9c] font-semibold'

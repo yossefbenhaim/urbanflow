@@ -42,7 +42,7 @@ function ProposalComparison({
     else { setSortKey(key); setSortAsc(true) }
   }
 
-  const sorted = [...(proposals ?? [])].sort((a: any, b: any) => {
+  const sorted = [...(proposals ?? [])].sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
     const av = a[sortKey] ?? 0
     const bv = b[sortKey] ?? 0
     return sortAsc ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1)
@@ -81,7 +81,7 @@ function ProposalComparison({
           </tr>
         </thead>
         <tbody>
-          {sorted.map((p: any) => (
+          {sorted.map((p: { id: string; status: string; provider_id: string; provider?: { full_name?: string }; price?: number; timeline_months?: number; experience_years?: number; past_projects_count?: number; warranty_details?: string }) => (
             <tr
               key={p.id}
               className={`border-t transition-colors ${
@@ -228,7 +228,7 @@ function NegotiationTimeline({
       )}
 
       <div className="relative">
-        {(rounds ?? []).map((round: any, i: number) => (
+        {(rounds ?? []).map((round: { id: string; round_number: number; title: string; created_at: string; summary?: string; changes_description?: string; document_url?: string; creator?: { full_name?: string } }, i: number) => (
           <div key={round.id} className="flex gap-4 mb-6">
             {/* Timeline line */}
             <div className="flex flex-col items-center">
@@ -288,7 +288,7 @@ function ContractFlow({
 }) {
   const { profile: _user } = useUser()
   const { data: assignments, refetch } = trpc.tenders.getProjectAssignments.useQuery({ projectId })
-  const tenderAssignments = (assignments ?? []).filter((a: any) => a.tender_id === tenderId)
+  const tenderAssignments = (assignments ?? []).filter((a: { tender_id?: string }) => a.tender_id === tenderId)
 
   const scheduleMeeting = trpc.tenders.scheduleMeeting.useMutation({ onSuccess: () => refetch() })
   const completeMeeting = trpc.tenders.completeMeeting.useMutation({ onSuccess: () => refetch() })
@@ -316,7 +316,7 @@ function ContractFlow({
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-bold text-[#212121]">📝 שיוך חוזה</h3>
-      {tenderAssignments.map((a: any) => {
+      {tenderAssignments.map((a: { id: string; tender_id?: string; status: string; provider?: { full_name?: string }; meeting_scheduled_at?: string; contract_file_url?: string; approval_required_count?: number; approvals_received: number }) => {
         const currentStep = stepIndex(a.status)
         return (
           <div key={a.id} className="sc-card p-5">

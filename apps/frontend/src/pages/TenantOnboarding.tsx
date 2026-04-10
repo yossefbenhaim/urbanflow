@@ -157,7 +157,7 @@ export default function TenantOnboarding() {
     hasSpecialAdvantage: null,
   })
 
-  const update = (field: keyof FormData, value: any) =>
+  const update = (field: keyof FormData, value: FormData[keyof FormData]) =>
     setForm(p => ({ ...p, [field]: value }))
 
   const [tabuFile, setTabuFile] = useState<File | null>(null)
@@ -372,8 +372,8 @@ export default function TenantOnboarding() {
                         const input = document.createElement('input')
                         input.type = 'file'
                         input.accept = 'application/pdf,image/*'
-                        input.onchange = (e: any) => {
-                          const file = e.target.files?.[0]
+                        input.onchange = () => {
+                          const file = input.files?.[0]
                           if (file) {
                             setOwnershipDocs(prev => [...prev, { file, type: docType.key, name: docType.label }])
                           }

@@ -1,5 +1,7 @@
 import { z } from 'zod'
+import { TRPCError } from '@trpc/server'
 import { router, publicProcedure } from '../middleware/auth'
+import { logger } from '../logger'
 
 const AI_SYSTEM_PROMPT = `אתה עוזר לדיירים בפרויקטי התחדשות עירונית (פינוי בינוי, תמ"א 38).
 ענה בשפה פשוטה וברורה, ללא מונחים משפטיים מורכבים.
@@ -9,39 +11,39 @@ const AI_SYSTEM_PROMPT = `אתה עוזר לדיירים בפרויקטי התח
 
 export const faqRouter = router({
   // כל נושאי הroot
-  getTopics: publicProcedure.query(async ({ ctx }: { ctx: any }) => {
+  getTopics: publicProcedure.query(async ({ ctx }) => {
     const { data, error } = await ctx.supabase
       .from('faq_nodes')
       .select('id, topic, question, is_leaf, order_index')
       .is('parent_id', null)
       .order('order_index')
-    if (error) throw error
+    if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
     return data ?? []
   }),
 
   // תת-שאלות של node
   getChildren: publicProcedure
     .input(z.object({ parentId: z.string().uuid() }))
-    .query(async ({ ctx, input }: { ctx: any; input: any }) => {
+    .query(async ({ ctx, input }) => {
       const { data, error } = await ctx.supabase
         .from('faq_nodes')
         .select('id, topic, question, is_leaf, order_index')
         .eq('parent_id', input.parentId)
         .order('order_index')
-      if (error) throw error
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
       return data ?? []
     }),
 
   // שאלה + תשובה מלאה
   getNode: publicProcedure
     .input(z.object({ id: z.string().uuid() }))
-    .query(async ({ ctx, input }: { ctx: any; input: any }) => {
+    .query(async ({ ctx, input }) => {
       const { data, error } = await ctx.supabase
         .from('faq_nodes')
         .select('*')
         .eq('id', input.id)
         .single()
-      if (error) throw error
+      if (error) throw new TRPCError({ code: 'NOT_FOUND', message: 'FAQ node not found' })
       return data
     }),
 
@@ -51,11 +53,11 @@ export const faqRouter = router({
       question: z.string().min(3).max(500),
       email: z.string().email().optional(),
     }))
-    .mutation(async ({ ctx, input }: { ctx: any; input: any }) => {
+    .mutation(async ({ ctx, input }) => {
       const { error } = await ctx.supabase
         .from('user_questions')
         .insert({ question: input.question, email: input.email ?? null })
-      if (error) throw error
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
       return { success: true }
     }),
 
@@ -64,7 +66,7 @@ export const faqRouter = router({
     .input(z.object({
       question: z.string().min(1).max(1000),
     }))
-    .mutation(async ({ input }: { input: any }) => {
+    .mutation(async ({ input }) => {
       try {
         // Try OpenAI first, fallback to Anthropic
         const apiKey = process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY
@@ -92,9 +94,9 @@ export const faqRouter = router({
               temperature: 0.7,
             }),
           })
-          const data: any = await response.json()
+          const data = await response.json() as { choices?: { message?: { content?: string } }[] }
           const answer = data.choices?.[0]?.message?.content || 'לא הצלחתי לענות. נסה לנסח את השאלה אחרת.'
-          return { answer, source: 'openai' }
+          return { answer, source: 'openai' as const }
         }
 
         if (process.env.ANTHROPIC_API_KEY) {
@@ -112,9 +114,9 @@ export const faqRouter = router({
               max_tokens: 500,
             }),
           })
-          const data: any = await response.json()
+          const data = await response.json() as { content?: { text?: string }[] }
           const answer = data.content?.[0]?.text || 'לא הצלחתי לענות. נסה לנסח את השאלה אחרת.'
-          return { answer, source: 'anthropic' }
+          return { answer, source: 'anthropic' as const }
         }
 
         return {
@@ -122,7 +124,7 @@ export const faqRouter = router({
           source: 'fallback',
         }
       } catch (err) {
-        console.error('AI Chat error:', err)
+        logger.error({ err }, 'AI Chat error')
         return {
           answer: 'אירעה שגיאה בשירות ה-AI. נסה שוב מאוחר יותר.',
           source: 'error',
