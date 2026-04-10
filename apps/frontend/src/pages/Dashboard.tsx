@@ -361,6 +361,20 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* Apartment Wishes CTA */}
+        <a href="/apartment-wishes" className="no-underline block">
+          <div className="bg-gradient-to-l from-[#3b6b9c] to-[#1e3a5f] rounded-[20px] p-5 shadow-lg cursor-pointer transition-transform hover:scale-[1.01]">
+            <div className="flex items-center gap-3.5">
+              <div className="w-[50px] h-[50px] rounded-2xl bg-white/20 flex items-center justify-center text-[26px] flex-shrink-0">🏗️</div>
+              <div className="flex-1">
+                <h3 className="m-0 text-[17px] font-extrabold text-white">טופס דירה חדשה</h3>
+                <p className="mt-1 text-[13px] text-white/80">ספר לנו מה חשוב לך בדירה החדשה וקבל ניתוח AI</p>
+              </div>
+              <span className="text-white/90 text-2xl">←</span>
+            </div>
+          </div>
+        </a>
+
         {/* Elderly Form + Timeline Quick Links */}
         <div className="grid grid-cols-2 gap-3">
           <a href="/elderly-form" className="no-underline sc-card p-4 flex items-center gap-3 hover:bg-[#ebf1f7] transition-colors">
