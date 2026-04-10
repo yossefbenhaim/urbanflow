@@ -88,6 +88,7 @@ function getSidebarItems(role: string, isRepresentative: boolean): NavItem[] {
         { to: '/dashboard', icon: '🏠', label: 'ראשי' },
         { to: '/apartment-wishes', icon: '🏗️', label: 'דירה חדשה' },
         { to: '/documents', icon: '📄', label: 'מסמכים' },
+        { to: '/my-documents', icon: '📁', label: 'המסמכים שלי' },
         { to: '/chat', icon: '💬', label: 'צ\'אט' },
         { to: '/directory', icon: '📋', label: 'ספריית מומחים' },
         { to: '/profile', icon: '👤', label: 'פרופיל' },

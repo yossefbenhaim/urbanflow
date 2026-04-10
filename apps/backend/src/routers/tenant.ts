@@ -1002,4 +1002,88 @@ export const tenantRouter = router({
       return analysis
     }),
 
+  // ─── Tenant Document Management ────────────────────────
+  getTenantDocuments: protectedProcedure
+    .input(z.object({ category: z.string().optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      let q = ctx.supabase
+        .from('tenant_documents')
+        .select('*')
+        .eq('user_id', ctx.user.id)
+        .order('created_at', { ascending: false })
+      if (input?.category) q = q.eq('category', input.category)
+      const { data } = await q
+      return data ?? []
+    }),
+
+  saveTenantDocument: protectedProcedure
+    .input(z.object({
+      fileUrl: z.string().url(),
+      fileName: z.string(),
+      fileSize: z.number().optional(),
+      mimeType: z.string().optional(),
+      category: z.enum(['signed_forms', 'ownership', 'personal', 'correspondence', 'contracts', 'other']),
+      description: z.string().optional(),
+      storagePath: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { data: tp } = await ctx.supabase.from('tenant_profiles').select('building_id').eq('user_id', ctx.user.id).single()
+      const { data, error } = await ctx.supabase.from('tenant_documents').insert({
+        user_id: ctx.user.id,
+        building_id: (tp as TenantProfileRow | null)?.building_id ?? null,
+        file_url: input.fileUrl,
+        file_name: input.fileName,
+        file_size: input.fileSize ?? null,
+        mime_type: input.mimeType ?? null,
+        category: input.category,
+        description: input.description ?? null,
+        is_confidential: true,
+        storage_path: input.storagePath,
+      }).select().single()
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return data
+    }),
+
+  deleteTenantDocument: protectedProcedure
+    .input(z.object({ documentId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      // Get document to find storage path
+      const { data: doc } = await ctx.supabase
+        .from('tenant_documents')
+        .select('storage_path')
+        .eq('id', input.documentId)
+        .eq('user_id', ctx.user.id)
+        .single()
+      if (!doc) throw new TRPCError({ code: 'NOT_FOUND', message: 'מסמך לא נמצא' })
+
+      // Delete from storage
+      const supabaseUrl = process.env.SUPABASE_URL || ''
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || ''
+      await fetch(`${supabaseUrl}/storage/v1/object/documents/${(doc as { storage_path: string }).storage_path}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${supabaseKey}` },
+      })
+
+      // Delete from DB
+      const { error } = await ctx.supabase
+        .from('tenant_documents')
+        .delete()
+        .eq('id', input.documentId)
+        .eq('user_id', ctx.user.id)
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return { ok: true }
+    }),
+
+  getTenantDocumentStats: protectedProcedure.query(async ({ ctx }) => {
+    const { data } = await ctx.supabase
+      .from('tenant_documents')
+      .select('category')
+      .eq('user_id', ctx.user.id)
+    const stats: Record<string, number> = {}
+    for (const d of (data ?? []) as { category: string }[]) {
+      stats[d.category] = (stats[d.category] ?? 0) + 1
+    }
+    return { total: (data ?? []).length, byCategory: stats }
+  }),
+
 })
