@@ -121,31 +121,32 @@ const STEPS = [
 ]
 
 function StepBar({ current }: { current: number }) {
+  const currentStep = STEPS.find(s => s.id === current)
+  const progress = ((current - 1) / (STEPS.length - 1)) * 100
   return (
-    <div className="flex items-center justify-center gap-0 mb-8 overflow-x-auto">
-      {STEPS.map((s, i) => (
-        <div key={s.id} className="flex items-center flex-shrink-0">
-          <div className="flex flex-col items-center gap-1">
-            <div className={`w-9 h-9 rounded-full flex items-center justify-center text-base font-bold transition-all ${
-              current > s.id ? 'bg-[#4a8c5c] text-white' :
-              current === s.id ? 'bg-[#3b6b9c] text-white shadow-[0_0_0_4px_rgba(59,107,156,0.2)]' :
-              'bg-sc-border text-[#5a5a6e]'
-            }`}>
-              {current > s.id ? '✓' : s.id}
-            </div>
-            <span className={`text-[10px] whitespace-nowrap ${
-              current === s.id ? 'text-[#3b6b9c] font-semibold' : 'text-[#5a5a6e]'
-            }`}>
-              {s.title}
-            </span>
-          </div>
-          {i < STEPS.length - 1 && (
-            <div className={`w-10 h-0.5 mx-0.5 mb-5 flex-shrink-0 transition-all ${
-              current > s.id + 1 ? 'bg-[#4a8c5c]' : current > s.id ? 'bg-[#3b6b9c]' : 'bg-sc-border'
-            }`} />
-          )}
-        </div>
-      ))}
+    <div className="mb-8">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[15px] font-bold text-[#212121]">
+          {currentStep?.icon} {currentStep?.title}
+        </span>
+        <span className="text-[13px] font-semibold text-[#3b6b9c]">
+          שלב {current} מתוך {STEPS.length}
+        </span>
+      </div>
+      <div className="w-full h-2.5 bg-[#eeeeee] rounded-full overflow-hidden">
+        <div
+          className="h-full bg-gradient-to-l from-[#3b6b9c] to-[#4a8c5c] rounded-full transition-all duration-500"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+      <div className="flex justify-between mt-1.5">
+        <span className="text-[10px] text-[#5a5a6e]">
+          {current > 1 ? `✓ ${current - 1} שלבים הושלמו` : 'התחלה'}
+        </span>
+        <span className="text-[10px] text-[#5a5a6e]">
+          {STEPS.length - current > 0 ? `${STEPS.length - current} שלבים נותרו` : 'סיום!'}
+        </span>
+      </div>
     </div>
   )
 }
@@ -219,20 +220,63 @@ export default function TenantOnboarding() {
   const [tabuFile, setTabuFile] = useState<File | null>(null)
   const [tabuUploading, setTabuUploading] = useState(false)
   const [tabuUrl, setTabuUrl] = useState<string | null>(null)
-  const [ownershipDocs, setOwnershipDocs] = useState<Array<{ file: File; type: string; name: string }>>([])
-
+  const [tabuError, setTabuError] = useState('')
+  const [ownershipDocs, setOwnershipDocs] = useState<Array<{ file: File; type: string; name: string; url?: string }>>([])
 
   const uploadTabu = trpc.tenant.uploadTabu.useMutation()
 
-  const handleTabuDrop = useCallback((e: React.DragEvent) => {
+  const uploadFileToStorage = async (file: File, folder: string): Promise<string> => {
+    const token = localStorage.getItem('sb-token')
+    if (!token) throw new Error('אינך מחובר')
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/_+/g, '_')
+    const storagePath = `${folder}/${Date.now()}-${safeName}`
+    const uploadRes = await fetch(`/api/upload?path=${encodeURIComponent(storagePath)}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': file.type },
+      body: file,
+    })
+    if (!uploadRes.ok) {
+      const errJson = await uploadRes.json().catch(() => ({}))
+      throw new Error(errJson.error || `שגיאה ${uploadRes.status}`)
+    }
+    return `https://supabase.byclick.co.il/storage/v1/object/public/documents/${storagePath}`
+  }
+
+  const handleTabuDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault()
     const file = e.dataTransfer.files[0]
-    if (file && file.type === 'application/pdf') setTabuFile(file)
+    if (!file || file.type !== 'application/pdf') { setTabuError('יש להעלות קובץ PDF בלבד'); return }
+    setTabuFile(file)
+    setTabuUploading(true)
+    setTabuError('')
+    try {
+      const url = await uploadFileToStorage(file, 'tabu')
+      setTabuUrl(url)
+      await uploadTabu.mutateAsync({ fileUrl: url })
+    } catch (err) {
+      setTabuError(err instanceof Error ? err.message : 'שגיאה בהעלאה')
+      setTabuFile(null)
+    } finally {
+      setTabuUploading(false)
+    }
   }, [])
 
-  const handleTabuSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTabuSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file && file.type === 'application/pdf') setTabuFile(file)
+    if (!file || file.type !== 'application/pdf') { setTabuError('יש להעלות קובץ PDF בלבד'); return }
+    setTabuFile(file)
+    setTabuUploading(true)
+    setTabuError('')
+    try {
+      const url = await uploadFileToStorage(file, 'tabu')
+      setTabuUrl(url)
+      await uploadTabu.mutateAsync({ fileUrl: url })
+    } catch (err) {
+      setTabuError(err instanceof Error ? err.message : 'שגיאה בהעלאה')
+      setTabuFile(null)
+    } finally {
+      setTabuUploading(false)
+    }
   }, [])
 
   const saveProfile = trpc.tenant.saveProfile.useMutation({
@@ -571,11 +615,17 @@ export default function TenantOnboarding() {
                   onClick={() => document.getElementById('tabu-input')?.click()}
                 >
                   <input id="tabu-input" type="file" accept="application/pdf" onChange={handleTabuSelect} className="hidden" />
-                  {tabuFile ? (
+                  {tabuUploading ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="text-3xl animate-spin">⏳</span>
+                      <p className="text-sm font-semibold text-[#3b6b9c]">מעלה קובץ...</p>
+                    </div>
+                  ) : tabuFile && tabuUrl ? (
                     <div className="flex flex-col items-center gap-2">
                       <span className="text-3xl">✅</span>
                       <p className="text-sm font-semibold text-[#212121]">{tabuFile.name}</p>
                       <p className="text-xs text-[#5a5a6e]">{(tabuFile.size / 1024).toFixed(0)} KB</p>
+                      <p className="text-xs text-[#4a8c5c] font-semibold">הועלה בהצלחה!</p>
                       <button
                         onClick={e => { e.stopPropagation(); setTabuFile(null); setTabuUrl(null) }}
                         className="text-xs text-red-500 underline bg-transparent border-none cursor-pointer mt-1"
@@ -586,6 +636,7 @@ export default function TenantOnboarding() {
                       <span className="text-4xl">📄</span>
                       <p className="text-sm font-semibold text-[#212121]">גרור קובץ PDF לכאן</p>
                       <p className="text-xs text-[#5a5a6e]">או לחץ לבחירת קובץ</p>
+                      {tabuError && <p className="text-xs text-red-500 font-semibold">{tabuError}</p>}
                     </div>
                   )}
                 </div>
@@ -604,10 +655,18 @@ export default function TenantOnboarding() {
                         const input = document.createElement('input')
                         input.type = 'file'
                         input.accept = 'application/pdf,image/*'
-                        input.onchange = () => {
+                        input.onchange = async () => {
                           const file = input.files?.[0]
                           if (file) {
-                            setOwnershipDocs(prev => [...prev, { file, type: docType.key, name: docType.label }])
+                            const tempDoc = { file, type: docType.key, name: docType.label }
+                            setOwnershipDocs(prev => [...prev, tempDoc])
+                            try {
+                              const url = await uploadFileToStorage(file, 'ownership-docs')
+                              setOwnershipDocs(prev => prev.map(d => d === tempDoc ? { ...d, url } : d))
+                            } catch {
+                              setOwnershipDocs(prev => prev.filter(d => d !== tempDoc))
+                              setError('שגיאה בהעלאת מסמך: ' + docType.label)
+                            }
                           }
                         }
                         input.click()
