@@ -16,7 +16,8 @@
   justify-content: center;
   box-shadow: -2px 2px 10px rgba(30, 58, 95, 0.3);
   transition: width 0.2s ease, box-shadow 0.2s ease;
-  padding-right: 2px;
+  padding: 0;
+  overflow: visible;
 }
 
 .floatBtn:hover {
@@ -58,7 +59,7 @@
    Header
    ===================== */
 .header {
-  background: #2563eb;
+  background: linear-gradient(135deg, #1e3a5f, #3b6b9c);
   color: white;
   padding: 14px 16px;
   display: flex;
@@ -139,7 +140,7 @@
    Bot Message Bubble
    ===================== */
 .botMessage {
-  background: #f0f4ff;
+  background: #eef3f9;
   border-radius: 14px 14px 14px 2px;
   padding: 12px 14px;
   font-size: 0.88rem;
@@ -160,7 +161,7 @@
   display: block;
   font-size: 0.9rem;
   font-weight: 700;
-  color: #2563eb;
+  color: #1e3a5f;
   margin-bottom: 8px;
 }
 
@@ -197,9 +198,9 @@
 }
 
 .chip:hover {
-  border-color: #2563eb;
-  color: #2563eb;
-  background: #eff6ff;
+  border-color: #3b6b9c;
+  color: #1e3a5f;
+  background: #e8f0f8;
 }
 
 /* =====================
@@ -228,9 +229,9 @@
 }
 
 .questionBtn:hover {
-  border-color: #2563eb;
-  color: #2563eb;
-  background: #eff6ff;
+  border-color: #3b6b9c;
+  color: #1e3a5f;
+  background: #e8f0f8;
 }
 
 /* =====================
@@ -239,7 +240,7 @@
 .backBtn {
   background: none;
   border: none;
-  color: #2563eb;
+  color: #3b6b9c;
   cursor: pointer;
   font-size: 0.83rem;
   padding: 0 0 8px;
@@ -289,12 +290,12 @@
 }
 
 .emailInput:focus {
-  border-color: #2563eb;
+  border-color: #3b6b9c;
 }
 
 .submitBtn {
   padding: 10px 16px;
-  background: #2563eb;
+  background: #1e3a5f;
   color: white;
   border: none;
   border-radius: 10px;
@@ -306,7 +307,7 @@
 }
 
 .submitBtn:hover {
-  background: #1d4ed8;
+  background: #3b6b9c;
 }
 
 /* =====================
@@ -334,14 +335,14 @@
 }
 
 .textInput:focus {
-  border-color: #2563eb;
+  border-color: #3b6b9c;
 }
 
 .sendBtn {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: #2563eb;
+  background: #1e3a5f;
   color: white;
   border: none;
   display: flex;
@@ -353,7 +354,7 @@
 }
 
 .sendBtn:hover {
-  background: #1d4ed8;
+  background: #3b6b9c;
 }
 
 /* FAB wrapper */
@@ -366,6 +367,7 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 12px;
+  overflow: visible;
 }
 
 /* Tooltip — anchored to fab, opens to the left */
@@ -424,7 +426,7 @@
    User Message Bubble
    ===================== */
 .userMessage {
-  background: #2563eb;
+  background: #1e3a5f;
   color: white;
   border-radius: 14px 14px 2px 14px;
   padding: 10px 14px;
@@ -492,9 +494,9 @@
 }
 
 .speakerBtn:hover {
-  border-color: #2563eb;
-  color: #2563eb;
-  background: #eff6ff;
+  border-color: #3b6b9c;
+  color: #1e3a5f;
+  background: #e8f0f8;
 }
 
 .speakerBtnSmall {
