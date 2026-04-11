@@ -168,14 +168,18 @@ export default function Dashboard() {
             <div className="w-12 h-12 rounded-2xl bg-[#ebf1f7] flex items-center justify-center text-2xl">📄</div>
             <span className="text-[13px] font-bold text-[#212121]">העלה נסח טאבו</span>
           </a>
-          <a href="/votes-tracker" className="no-underline bg-white rounded-2xl border border-[#eeeeee] p-4 flex flex-col items-center gap-2.5 text-center hover:bg-[#ebf1f7] hover:border-[#3b6b9c]/30 transition-all shadow-sm">
-            <div className="w-12 h-12 rounded-2xl bg-[#ebf1f7] flex items-center justify-center text-2xl">📊</div>
-            <span className="text-[13px] font-bold text-[#212121]">הצבעות</span>
-          </a>
-          <a href="/committee-actions" className="no-underline bg-white rounded-2xl border border-[#eeeeee] p-4 flex flex-col items-center gap-2.5 text-center hover:bg-[#ebf1f7] hover:border-[#3b6b9c]/30 transition-all shadow-sm">
-            <div className="w-12 h-12 rounded-2xl bg-[#ebf1f7] flex items-center justify-center text-2xl">🏛️</div>
-            <span className="text-[13px] font-bold text-[#212121]">פעולות ועד</span>
-          </a>
+          {(myRole as MyRoleData)?.isRepresentative && (
+            <a href="/votes-tracker" className="no-underline bg-white rounded-2xl border border-[#eeeeee] p-4 flex flex-col items-center gap-2.5 text-center hover:bg-[#ebf1f7] hover:border-[#3b6b9c]/30 transition-all shadow-sm">
+              <div className="w-12 h-12 rounded-2xl bg-[#ebf1f7] flex items-center justify-center text-2xl">📊</div>
+              <span className="text-[13px] font-bold text-[#212121]">הצבעות</span>
+            </a>
+          )}
+          {(myRole as MyRoleData)?.isRepresentative && (
+            <a href="/committee-actions" className="no-underline bg-white rounded-2xl border border-[#eeeeee] p-4 flex flex-col items-center gap-2.5 text-center hover:bg-[#ebf1f7] hover:border-[#3b6b9c]/30 transition-all shadow-sm">
+              <div className="w-12 h-12 rounded-2xl bg-[#ebf1f7] flex items-center justify-center text-2xl">🏛️</div>
+              <span className="text-[13px] font-bold text-[#212121]">פעולות ועד</span>
+            </a>
+          )}
           <a href={buildingGroup ? '/building-chat/' + (buildingGroup as BuildingGroupData).id : '#'} className="no-underline bg-white rounded-2xl border border-[#eeeeee] p-4 flex flex-col items-center gap-2.5 text-center hover:bg-[#ebf1f7] hover:border-[#3b6b9c]/30 transition-all shadow-sm">
             <div className="w-12 h-12 rounded-2xl bg-[#ebf1f7] flex items-center justify-center text-2xl">💬</div>
             <span className="text-[13px] font-bold text-[#212121]">צ'אט בניין</span>
