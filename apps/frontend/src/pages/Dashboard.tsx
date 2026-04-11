@@ -99,17 +99,19 @@ export default function Dashboard() {
 
         {/* E3: Next Step Banner */}
         {nextStep && (nextStep as NextStepData).action !== 'all_done' && (
-          <div className="bg-[#ebf1f7] border border-[#3b6b9c]/20 rounded-2xl p-5 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-[#3b6b9c] flex items-center justify-center text-2xl flex-shrink-0">
-              {(nextStep as NextStepData).icon}
-            </div>
-            <div className="flex-1">
-              <p className="text-xs text-[#3b6b9c] font-medium mb-0.5">הצעד הבא שלך</p>
-              <p className="text-base font-bold text-[#1e3a5f]">{(nextStep as NextStepData).text}</p>
+          <div className="bg-[#ebf1f7] border border-[#3b6b9c]/20 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#3b6b9c] flex items-center justify-center text-xl sm:text-2xl flex-shrink-0">
+                {(nextStep as NextStepData).icon}
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-[#3b6b9c] font-medium mb-0.5">הצעד הבא שלך</p>
+                <p className="text-sm sm:text-base font-bold text-[#1e3a5f]">{(nextStep as NextStepData).text}</p>
+              </div>
             </div>
             <a
               href={(nextStep as NextStepData).link}
-              className="sc-btn-primary px-5 py-2.5 text-sm no-underline whitespace-nowrap flex-shrink-0"
+              className="sc-btn-primary px-5 py-2.5 text-sm no-underline whitespace-nowrap flex-shrink-0 w-full sm:w-auto text-center"
             >
               בצע עכשיו ←
             </a>
@@ -223,7 +225,7 @@ export default function Dashboard() {
         </a>
 
         {/* Elderly Form + Timeline Quick Links */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <a href="/elderly-form" className="no-underline sc-card p-4 flex items-center gap-3 hover:bg-[#ebf1f7] transition-colors">
             <span className="text-2xl">👴</span>
             <div>
@@ -267,10 +269,10 @@ export default function Dashboard() {
               </div>
             )}
 
-            <div className="overflow-x-auto -mx-2 px-2 pb-1 scrollbar-hide">
-              <div className="flex gap-2 min-w-max" dir="rtl">
+            <div className="overflow-x-auto pb-2 scrollbar-hide -mx-6 px-6">
+              <div className="flex gap-1.5 w-max" dir="rtl">
                 {STAGES.map((s, i) => (
-                  <span key={i} className={`text-[13px] px-4 py-2 rounded-full whitespace-nowrap transition-all ${
+                  <span key={i} className={`text-[11px] sm:text-[13px] px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full whitespace-nowrap transition-all ${
                     i < currentStage ? 'bg-[#4a8c5c]/15 text-[#4a8c5c] font-medium' :
                     i === currentStage ? 'bg-[#3b6b9c] text-white font-bold shadow-sm' :
                     'bg-[#f0f0f5] text-[#8e8e9e]'
