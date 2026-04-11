@@ -325,8 +325,8 @@ export default function BuildingChatPage() {
   }
 
   return (
-    <div className="h-[100dvh] bg-[#f8f9fa] flex flex-col" dir="rtl">
-      
+    <div className="h-[100dvh] bg-[#f8f9fa] flex flex-col overflow-hidden" dir="rtl">
+
       <div className="max-w-[720px] mx-auto w-full flex-1 flex flex-col px-4 min-h-0 overflow-hidden">
 
         {/* Header */}
@@ -403,8 +403,8 @@ export default function BuildingChatPage() {
           </div>
         )}
 
-        {/* Input — always at bottom */}
-        <div className="py-2 pb-[env(safe-area-inset-bottom,12px)] flex gap-2 flex-shrink-0 bg-[#f8f9fa]">
+        {/* Input — sticky bottom */}
+        <div className="py-2 pb-[env(safe-area-inset-bottom,12px)] flex gap-2 flex-shrink-0 sticky bottom-0 z-10 bg-[#f8f9fa] border-t border-[#eeeeee]">
           <input
             value={message} onChange={e => setMessage(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}

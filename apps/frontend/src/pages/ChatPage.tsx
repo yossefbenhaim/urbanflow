@@ -148,7 +148,7 @@ export default function ChatPage() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2.5 min-h-0" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="flex-1 overflow-y-auto px-4 pt-4 pb-2 space-y-2.5 min-h-0" style={{ WebkitOverflowScrolling: 'touch' }}>
           {messages.map((msg: { id: string; sender_id: string; content: string; created_at: string }) => {
             const isMe = msg.sender_id === meId
             return (
@@ -169,8 +169,8 @@ export default function ChatPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input */}
-        <div className="bg-white border-t border-[#eeeeee] px-3 py-2.5 pb-[env(safe-area-inset-bottom,12px)] flex gap-2 items-end flex-shrink-0">
+        {/* Input — sticky bottom */}
+        <div className="bg-white border-t border-[#eeeeee] px-3 py-2.5 pb-[env(safe-area-inset-bottom,12px)] flex gap-2 items-end flex-shrink-0 sticky bottom-0 z-10">
           <button
             onClick={handleSend}
             disabled={!message.trim() || sendMessage.isPending}
