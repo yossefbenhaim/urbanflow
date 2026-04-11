@@ -10,20 +10,14 @@ type MyRoleData = { isRepresentative?: boolean }
 type BuildingGroupData = { id: string }
 type DocData = { id: string; title: string; type: string; due_date?: string; signatures?: unknown[] }
 
-const STAGES = ['סקר','ייצוג','מו"מ','הסכם','חתימות','תכנון','היתר','פינוי','בנייה','מסירה']
-
-const STATUS_LABELS: Record<string, string> = {
-  INITIAL: 'התחלה', SURVEY: 'סקר', REPRESENTATION: 'ייצוג',
-  NEGOTIATION: 'מו"מ', AGREEMENT: 'הסכם', SIGNATURES: 'חתימות',
-  PLANNING: 'תכנון', PERMIT: 'היתר', EVACUATION: 'פינוי',
-  CONSTRUCTION: 'בנייה', DELIVERY: 'מסירה',
-}
-
-function StageIndex(status?: string) {
-  const order = ['INITIAL','SURVEY','REPRESENTATION','NEGOTIATION','AGREEMENT',
-    'SIGNATURES','PLANNING','PERMIT','EVACUATION','CONSTRUCTION','DELIVERY']
-  return order.indexOf(status ?? '') ?? 0
-}
+// Tenant personal steps
+const TENANT_STEPS = [
+  { key: 'profile', label: 'פרופיל', icon: '👤' },
+  { key: 'tabu', label: 'נסח טאבו', icon: '📄' },
+  { key: 'wishes', label: 'דירה חדשה', icon: '🏗️' },
+  { key: 'vote', label: 'הצבעות', icon: '🗳️' },
+  { key: 'sign', label: 'חתימות', icon: '✍️' },
+]
 
 
 // --- Main Dashboard ---
@@ -70,6 +64,7 @@ export default function Dashboard() {
   const { data: rawLeadership } = trpc.tenant.getLeadership.useQuery()
   const leadership = rawLeadership as { manager?: { full_name?: string; phone?: string } } | null | undefined
   const { data: nextStep } = trpc.tenant.getNextStep.useQuery()
+  const { data: tenantSteps } = trpc.tenant.getTenantSteps.useQuery()
   const signDoc = trpc.tenant.signDocument.useMutation()
 
   // Show skeleton while loading
@@ -77,11 +72,11 @@ export default function Dashboard() {
     <PageLayout><DashboardSkeleton /></PageLayout>
   )
 
-  // Full dashboard
-  const currentStage = StageIndex(project?.status)
-  const signed = (project as { signedCount?: number })?.signedCount ?? 0
-  const total = (project as { totalTenants?: number })?.totalTenants ?? 0
-  const pct = total ? Math.round((signed / total) * 100) : 0
+  // Tenant personal progress
+  const steps = tenantSteps as Record<string, boolean> | undefined
+  const completedSteps = steps ? TENANT_STEPS.filter(s => steps[s.key]).length : 0
+  const totalSteps = TENANT_STEPS.length
+  const personalPct = Math.round((completedSteps / totalSteps) * 100)
 
   return (
     <PageLayout>
@@ -95,48 +90,60 @@ export default function Dashboard() {
 
       <div className="space-y-4">
 
-        {/* Project Card - prominent at top */}
+        {/* Personal Progress Card */}
         <div className="bg-white rounded-2xl border border-[#eeeeee] p-4 sm:p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <span className="text-lg">🏗️</span>
+              <span className="text-lg">📋</span>
               <h3 className="text-[15px] sm:text-[17px] font-bold text-[#212121] m-0">
-                {project?.name || 'פרויקט פינוי בינוי'}
+                ההתקדמות שלי
               </h3>
             </div>
-            <div className="flex gap-1.5">
-              <span className="bg-[#4a8c5c]/15 text-[#4a8c5c] text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full">פעיל</span>
-              <span className="bg-[#ebf1f7] text-[#3b6b9c] text-[10px] sm:text-[11px] font-medium px-2.5 py-1 rounded-full">פינוי בינוי</span>
-            </div>
+            <span className="bg-[#ebf1f7] text-[#3b6b9c] text-[11px] font-bold px-2.5 py-1 rounded-full">
+              {completedSteps}/{totalSteps} הושלמו
+            </span>
           </div>
 
           {/* Progress bar */}
           <div className="mb-4">
             <div className="flex justify-between text-[13px] text-[#5a5a6e] mb-2">
-              <span>התקדמות חתימות</span>
-              <span className="font-bold text-[#3b6b9c]">{pct}%</span>
+              <span>השלמת משימות</span>
+              <span className="font-bold text-[#3b6b9c]">{personalPct}%</span>
             </div>
             <div className="w-full bg-[#e8edf2] rounded-full h-3 overflow-hidden">
-              <div className="bg-gradient-to-l from-[#3b6b9c] to-[#5a8dbf] h-3 rounded-full transition-all duration-500" style={{ width: `${Math.max(pct, 5)}%` }} />
+              <div className="bg-gradient-to-l from-[#4a8c5c] to-[#6ab87a] h-3 rounded-full transition-all duration-500" style={{ width: `${Math.max(personalPct, 3)}%` }} />
             </div>
-            <p className="text-[11px] text-[#5a5a6e] mt-1.5">{signed} מתוך {total || 25} דירות חתמו</p>
           </div>
 
-          {/* Stage slider */}
+          {/* Steps slider */}
           <div className="overflow-x-auto pb-1 scrollbar-hide">
-            <div className="flex gap-1 w-max" dir="rtl">
-              {STAGES.map((s, i) => (
-                <span key={i} className={`text-[10px] sm:text-[12px] px-2 sm:px-3 py-1.5 rounded-full whitespace-nowrap transition-all ${
-                  i < currentStage ? 'bg-[#4a8c5c]/15 text-[#4a8c5c] font-medium' :
-                  i === currentStage ? 'bg-[#3b6b9c] text-white font-bold shadow-sm' :
-                  'bg-[#f0f0f5] text-[#8e8e9e]'
-                }`}>
-                  {i < currentStage && '✓ '}{s}
-                </span>
-              ))}
+            <div className="flex gap-2 w-max" dir="rtl">
+              {TENANT_STEPS.map((s) => {
+                const done = steps?.[s.key] ?? false
+                return (
+                  <div key={s.key} className={`flex items-center gap-1.5 text-[11px] sm:text-[12px] px-3 py-2 rounded-xl whitespace-nowrap transition-all ${
+                    done ? 'bg-[#4a8c5c]/15 text-[#4a8c5c] font-medium' : 'bg-[#f0f0f5] text-[#8e8e9e]'
+                  }`}>
+                    <span>{done ? '✓' : s.icon}</span>
+                    <span>{s.label}</span>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>
+
+        {/* Project Progress Link */}
+        <a href="/project-progress" className="no-underline block">
+          <div className="bg-gradient-to-l from-[#1e3a5f] to-[#3b6b9c] rounded-2xl p-3.5 shadow-sm flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl flex-shrink-0">📊</div>
+            <div className="flex-1">
+              <h3 className="m-0 text-[14px] font-bold text-white">התקדמות הפרויקט</h3>
+              <p className="mt-0.5 text-[11px] text-white/80">נתונים, גרפים וסטטיסטיקות</p>
+            </div>
+            <span className="text-white/90 text-xl">←</span>
+          </div>
+        </a>
 
         {/* E3: Next Step Banner */}
         {nextStep && (nextStep as NextStepData).action !== 'all_done' && (

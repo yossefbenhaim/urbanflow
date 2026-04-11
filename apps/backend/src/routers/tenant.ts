@@ -806,6 +806,92 @@ export const tenantRouter = router({
     return { action: 'all_done', text: 'הפרויקט מתקדם, אין פעולות נדרשות ✅', link: '/dashboard', icon: '✅' }
   }),
 
+  // ─── Tenant Steps (personal progress) ─────────────────────
+  getTenantSteps: protectedProcedure.query(async ({ ctx }) => {
+    const { data: tp } = await ctx.supabase.from('tenant_profiles').select('is_onboarded, tabu_file_url, id_number, phone, floor, apartment_sqm, apartment_number').eq('user_id', ctx.user.id).single()
+    const profile = tp as TenantProfileRow | null
+    const profileDone = !!(profile?.is_onboarded)
+    const tabuDone = !!(profile?.tabu_file_url)
+
+    // Check apartment wishes
+    const { data: wishes } = await ctx.supabase.from('apartment_wishes').select('id').eq('user_id', ctx.user.id).single()
+    const wishesDone = !!wishes
+
+    // Check votes
+    let voteDone = true
+    const { data: bgm } = await ctx.supabase.from('building_group_members').select('group_id').eq('user_id', ctx.user.id)
+    if (bgm && bgm.length > 0) {
+      const groupIds = (bgm as Array<{ group_id: string }>).map(m => m.group_id)
+      const { data: polls } = await ctx.supabase.from('polls').select('id').in('group_id', groupIds).eq('status', 'open')
+      if (polls && polls.length > 0) {
+        const pollIds = (polls as Array<{ id: string }>).map(p => p.id)
+        const { data: votes } = await ctx.supabase.from('poll_votes').select('poll_id').eq('voter_id', ctx.user.id).in('poll_id', pollIds)
+        const votedIds = new Set((votes as Array<{ poll_id: string }> ?? []).map(v => v.poll_id))
+        voteDone = pollIds.every(id => votedIds.has(id))
+      }
+    }
+
+    // Check signatures
+    let signDone = true
+    const { data: tpUnit } = await ctx.supabase.from('tenant_profiles').select('unit:units(building:buildings(project_id))').eq('user_id', ctx.user.id).single()
+    const projectId = ((tpUnit as TenantProfileRow | null)?.unit as UnitBuilding | undefined)?.building?.project_id
+    if (projectId) {
+      const { data: docs } = await ctx.supabase.from('documents').select('id, signatures(signed_at)').eq('project_id', projectId).eq('type', 'SIGN_REQUIRED')
+      if (docs && docs.length > 0) {
+        signDone = docs.every((d: { signatures?: unknown[] }) => d.signatures && d.signatures.length > 0)
+      }
+    }
+
+    return { profile: profileDone, tabu: tabuDone, wishes: wishesDone, vote: voteDone, sign: signDone }
+  }),
+
+  // ─── Project Progress (dashboard page) ───────────────────
+  getProjectProgress: protectedProcedure.query(async ({ ctx }) => {
+    // Find project
+    const { data: pt } = await ctx.supabase.from('project_tenants').select('project_id, projects(id, name, status, created_at)').eq('tenant_id', ctx.user.id).single()
+    if (!pt) return null
+    const project = unwrapJoin((pt as unknown as ProjectTenantRow).projects as Record<string, unknown>[] | Record<string, unknown> | undefined)
+    if (!project) return null
+
+    const [
+      { count: totalTenants },
+      { data: allProfiles },
+      { data: signedUsers },
+      { data: docs },
+      { data: allWishes },
+    ] = await Promise.all([
+      ctx.supabase.from('project_tenants').select('*', { count: 'exact', head: true }).eq('project_id', project.id),
+      ctx.supabase.from('tenant_profiles').select('user_id, is_onboarded, tabu_file_url').in('user_id',
+        (await ctx.supabase.from('project_tenants').select('tenant_id').eq('project_id', project.id)).data?.map((t: { tenant_id: string }) => t.tenant_id) ?? []
+      ),
+      ctx.supabase.from('signatures').select('user_id, documents!inner(project_id)').eq('documents.project_id', project.id),
+      ctx.supabase.from('documents').select('id, title, type, signatures(user_id)').eq('project_id', project.id),
+      ctx.supabase.from('apartment_wishes').select('user_id').in('user_id',
+        (await ctx.supabase.from('project_tenants').select('tenant_id').eq('project_id', project.id)).data?.map((t: { tenant_id: string }) => t.tenant_id) ?? []
+      ),
+    ])
+
+    const total = totalTenants ?? 0
+    const profiles = allProfiles as TenantProfileRow[] ?? []
+    const onboarded = profiles.filter(p => p.is_onboarded).length
+    const tabuUploaded = profiles.filter(p => p.tabu_file_url).length
+    const uniqueSigners = new Set((signedUsers ?? []).map((s: { user_id: string }) => s.user_id)).size
+    const wishesCount = allWishes?.length ?? 0
+
+    // Per-document breakdown
+    const docBreakdown = (docs ?? []).map((d: { id: string; title: string; type: string; signatures?: Array<{ user_id: string }> }) => ({
+      id: d.id, title: d.title, type: d.type,
+      signed: new Set((d.signatures ?? []).map(s => s.user_id)).size,
+      total,
+    }))
+
+    return {
+      projectName: project.name, projectStatus: project.status, createdAt: project.created_at,
+      totalTenants: total, onboarded, tabuUploaded, signedCount: uniqueSigners, wishesCount,
+      documents: docBreakdown,
+    }
+  }),
+
   // ─── DI2: Apartment Wishes ────────────────────────────────
 
   getApartmentWishes: protectedProcedure.query(async ({ ctx }) => {

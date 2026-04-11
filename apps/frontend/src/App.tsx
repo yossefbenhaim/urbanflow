@@ -40,6 +40,7 @@ import ElderlyForm from './pages/ElderlyForm'
 import ApartmentWishesForm from './pages/ApartmentWishesForm'
 import TabuUploadPage from './pages/TabuUploadPage'
 
+import ProjectProgressPage from './pages/ProjectProgressPage'
 import TimelinePage from './pages/TimelinePage'
 import ValidationPage from './pages/ValidationPage'
 import LearningPage from './pages/LearningPage'
@@ -123,6 +124,7 @@ export default function App() {
         <Route path="/apartment-wishes" element={<ApartmentWishesForm />} />
         <Route path="/upload-tabu" element={<TabuUploadPage />} />
 
+        <Route path="/project-progress" element={<ProjectProgressPage />} />
         <Route path="/timeline" element={<TimelinePage />} />
         <Route path="/validation" element={<ValidationPage />} />
         <Route path="/learn" element={<LearningPage />} />

@@ -86,6 +86,7 @@ function getSidebarItems(role: string, isRepresentative: boolean): NavItem[] {
     case 'tenant':
       return [
         { to: '/dashboard', icon: '🏠', label: 'ראשי' },
+        { to: '/project-progress', icon: '📊', label: 'התקדמות פרויקט' },
         { to: '/apartment-wishes', icon: '🏗️', label: 'דירה חדשה' },
         { to: '/documents', icon: '📄', label: 'מסמכים' },
         { to: '/chat', icon: '💬', label: 'צ\'אט' },
