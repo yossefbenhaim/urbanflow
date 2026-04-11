@@ -86,33 +86,72 @@ export default function Dashboard() {
 
   return (
     <PageLayout>
-      {(myRole as MyRoleData)?.isRepresentative && (
-        <div className="bg-[#1e3a5f] rounded-[14px] px-5 py-3 flex items-center gap-3 mb-5">
-          <span className="text-xl">🏛️</span>
-          <span className="text-white font-bold text-[13px]">נציג ועד הבניין</span>
-          <span className="mr-auto bg-white/15 text-[#ebf1f7] text-[10px] px-3 py-1 rounded-full">הרשאות מורחבות פעילות</span>
-        </div>
-      )}
+      {/* Header greeting + role badge */}
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="text-[22px] sm:text-[24px] font-extrabold text-[#212121] m-0">שלום, {profile?.fullName || 'אורח'} 👋</h1>
+        {(myRole as MyRoleData)?.isRepresentative && (
+          <span className="bg-[#1e3a5f] text-white text-[11px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap">נציג בניין</span>
+        )}
+      </div>
 
-      <h1 className="text-[24px] font-extrabold text-[#212121] mb-5">שלום, {profile?.fullName || 'אורח'} 👋</h1>
-      <div className="space-y-5">
+      <div className="space-y-4">
+
+        {/* Project Card - prominent at top */}
+        <div className="bg-white rounded-2xl border border-[#eeeeee] p-4 sm:p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🏗️</span>
+              <h3 className="text-[15px] sm:text-[17px] font-bold text-[#212121] m-0">
+                {project?.name || 'פרויקט פינוי בינוי'}
+              </h3>
+            </div>
+            <div className="flex gap-1.5">
+              <span className="bg-[#4a8c5c]/15 text-[#4a8c5c] text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full">פעיל</span>
+              <span className="bg-[#ebf1f7] text-[#3b6b9c] text-[10px] sm:text-[11px] font-medium px-2.5 py-1 rounded-full">פינוי בינוי</span>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="mb-4">
+            <div className="flex justify-between text-[13px] text-[#5a5a6e] mb-2">
+              <span>התקדמות חתימות</span>
+              <span className="font-bold text-[#3b6b9c]">{pct}%</span>
+            </div>
+            <div className="w-full bg-[#e8edf2] rounded-full h-3 overflow-hidden">
+              <div className="bg-gradient-to-l from-[#3b6b9c] to-[#5a8dbf] h-3 rounded-full transition-all duration-500" style={{ width: `${Math.max(pct, 5)}%` }} />
+            </div>
+            <p className="text-[11px] text-[#5a5a6e] mt-1.5">{signed} מתוך {total || 25} דירות חתמו</p>
+          </div>
+
+          {/* Stage slider */}
+          <div className="overflow-x-auto pb-1 scrollbar-hide">
+            <div className="flex gap-1 w-max" dir="rtl">
+              {STAGES.map((s, i) => (
+                <span key={i} className={`text-[10px] sm:text-[12px] px-2 sm:px-3 py-1.5 rounded-full whitespace-nowrap transition-all ${
+                  i < currentStage ? 'bg-[#4a8c5c]/15 text-[#4a8c5c] font-medium' :
+                  i === currentStage ? 'bg-[#3b6b9c] text-white font-bold shadow-sm' :
+                  'bg-[#f0f0f5] text-[#8e8e9e]'
+                }`}>
+                  {i < currentStage && '✓ '}{s}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
 
         {/* E3: Next Step Banner */}
         {nextStep && (nextStep as NextStepData).action !== 'all_done' && (
-          <div className="bg-[#ebf1f7] border border-[#3b6b9c]/20 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+          <div className="bg-[#ebf1f7] border border-[#3b6b9c]/20 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <div className="flex items-center gap-3 w-full sm:w-auto">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#3b6b9c] flex items-center justify-center text-xl sm:text-2xl flex-shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-[#3b6b9c] flex items-center justify-center text-xl flex-shrink-0">
                 {(nextStep as NextStepData).icon}
               </div>
               <div className="flex-1">
                 <p className="text-xs text-[#3b6b9c] font-medium mb-0.5">הצעד הבא שלך</p>
-                <p className="text-sm sm:text-base font-bold text-[#1e3a5f]">{(nextStep as NextStepData).text}</p>
+                <p className="text-sm font-bold text-[#1e3a5f]">{(nextStep as NextStepData).text}</p>
               </div>
             </div>
-            <a
-              href={(nextStep as NextStepData).link}
-              className="sc-btn-primary px-5 py-2.5 text-sm no-underline whitespace-nowrap flex-shrink-0 w-full sm:w-auto text-center"
-            >
+            <a href={(nextStep as NextStepData).link} className="sc-btn-primary px-5 py-2.5 text-sm no-underline whitespace-nowrap w-full sm:w-auto text-center">
               בצע עכשיו ←
             </a>
           </div>
@@ -124,29 +163,45 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* 4 Quick Action Tiles - 2x2 grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <a href="/upload-tabu" className="no-underline bg-white rounded-2xl border border-[#eeeeee] p-4 flex flex-col items-center gap-2.5 text-center hover:bg-[#ebf1f7] hover:border-[#3b6b9c]/30 transition-all shadow-sm">
+            <div className="w-12 h-12 rounded-2xl bg-[#ebf1f7] flex items-center justify-center text-2xl">📄</div>
+            <span className="text-[13px] font-bold text-[#212121]">העלה נסח טאבו</span>
+          </a>
+          <a href="/votes-tracker" className="no-underline bg-white rounded-2xl border border-[#eeeeee] p-4 flex flex-col items-center gap-2.5 text-center hover:bg-[#ebf1f7] hover:border-[#3b6b9c]/30 transition-all shadow-sm">
+            <div className="w-12 h-12 rounded-2xl bg-[#ebf1f7] flex items-center justify-center text-2xl">📊</div>
+            <span className="text-[13px] font-bold text-[#212121]">הצבעות</span>
+          </a>
+          <a href="/committee-actions" className="no-underline bg-white rounded-2xl border border-[#eeeeee] p-4 flex flex-col items-center gap-2.5 text-center hover:bg-[#ebf1f7] hover:border-[#3b6b9c]/30 transition-all shadow-sm">
+            <div className="w-12 h-12 rounded-2xl bg-[#ebf1f7] flex items-center justify-center text-2xl">🏛️</div>
+            <span className="text-[13px] font-bold text-[#212121]">פעולות ועד</span>
+          </a>
+          <a href={buildingGroup ? '/building-chat/' + (buildingGroup as BuildingGroupData).id : '#'} className="no-underline bg-white rounded-2xl border border-[#eeeeee] p-4 flex flex-col items-center gap-2.5 text-center hover:bg-[#ebf1f7] hover:border-[#3b6b9c]/30 transition-all shadow-sm">
+            <div className="w-12 h-12 rounded-2xl bg-[#ebf1f7] flex items-center justify-center text-2xl">💬</div>
+            <span className="text-[13px] font-bold text-[#212121]">צ'אט בניין</span>
+          </a>
+        </div>
+
         {/* Onboarding Tasks Card */}
         {myStatus && !myStatus.isOnboarded && (
-          <div className="sc-card p-6 border-t-4 border-t-sc-primary">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-11 h-11 rounded-xl bg-[#3b6b9c] flex items-center justify-center text-[22px]">📋</div>
-              <div>
-                <h3 className="text-[17px] font-bold text-[#212121] m-0">השלם את הפרופיל שלך</h3>
-                <p className="text-[13px] text-[#5a5a6e] mt-0.5">מלא את הפרטים כדי להשתמש בכל הפיצ׳רים</p>
+          <div className="sc-card p-5 border-t-4 border-t-sc-primary">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-[#3b6b9c] flex items-center justify-center text-xl">📋</div>
+              <div className="flex-1">
+                <h3 className="text-[15px] font-bold text-[#212121] m-0">השלם את הפרופיל שלך</h3>
+                <p className="text-[12px] text-[#5a5a6e] mt-0.5">מלא את הפרטים כדי להשתמש בכל הפיצ׳רים</p>
               </div>
-              <a href="/onboarding" className="sc-btn-primary mr-auto px-5 py-2.5 text-sm no-underline whitespace-nowrap">
-                מלא פרטים ←
-              </a>
             </div>
-
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-2">
               {[
                 { icon: '👤', text: 'תעודת זהות ומספר טלפון', done: !!myStatus.steps?.personal },
-                { icon: '🏠', text: 'כתובת הדירה (עיר, רחוב, מספר)', done: !!myStatus.steps?.address },
-                { icon: '📐', text: 'פרטי הדירה (קומה, גודל, שנת כניסה)', done: !!myStatus.steps?.apartment },
+                { icon: '🏠', text: 'כתובת הדירה', done: !!myStatus.steps?.address },
+                { icon: '📐', text: 'פרטי הדירה', done: !!myStatus.steps?.apartment },
               ].map((step, i) => (
                 <div key={i} className="flex items-center gap-3 p-2.5 bg-white rounded-[10px] border border-[#eeeeee]">
-                  <span className="text-lg">{step.icon}</span>
-                  <span className={`text-sm flex-1 ${step.done ? 'text-[#4a8c5c] line-through' : 'text-[#212121]'}`}>{step.text}</span>
+                  <span className="text-base">{step.icon}</span>
+                  <span className={`text-[13px] flex-1 ${step.done ? 'text-[#4a8c5c] line-through' : 'text-[#212121]'}`}>{step.text}</span>
                   {step.done
                     ? <span className="w-5 h-5 rounded-full bg-[#4a8c5c] inline-flex items-center justify-center text-white text-xs font-bold">✓</span>
                     : <span className="w-5 h-5 rounded-full border-2 border-[#eeeeee] inline-block" />
@@ -154,151 +209,58 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
-          </div>
-        )}
-
-
-        {/* Building Group Card */}
-        {buildingGroup && (
-          <a
-            href={'/building-chat/' + (buildingGroup as BuildingGroupData).id}
-            className="no-underline block"
-          >
-            <div className="bg-[#1e3a5f] rounded-[20px] p-5 shadow-lg cursor-pointer transition-transform hover:scale-[1.01]">
-              <div className="flex items-center gap-3.5">
-                <div className="w-[50px] h-[50px] rounded-2xl bg-white/20 flex items-center justify-center text-[26px] flex-shrink-0">💬</div>
-                <div className="flex-1">
-                  <h3 className="m-0 text-[17px] font-extrabold text-white">קבוצת הבניין שלי</h3>
-                  <p className="mt-1 text-[13px] text-white/80">לחץ לכניסה לצ׳אט עם הדיירים, סקרים ועוד</p>
-                </div>
-                <span className="text-white/90 text-2xl">←</span>
-              </div>
-            </div>
-          </a>
-        )}
-
-        {/* Representative Tasks */}
-        {(myRole as MyRoleData)?.isRepresentative && (
-          <div className="sc-card p-6 border-t-4 border-t-sc-primary">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-11 h-11 rounded-xl bg-[#3b6b9c] flex items-center justify-center text-[22px]">🏛️</div>
-              <div className="flex-1">
-                <h3 className="m-0 text-[17px] font-bold text-[#212121]">משימות הועד</h3>
-                <p className="mt-0.5 text-[13px] text-[#5a5a6e]">פעולות נדרשות בשם הבניין</p>
-              </div>
-              <button
-                onClick={() => window.dispatchEvent(new Event('open-faqbot-committee'))}
-                className="sc-btn-primary px-3.5 py-2 text-[13px] flex items-center gap-1.5 flex-shrink-0"
-              >
-                📖 מדריך
-              </button>
-            </div>
-            <div className="flex flex-col gap-2.5">
-              {[
-                { icon: '📄', text: 'העלה נסח טאבו', link: '/upload-tabu',
-                  info: 'העלה את נסח הטאבו העדכני של הדירה שלך. הנסח נדרש לצורך אימות בעלות וקידום הפרויקט.' },
-                { icon: '📊', text: 'מעקב הצבעות דיירים', link: '/votes-tracker',
-                  info: 'עקוב מי הצביע ומי לא בסקרים הפתוחים. שלח תזכורות לדיירים שלא הצביעו כדי להגיע ל-60% הנדרשים לקבלת החלטה.' },
-                { icon: '🏛️', text: 'פעולות ועד', link: '/committee-actions',
-                  info: 'יצירת סקרים, שליחת הודעות לדיירים, קביעת ישיבות, העלאת מסמכים וניהול חתימות — כל הכלים לניהול פרויקט בינוי.' },
-                { icon: '📝', text: 'מסמכים וחתימות', link: '/documents',
-                  info: 'נהל חוזים, פרוטוקולים ומסמכים חשובים. איסוף חתימות דיגיטלי מהדיירים מאיץ תהליכים ומונע עיכובים בפרויקט.' },
-              ].map((task, i) => (
-                <TaskItem key={i} task={task} />
-              ))}
-            </div>
+            <a href="/onboarding" className="sc-btn-primary w-full mt-3 px-5 py-2.5 text-sm no-underline text-center block">
+              מלא פרטים ←
+            </a>
           </div>
         )}
 
         {/* Apartment Wishes CTA */}
         <a href="/apartment-wishes" className="no-underline block">
-          <div className="bg-gradient-to-l from-[#3b6b9c] to-[#1e3a5f] rounded-[20px] p-5 shadow-lg cursor-pointer transition-transform hover:scale-[1.01]">
-            <div className="flex items-center gap-3.5">
-              <div className="w-[50px] h-[50px] rounded-2xl bg-white/20 flex items-center justify-center text-[26px] flex-shrink-0">🏗️</div>
+          <div className="bg-gradient-to-l from-[#3b6b9c] to-[#1e3a5f] rounded-2xl p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center text-2xl flex-shrink-0">🏗️</div>
               <div className="flex-1">
-                <h3 className="m-0 text-[17px] font-extrabold text-white">טופס דירה חדשה</h3>
-                <p className="mt-1 text-[13px] text-white/80">ספר לנו מה חשוב לך בדירה החדשה וקבל ניתוח AI</p>
+                <h3 className="m-0 text-[15px] font-extrabold text-white">טופס דירה חדשה</h3>
+                <p className="mt-0.5 text-[12px] text-white/80">ספר לנו מה חשוב לך בדירה החדשה</p>
               </div>
-              <span className="text-white/90 text-2xl">←</span>
+              <span className="text-white/90 text-xl">←</span>
             </div>
           </div>
         </a>
 
-        {/* Elderly Form + Timeline Quick Links */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <a href="/elderly-form" className="no-underline sc-card p-4 flex items-center gap-3 hover:bg-[#ebf1f7] transition-colors">
-            <span className="text-2xl">👴</span>
+        {/* Quick Links row */}
+        <div className="grid grid-cols-2 gap-3">
+          <a href="/elderly-form" className="no-underline sc-card p-3.5 flex items-center gap-2.5 hover:bg-[#ebf1f7] transition-colors">
+            <span className="text-xl">👴</span>
             <div>
-              <p className="text-sm font-bold text-[#212121]">טופס קשיש / מוגבלות</p>
-              <p className="text-xs text-[#5a5a6e]">זכויות מיוחדות בפרויקט</p>
+              <p className="text-[13px] font-bold text-[#212121]">טופס קשיש</p>
+              <p className="text-[11px] text-[#5a5a6e]">זכויות מיוחדות</p>
             </div>
           </a>
-          <a href="/timeline" className="no-underline sc-card p-4 flex items-center gap-3 hover:bg-[#ebf1f7] transition-colors">
-            <span className="text-2xl">📅</span>
+          <a href="/timeline" className="no-underline sc-card p-3.5 flex items-center gap-2.5 hover:bg-[#ebf1f7] transition-colors">
+            <span className="text-xl">📅</span>
             <div>
-              <p className="text-sm font-bold text-[#212121]">לוח זמנים</p>
-              <p className="text-xs text-[#5a5a6e]">עדכונים שבועיים מספקים</p>
+              <p className="text-[13px] font-bold text-[#212121]">לוח זמנים</p>
+              <p className="text-[11px] text-[#5a5a6e]">עדכונים שבועיים</p>
             </div>
           </a>
         </div>
 
-        {/* Project Status Card */}
-        {project ? (
-          <div className="sc-card p-6 border-t-4 border-t-sc-primary">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h3 className="font-semibold text-[#212121] text-lg">{project.name}</h3>
-                <span className="sc-badge mt-1 bg-[#ebf1f7] text-[#3b6b9c]">
-                  {project.type?.replace('_', ' ')}
-                </span>
-              </div>
-              <span className="sc-badge bg-[#8b6f47]/15 text-[#8b6f47]">
-                {STATUS_LABELS[project.status] ?? project.status}
-              </span>
-            </div>
-
-            {total > 0 && (
-              <div className="mb-4">
-                <div className="flex justify-between text-sm text-[#5a5a6e] mb-2">
-                  <span>חתימות שנאספו</span>
-                  <span className="font-medium">{signed} / {total} ({pct}%)</span>
-                </div>
-                <div className="w-full bg-sc-border rounded-full h-2">
-                  <div className="bg-[#3b6b9c] h-2 rounded-full transition-all" style={{ width: `${pct}%` }} />
-                </div>
-              </div>
-            )}
-
-            <div className="overflow-x-auto pb-2 scrollbar-hide -mx-6 px-6">
-              <div className="flex gap-1.5 w-max" dir="rtl">
-                {STAGES.map((s, i) => (
-                  <span key={i} className={`text-[11px] sm:text-[13px] px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full whitespace-nowrap transition-all ${
-                    i < currentStage ? 'bg-[#4a8c5c]/15 text-[#4a8c5c] font-medium' :
-                    i === currentStage ? 'bg-[#3b6b9c] text-white font-bold shadow-sm' :
-                    'bg-[#f0f0f5] text-[#8e8e9e]'
-                  }`}>
-                    {i < currentStage && '✓ '}{s}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        ) : null}
-
         {/* Leadership */}
         {leadership && (
-          <div className="sc-card p-6">
-            <h3 className="sc-section-title text-base mb-4">מי מוביל</h3>
-            <div className="space-y-3">
+          <div className="sc-card p-5">
+            <h3 className="sc-section-title text-sm mb-3">מי מוביל</h3>
+            <div className="space-y-2.5">
               {[
                 { label: 'מארגן דיירים', name: leadership.manager?.full_name, phone: leadership.manager?.phone, icon: '🏢' },
               ].filter(p => p.name).map((p) => (
                 <div key={p.label} className="flex items-center gap-3 p-3 bg-[#f8f9fa] rounded-xl">
-                  <span className="text-xl">{p.icon}</span>
+                  <span className="text-lg">{p.icon}</span>
                   <div>
-                    <p className="text-xs text-[#5a5a6e]">{p.label}</p>
-                    <p className="text-sm font-medium text-[#212121]">{p.name}</p>
-                    {p.phone && <p className="text-xs text-[#3b6b9c]">{p.phone}</p>}
+                    <p className="text-[11px] text-[#5a5a6e]">{p.label}</p>
+                    <p className="text-[13px] font-medium text-[#212121]">{p.name}</p>
+                    {p.phone && <p className="text-[11px] text-[#3b6b9c]">{p.phone}</p>}
                   </div>
                 </div>
               ))}
@@ -308,9 +270,9 @@ export default function Dashboard() {
 
         {/* Documents */}
         {docs && docs.length > 0 && (
-          <div className="sc-card p-6">
-            <h3 className="sc-section-title text-base mb-4">מסמכים לחתימה</h3>
-            <div className="space-y-3">
+          <div className="sc-card p-5">
+            <h3 className="sc-section-title text-sm mb-3">מסמכים לחתימה</h3>
+            <div className="space-y-2.5">
               {docs.map((doc: DocData) => {
                 const isSigned = (doc.signatures?.length ?? 0) > 0
                 return (
@@ -319,11 +281,11 @@ export default function Dashboard() {
                     doc.type === 'SIGN_REQUIRED' ? 'border-sc-error/30 bg-red-500/5' : 'border-[#eeeeee] bg-[#f8f9fa]'
                   }`}>
                     <div>
-                      <p className="text-sm font-medium text-[#212121]">{doc.title}</p>
-                      {doc.due_date && <p className="text-xs text-[#5a5a6e]">עד {doc.due_date}</p>}
+                      <p className="text-[13px] font-medium text-[#212121]">{doc.title}</p>
+                      {doc.due_date && <p className="text-[11px] text-[#5a5a6e]">עד {doc.due_date}</p>}
                     </div>
                     {isSigned ? (
-                      <span className="text-[#4a8c5c] text-sm font-medium">✅ חתום</span>
+                      <span className="text-[#4a8c5c] text-[13px] font-medium">✅ חתום</span>
                     ) : doc.type === 'SIGN_REQUIRED' ? (
                       <button
                         onClick={() => signDoc.mutate({ docId: doc.id })}
