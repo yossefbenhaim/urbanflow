@@ -165,12 +165,19 @@ export default function AccessibilityWidget() {
           </div>
         )}
         <button onClick={() => setOpen(o => !o)} className={styles.fab} aria-label="תפריט נגישות">
-          {/* Accessibility person icon */}
-          <svg className={styles.fabIcon} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="4" r="2" />
-            <path d="M13 7h-2c-2.76 0-5 2.24-5 5v2h2v-2c0-1.1.45-2.09 1.17-2.83L9 22h2.5l1.5-6 1.5 6H17l-.17-12.83A4.982 4.982 0 0 1 18 12v2h2v-2c0-2.76-2.24-5-5-5z" />
-          </svg>
-          {activeCount > 0 && <span className={styles.badge}>{activeCount}</span>}
+          {open ? (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          ) : (
+            <>
+              <svg className={styles.fabIcon} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="4" r="2" />
+                <path d="M13 7h-2c-2.76 0-5 2.24-5 5v2h2v-2c0-1.1.45-2.09 1.17-2.83L9 22h2.5l1.5-6 1.5 6H17l-.17-12.83A4.982 4.982 0 0 1 18 12v2h2v-2c0-2.76-2.24-5-5-5z" />
+              </svg>
+              {activeCount > 0 && <span className={styles.badge}>{activeCount}</span>}
+            </>
+          )}
         </button>
       </div>
     </div>
