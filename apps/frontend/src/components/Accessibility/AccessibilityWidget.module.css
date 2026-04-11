@@ -1,13 +1,9 @@
-/* Root — always fixed bottom-left */
+/* Root — always fixed bottom-left, only contains the FAB */
 .root {
   position: fixed;
   bottom: 80px;
   left: 0;
   z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
 }
 
 /* FAB button — Tab/tongue shape from left edge */
@@ -51,8 +47,12 @@
   border: 1.5px solid #fff;
 }
 
-/* Panel */
+/* Panel — fixed, separate from the FAB */
 .panel {
+  position: fixed;
+  bottom: 130px;
+  left: 16px;
+  z-index: 9998;
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
@@ -61,8 +61,6 @@
   max-height: 80vh;
   overflow-y: auto;
   padding: 0;
-  order: -1; /* above the FAB */
-  margin-left: 8px;
 }
 
 /* Header — gradient navy */
