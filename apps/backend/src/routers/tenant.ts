@@ -273,18 +273,27 @@ export const tenantRouter = router({
       ownershipPercentage: z.number().min(1).max(99).optional(),
       moveInYear: z.number().optional(), apartmentsInBuilding: z.number().optional(),
       tenantsInBuilding: z.number().optional(),
-      // New fields
       specialRequests: z.array(z.string()).optional(),
       specialRequestsNotes: z.string().optional(),
       apartmentExtras: z.array(z.string()).optional(),
       apartmentExtrasNotes: z.string().optional(),
       hasSpecialAdvantage: z.boolean().optional(),
+      // Section 3 - Living Status
+      isResiding: z.boolean().optional(),
+      residingStatus: z.enum(['renter', 'family_member', 'empty']).optional(),
+      // Section 4 - Property Relation
+      propertyRelation: z.enum(['owner', 'renter', 'heir', 'power_of_attorney']).optional(),
+      // Section 5 - Co-owners
+      coOwnersCount: z.number().min(2).optional(),
+      // Section 10 - Declarations
+      declarationsAccepted: z.boolean().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const buildingId = await findOrCreateBuilding(ctx.supabase, input.city, input.street, input.buildingNumber)
       if (input.apartmentsInBuilding) {
         await ctx.supabase.from('buildings').update({ total_units: input.apartmentsInBuilding }).eq('id', buildingId)
       }
+      const ownershipComplexity = (input.coOwnersCount && input.coOwnersCount > 1) ? 'complex' : 'simple'
       const { error } = await ctx.supabase.from('tenant_profiles').upsert({
         user_id: ctx.user.id, id_number: input.idNumber, phone: input.phone,
         address: `${input.street} ${input.buildingNumber}, ${input.city}`,
@@ -299,6 +308,17 @@ export const tenantRouter = router({
         apartment_extras: input.apartmentExtras ?? [],
         apartment_extras_notes: input.apartmentExtrasNotes ?? null,
         has_special_advantage: input.hasSpecialAdvantage ?? false,
+        // Section 3
+        is_residing: input.isResiding ?? true,
+        residing_status: input.isResiding === false ? (input.residingStatus ?? null) : null,
+        // Section 4
+        property_relation: input.propertyRelation ?? null,
+        // Section 5
+        co_owners_count: input.coOwnersCount ?? 0,
+        ownership_complexity_flag: ownershipComplexity,
+        // Section 10
+        declarations_accepted: input.declarationsAccepted ?? false,
+        declarations_accepted_at: input.declarationsAccepted ? new Date().toISOString() : null,
       }, { onConflict: 'user_id' })
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
       try { await handleBuildingGroup(ctx.supabase, buildingId, ctx.user.id) } catch (e) { logger.error({ err: e }, '[buildingGroup] failed to create group') }
@@ -642,6 +662,49 @@ export const tenantRouter = router({
       .eq('reported_by', ctx.user.id)
       .order('created_at', { ascending: false })
     return data ?? []
+  }),
+
+  // ─── Partners (Section 5 - Co-owners repeater) ─────────
+  addPartner: protectedProcedure
+    .input(z.object({ fullName: z.string().min(2), phone: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { data, error } = await ctx.supabase.from('tenant_partners').insert({
+        user_id: ctx.user.id, full_name: input.fullName, phone: input.phone,
+      }).select().single()
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return data
+    }),
+
+  removePartner: protectedProcedure
+    .input(z.object({ partnerId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { error } = await ctx.supabase.from('tenant_partners').delete()
+        .eq('id', input.partnerId).eq('user_id', ctx.user.id)
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return { ok: true }
+    }),
+
+  getPartners: protectedProcedure.query(async ({ ctx }) => {
+    const { data } = await ctx.supabase.from('tenant_partners').select('*')
+      .eq('user_id', ctx.user.id).order('created_at')
+    return data ?? []
+  }),
+
+  // ─── Companion (Section 8 - Family/companion) ─────────
+  saveCompanion: protectedProcedure
+    .input(z.object({ fullName: z.string().min(2), phone: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { data, error } = await ctx.supabase.from('tenant_companions').upsert({
+        user_id: ctx.user.id, full_name: input.fullName, phone: input.phone, role: 'viewer',
+      }, { onConflict: 'user_id' }).select().single()
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return data
+    }),
+
+  getCompanion: protectedProcedure.query(async ({ ctx }) => {
+    const { data } = await ctx.supabase.from('tenant_companions').select('*')
+      .eq('user_id', ctx.user.id).maybeSingle()
+    return data ?? null
   }),
 
   // ─── E1: Elderly / Disability Profile ──────────────────

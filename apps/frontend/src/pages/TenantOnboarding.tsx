@@ -54,6 +54,22 @@ const OWNERSHIP_DOC_TYPES = [
   { key: 'other', label: '📎 מסמך אחר', desc: 'כל מסמך רלוונטי לנכס' },
 ]
 
+// ── Property Relation options (סעיף 4) ───────────────────
+const PROPERTY_RELATION_OPTIONS = [
+  { key: 'owner', label: '🏠 בעלים', desc: 'הנכס רשום על שמך' },
+  { key: 'renter', label: '🔑 שוכר', desc: 'שוכר את הנכס' },
+  { key: 'heir', label: '📋 יורש', desc: 'ירשת את הנכס' },
+  { key: 'power_of_attorney', label: '⚖️ מיופה כוח', desc: 'פועל בשם הבעלים' },
+] as const
+
+// ── Declaration texts (סעיף 10) ─────────────────────────
+const DECLARATIONS = [
+  'אני מצהיר שכל הפרטים שהוזנו נכונים ומדויקים',
+  'אני מבין שהמערכת אינה מבצעת בדיקה משפטית לבעלות',
+  'האחריות על המידע חלה עליי בלבד',
+  'אני מאשר את תנאי השימוש במערכת',
+]
+
 type FormData = {
   idNumber: string
   phone: string
@@ -75,16 +91,33 @@ type FormData = {
   apartmentExtras: string[]
   apartmentExtrasNotes: string
   hasSpecialAdvantage: boolean | null
+  // Section 3 - Living Status
+  isResiding: boolean | null
+  residingStatus: 'renter' | 'family_member' | 'empty' | ''
+  // Section 4 - Property Relation
+  propertyRelation: 'owner' | 'renter' | 'heir' | 'power_of_attorney' | ''
+  // Section 5 - Co-owners
+  coOwnersCount: string
+  partners: Array<{ fullName: string; phone: string }>
+  // Section 8 - Companion
+  companionName: string
+  companionPhone: string
+  // Section 10 - Declarations
+  declarations: boolean[]
 }
 
 const STEPS = [
   { id: 1, title: 'פרטים אישיים', icon: '👤' },
   { id: 2, title: 'כתובת הדירה', icon: '🏠' },
-  { id: 3, title: 'פרטי הדירה', icon: '📋' },
-  { id: 4, title: 'נסח טאבו', icon: '📄' },
-  { id: 5, title: 'ציפיות לדירה חדשה', icon: '✨' },
-  { id: 6, title: 'חריגות והצמדות', icon: '📎' },
-  { id: 7, title: 'סיכום', icon: '✅' },
+  { id: 3, title: 'פרטי מגורים', icon: '🏘️' },
+  { id: 4, title: 'תפקיד בנכס', icon: '🔑' },
+  { id: 5, title: 'פרטי הדירה', icon: '📋' },
+  { id: 6, title: 'נסח טאבו', icon: '📄' },
+  { id: 7, title: 'ציפיות לדירה חדשה', icon: '✨' },
+  { id: 8, title: 'חריגות והצמדות', icon: '📎' },
+  { id: 9, title: 'איש קשר', icon: '👨‍👩‍👦' },
+  { id: 10, title: 'הצהרות', icon: '📝' },
+  { id: 11, title: 'סיכום', icon: '✅' },
 ]
 
 function StepBar({ current }: { current: number }) {
@@ -168,6 +201,16 @@ export default function TenantOnboarding() {
     buildingStage: '',
     apartmentExtras: [], apartmentExtrasNotes: '',
     hasSpecialAdvantage: null,
+    // Section 3
+    isResiding: null, residingStatus: '',
+    // Section 4
+    propertyRelation: '',
+    // Section 5
+    coOwnersCount: '', partners: [],
+    // Section 8
+    companionName: '', companionPhone: '',
+    // Section 10
+    declarations: [false, false, false, false],
   })
 
   const update = (field: keyof FormData, value: FormData[keyof FormData]) =>
@@ -210,9 +253,22 @@ export default function TenantOnboarding() {
     return null
   }
   const validateStep3 = () => {
+    if (form.isResiding === null) return 'יש לבחור האם אתה מתגורר בדירה'
+    if (form.isResiding === false && !form.residingStatus) return 'יש לבחור מי מתגורר בדירה'
+    return null
+  }
+  const validateStep4 = () => {
+    if (!form.propertyRelation) return 'יש לבחור את הקשר שלך לנכס'
+    return null
+  }
+  const validateStep5 = () => {
     if (!form.floor) return 'קומה נדרשת'
     if (!form.apartmentNumber) return 'מספר דירה נדרש'
     if (!form.apartmentSqm) return 'גודל דירה נדרש'
+    return null
+  }
+  const validateStep10 = () => {
+    if (form.declarations.some(d => !d)) return 'יש לאשר את כל ההצהרות כדי להמשיך'
     return null
   }
 
@@ -221,9 +277,11 @@ export default function TenantOnboarding() {
     if (step === 1) { const err = validateStep1(); if (err) { setError(err); return } }
     if (step === 2) { const err = validateStep2(); if (err) { setError(err); return } }
     if (step === 3) { const err = validateStep3(); if (err) { setError(err); return } }
-    // Step 4 (tabu) is optional — no validation needed
+    if (step === 4) { const err = validateStep4(); if (err) { setError(err); return } }
+    if (step === 5) { const err = validateStep5(); if (err) { setError(err); return } }
+    if (step === 10) { const err = validateStep10(); if (err) { setError(err); return } }
 
-    if (step < 7) { setStep(s => s + 1); return }
+    if (step < 11) { setStep(s => s + 1); return }
 
     // Final submit from summary step
     saveProfile.mutate({
@@ -246,6 +304,12 @@ export default function TenantOnboarding() {
       apartmentExtras: form.apartmentExtras,
       apartmentExtrasNotes: form.apartmentExtrasNotes || undefined,
       hasSpecialAdvantage: form.hasSpecialAdvantage ?? false,
+      // New fields
+      isResiding: form.isResiding ?? true,
+      residingStatus: form.isResiding === false && form.residingStatus ? form.residingStatus as 'renter' | 'family_member' | 'empty' : undefined,
+      propertyRelation: form.propertyRelation ? form.propertyRelation as 'owner' | 'renter' | 'heir' | 'power_of_attorney' : undefined,
+      coOwnersCount: form.ownershipType === 'partial' && form.coOwnersCount ? parseInt(form.coOwnersCount) : undefined,
+      declarationsAccepted: form.declarations.every(Boolean),
     })
   }
 
@@ -298,8 +362,96 @@ export default function TenantOnboarding() {
             </div>
           )}
 
-          {/* ─── Step 3 - Apartment details ─── */}
+          {/* ─── Step 3 - Living Status (סעיף 3) ─── */}
           {step === 3 && (
+            <div className="flex flex-col gap-4">
+              <h2 className="text-[17px] font-bold text-[#212121] mb-1">🏘️ פרטי מגורים</h2>
+              <div>
+                <label className="block text-[13px] font-semibold text-[#212121] mb-2.5">האם אתה מתגורר בדירה כיום? *</label>
+                <div className="flex gap-2.5">
+                  {[true, false].map(v => (
+                    <button key={String(v)} onClick={() => {
+                      update('isResiding', v)
+                      if (v) update('residingStatus', '')
+                    }}
+                      className={`flex-1 py-3 rounded-xl border-2 font-semibold text-[15px] cursor-pointer transition-colors ${
+                        form.isResiding === v
+                          ? (v ? 'border-[#3b6b9c] bg-[#ebf1f7] text-[#3b6b9c]' : 'border-[#3b6b9c] bg-[#ebf1f7] text-[#3b6b9c]')
+                          : 'border-[#eeeeee] bg-white text-[#212121]'
+                      }`}>
+                      {v ? '✅ כן' : '❌ לא'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {form.isResiding === false && (
+                <div>
+                  <label className="block text-[13px] font-semibold text-[#212121] mb-2.5">מי מתגורר בדירה? *</label>
+                  <div className="flex flex-col gap-2">
+                    {([
+                      { key: 'renter', label: '🔑 משכיר (השכרה)', desc: 'הדירה מושכרת לאדם אחר' },
+                      { key: 'family_member', label: '👨‍👩‍👧 קרוב משפחה', desc: 'בן משפחה מתגורר בדירה' },
+                      { key: 'empty', label: '🏚️ הדירה ריקה', desc: 'אף אחד לא מתגורר בדירה' },
+                    ] as const).map(opt => (
+                      <button key={opt.key} onClick={() => update('residingStatus', opt.key)}
+                        className={`p-3 rounded-xl border-2 text-[13px] cursor-pointer text-right transition-all flex items-center gap-2 ${
+                          form.residingStatus === opt.key
+                            ? 'border-[#3b6b9c] bg-[#3b6b9c]/10 text-[#3b6b9c] font-semibold'
+                            : 'border-sc-border bg-white text-[#212121] hover:border-[#3b6b9c]/40'
+                        }`}>
+                        <div>
+                          <span className="block font-semibold">{opt.label}</span>
+                          <span className="block text-[10px] mt-0.5 opacity-70">{opt.desc}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-[#ebf1f7] border border-[#3b6b9c]/30 rounded-xl p-3">
+                <p className="text-xs text-[#3b6b9c] m-0">
+                  💡 מידע זה ישמש להתאמת התקשורת והעדכונים שתקבל מהמערכת
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ─── Step 4 - Property Relation (סעיף 4) ─── */}
+          {step === 4 && (
+            <div className="flex flex-col gap-4">
+              <h2 className="text-[17px] font-bold text-[#212121] mb-1">🔑 מה הקשר שלך לנכס?</h2>
+              <p className="text-[13px] text-[#5a5a6e] mb-2">הבחירה תשפיע על הרשאות, זכויות הצבעה ודרישות מסמכים</p>
+              <div className="flex flex-col gap-2">
+                {PROPERTY_RELATION_OPTIONS.map(opt => (
+                  <button key={opt.key} onClick={() => {
+                    update('propertyRelation', opt.key)
+                    update('isOwner', opt.key === 'owner' || opt.key === 'heir')
+                    if (opt.key === 'renter') update('ownershipType', 'renter')
+                    else if (opt.key === 'owner') update('ownershipType', 'sole')
+                  }}
+                    className={`p-3.5 rounded-xl border-2 text-right cursor-pointer transition-all ${
+                      form.propertyRelation === opt.key
+                        ? 'border-[#3b6b9c] bg-[#3b6b9c]/10 text-[#3b6b9c]'
+                        : 'border-sc-border bg-white text-[#212121] hover:border-[#3b6b9c]/40'
+                    }`}>
+                    <span className="block font-semibold text-sm">{opt.label}</span>
+                    <span className="block text-[10px] mt-0.5 opacity-70">{opt.desc}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="bg-[#8b6f47]/10 border border-[#8b6f47]/30 rounded-xl p-3">
+                <p className="text-xs text-[#8b6f47] m-0">
+                  ⚠️ <strong>שים לב:</strong> הבחירה תקבע את ההרשאות שלך במערכת ואת דרישות המסמכים בשלבים מתקדמים
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ─── Step 5 - Apartment details ─── */}
+          {step === 5 && (
             <div className="flex flex-col gap-4">
               <h2 className="text-[17px] font-bold text-[#212121] mb-1">📋 פרטי הדירה</h2>
               <div className="grid grid-cols-2 gap-3">
@@ -352,22 +504,55 @@ export default function TenantOnboarding() {
               </div>
 
               {form.ownershipType === 'partial' && (
-                <div>
-                  <label className="block text-[13px] font-semibold text-[#212121] mb-1">אחוז הבעלות שלך *</label>
-                  <div className="flex items-center gap-2">
-                    <input className="sc-input flex-1" placeholder="לדוג׳ 50" type="number" min="1" max="99"
-                      value={form.ownershipPercentage}
-                      onChange={e => update('ownershipPercentage', e.target.value)} />
-                    <span className="text-lg font-bold text-[#5a5a6e]">%</span>
+                <>
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#212121] mb-1">אחוז הבעלות שלך *</label>
+                    <div className="flex items-center gap-2">
+                      <input className="sc-input flex-1" placeholder="לדוג׳ 50" type="number" min="1" max="99"
+                        value={form.ownershipPercentage}
+                        onChange={e => update('ownershipPercentage', e.target.value)} />
+                      <span className="text-lg font-bold text-[#5a5a6e]">%</span>
+                    </div>
+                    <p className="text-[11px] text-[#5a5a6e] mt-1">ציין את חלקך מתוך הבעלות הכוללת על הנכס</p>
                   </div>
-                  <p className="text-[11px] text-[#5a5a6e] mt-1">ציין את חלקך מתוך הבעלות הכוללת על הנכס</p>
-                </div>
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#212121] mb-1">מספר בעלי זכויות *</label>
+                    <input className="sc-input" placeholder="לדוג׳ 2" type="number" min="2"
+                      value={form.coOwnersCount}
+                      onChange={e => update('coOwnersCount', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#212121] mb-2">שותפים נוספים</label>
+                    {form.partners.map((p, i) => (
+                      <div key={i} className="flex items-center gap-2 mb-2">
+                        <input className="sc-input flex-1" placeholder="שם מלא" value={p.fullName}
+                          onChange={e => {
+                            const updated = [...form.partners]
+                            updated[i] = { ...updated[i], fullName: e.target.value }
+                            update('partners', updated)
+                          }} />
+                        <input className="sc-input flex-1" placeholder="טלפון" dir="ltr" value={p.phone}
+                          onChange={e => {
+                            const updated = [...form.partners]
+                            updated[i] = { ...updated[i], phone: e.target.value }
+                            update('partners', updated)
+                          }} />
+                        <button onClick={() => update('partners', form.partners.filter((_, idx) => idx !== i))}
+                          className="text-red-500 text-lg font-bold bg-transparent border-none cursor-pointer px-2">✕</button>
+                      </div>
+                    ))}
+                    <button onClick={() => update('partners', [...form.partners, { fullName: '', phone: '' }])}
+                      className="text-[13px] text-[#3b6b9c] font-semibold bg-transparent border-2 border-dashed border-[#3b6b9c]/30 rounded-xl py-2.5 w-full cursor-pointer hover:bg-[#ebf1f7]/30 transition-colors">
+                      + הוסף שותף
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           )}
 
-          {/* ─── Step 4 - Ownership Documents ─── */}
-          {step === 4 && (
+          {/* ─── Step 6 - Ownership Documents ─── */}
+          {step === 6 && (
             <div className="flex flex-col gap-5">
               <div>
                 <h2 className="text-[17px] font-bold text-[#212121] mb-1">📄 העלאת מסמכי בעלות</h2>
@@ -478,8 +663,8 @@ export default function TenantOnboarding() {
             </div>
           )}
 
-          {/* ─── Step 5 - Special Requests ─── */}
-          {step === 5 && (
+          {/* ─── Step 7 - Special Requests ─── */}
+          {step === 7 && (
             <div className="flex flex-col gap-5">
               <div>
                 <h2 className="text-[17px] font-bold text-[#212121] mb-1">✨ דרישות לדירה החדשה</h2>
@@ -544,8 +729,8 @@ export default function TenantOnboarding() {
             </div>
           )}
 
-          {/* ─── Step 6 - Apartment Extras ─── */}
-          {step === 6 && (
+          {/* ─── Step 8 - Apartment Extras ─── */}
+          {step === 8 && (
             <div className="flex flex-col gap-5">
               <div>
                 <h2 className="text-[17px] font-bold text-[#212121] mb-1">📎 חריגות והצמדות בדירה הנוכחית</h2>
@@ -611,8 +796,91 @@ export default function TenantOnboarding() {
             </div>
           )}
 
-          {/* ─── Step 7 - Summary ─── */}
-          {step === 7 && (
+          {/* ─── Step 9 - Companion (סעיף 8) ─── */}
+          {step === 9 && (
+            <div className="flex flex-col gap-4">
+              <h2 className="text-[17px] font-bold text-[#212121] mb-1">👨‍👩‍👦 הוספת בן משפחה / מלווה</h2>
+              <p className="text-[13px] text-[#5a5a6e] mb-2">
+                ניתן להוסיף איש קשר שיקבל גישה לצפייה בלבד ועדכונים על הפרויקט
+              </p>
+              <div>
+                <label className="block text-[13px] font-semibold text-[#212121] mb-1">שם מלא</label>
+                <input className="sc-input" placeholder="שם מלא של איש הקשר" value={form.companionName}
+                  onChange={e => update('companionName', e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-[13px] font-semibold text-[#212121] mb-1">מספר טלפון</label>
+                <input className="sc-input" placeholder="05XXXXXXXX" dir="ltr" value={form.companionPhone}
+                  onChange={e => update('companionPhone', e.target.value)} />
+              </div>
+
+              {(form.companionName || form.companionPhone) && (
+                <div className="bg-[#4a8c5c]/10 border-2 border-sc-success/30 rounded-xl p-3">
+                  <p className="text-xs text-[#4a8c5c] font-semibold m-0">
+                    📲 איש הקשר יקבל לינק התחברות ב-SMS ויוכל לצפות בעדכונים
+                  </p>
+                </div>
+              )}
+
+              <div className="bg-[#ebf1f7] border border-[#3b6b9c]/30 rounded-xl p-3">
+                <p className="text-xs text-[#3b6b9c] m-0">
+                  🔐 <strong>הרשאות:</strong> איש הקשר יקבל צפייה בלבד וקבלת עדכונים — ללא אפשרות הצבעה או חתימה
+                </p>
+              </div>
+
+              <div className="bg-[#8b6f47]/10 border border-[#8b6f47]/30 rounded-xl p-3">
+                <p className="text-xs text-[#8b6f47] m-0">
+                  💡 <strong>אופציונלי</strong> — ניתן לדלג ולהוסיף מאוחר יותר
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ─── Step 10 - Declarations (סעיף 10) ─── */}
+          {step === 10 && (
+            <div className="flex flex-col gap-4">
+              <h2 className="text-[17px] font-bold text-[#212121] mb-1">📝 הצהרות ואישורים</h2>
+              <p className="text-[13px] text-[#5a5a6e] mb-2">
+                יש לאשר את כל ההצהרות כדי להשלים את הרישום
+              </p>
+              <div className="flex flex-col gap-3">
+                {DECLARATIONS.map((text, i) => (
+                  <button key={i} onClick={() => {
+                    const updated = [...form.declarations]
+                    updated[i] = !updated[i]
+                    update('declarations', updated)
+                  }}
+                    className={`p-3.5 rounded-xl border-2 text-right cursor-pointer transition-all flex items-start gap-3 ${
+                      form.declarations[i]
+                        ? 'border-[#4a8c5c] bg-[#4a8c5c]/10'
+                        : 'border-[#eeeeee] bg-white hover:border-[#3b6b9c]/40'
+                    }`}>
+                    <span className={`w-[22px] h-[22px] rounded-md border-2 flex-shrink-0 flex items-center justify-center text-[13px] mt-0.5 ${
+                      form.declarations[i]
+                        ? 'border-[#4a8c5c] bg-[#4a8c5c] text-white'
+                        : 'border-[#eeeeee] bg-white'
+                    }`}>
+                      {form.declarations[i] ? '✓' : ''}
+                    </span>
+                    <span className={`text-[13px] leading-relaxed ${form.declarations[i] ? 'text-[#212121] font-medium' : 'text-[#5a5a6e]'}`}>
+                      {text}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {form.declarations.every(Boolean) && (
+                <div className="bg-[#4a8c5c]/10 border-2 border-sc-success/30 rounded-xl p-3">
+                  <p className="text-xs text-[#4a8c5c] font-semibold m-0 text-center">
+                    ✅ כל ההצהרות אושרו — ניתן להמשיך לסיכום
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ─── Step 11 - Summary ─── */}
+          {step === 11 && (
             <div className="flex flex-col items-center gap-6 py-4">
               <div className="w-20 h-20 rounded-full bg-[#4a8c5c]/10 flex items-center justify-center">
                 <span className="text-4xl">✅</span>
@@ -638,6 +906,12 @@ export default function TenantOnboarding() {
                   {form.buildingStage && <div className="flex justify-between"><span className="text-[#5a5a6e]">שלב הבניין</span><span className="font-semibold text-[#212121]">{BUILDING_STAGE_OPTIONS.find(o => o.key === form.buildingStage)?.label}</span></div>}
                   {form.specialRequests.length > 0 && <div className="flex justify-between"><span className="text-[#5a5a6e]">דרישות לדירה חדשה</span><span className="font-semibold text-[#212121]">{form.specialRequests.length} נבחרו</span></div>}
                   {form.apartmentExtras.length > 0 && <div className="flex justify-between"><span className="text-[#5a5a6e]">חריגות/הצמדות</span><span className="font-semibold text-[#212121]">{form.apartmentExtras.length} דווחו</span></div>}
+                  {form.isResiding !== null && <div className="flex justify-between"><span className="text-[#5a5a6e]">מתגורר בדירה</span><span className="font-semibold text-[#212121]">{form.isResiding ? 'כן' : 'לא'}</span></div>}
+                  {form.isResiding === false && form.residingStatus && <div className="flex justify-between"><span className="text-[#5a5a6e]">סטטוס מגורים</span><span className="font-semibold text-[#212121]">{form.residingStatus === 'renter' ? 'משכיר' : form.residingStatus === 'family_member' ? 'קרוב משפחה' : 'ריקה'}</span></div>}
+                  {form.propertyRelation && <div className="flex justify-between"><span className="text-[#5a5a6e]">קשר לנכס</span><span className="font-semibold text-[#212121]">{PROPERTY_RELATION_OPTIONS.find(o => o.key === form.propertyRelation)?.label}</span></div>}
+                  {form.partners.length > 0 && <div className="flex justify-between"><span className="text-[#5a5a6e]">שותפים</span><span className="font-semibold text-[#212121]">{form.partners.length} שותפים</span></div>}
+                  {form.companionName && <div className="flex justify-between"><span className="text-[#5a5a6e]">איש קשר</span><span className="font-semibold text-[#212121]">{form.companionName}</span></div>}
+                  <div className="flex justify-between"><span className="text-[#5a5a6e]">הצהרות</span><span className="font-semibold text-[#4a8c5c]">✓ אושרו</span></div>
                 </div>
               </div>
 
@@ -664,11 +938,11 @@ export default function TenantOnboarding() {
             )}
             <button onClick={handleNext} disabled={saveProfile.isPending}
               className="sc-btn-primary flex-[2] text-[15px] disabled:opacity-70">
-              {saveProfile.isPending ? 'שומר...' : step === 7 ? '✓ שמירה וסיום' : step === 6 ? 'לסיכום ←' : step >= 4 ? 'המשך ←' : 'המשך ←'}
+              {saveProfile.isPending ? 'שומר...' : step === 11 ? '✓ שמירה וסיום' : step === 10 ? 'לסיכום ←' : 'המשך ←'}
             </button>
           </div>
 
-          {step >= 4 && step <= 6 && (
+          {((step >= 6 && step <= 9)) && (
             <button
               onClick={() => setStep(s => s + 1)}
               className="w-full mt-2.5 py-2.5 bg-transparent border-none text-[#5a5a6e] text-[13px] cursor-pointer underline"
