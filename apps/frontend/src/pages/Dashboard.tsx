@@ -79,8 +79,8 @@ export default function Dashboard() {
 
   // Full dashboard
   const currentStage = StageIndex(project?.status)
-  const signed = project?.signatures?.length ?? 0
-  const total = project?.milestones?.length ?? 0
+  const signed = (project as { signedCount?: number })?.signedCount ?? 0
+  const total = (project as { totalTenants?: number })?.totalTenants ?? 0
   const pct = total ? Math.round((signed / total) * 100) : 0
 
   return (

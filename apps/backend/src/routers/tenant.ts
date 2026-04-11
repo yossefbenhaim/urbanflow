@@ -176,8 +176,14 @@ export const tenantRouter = router({
     if (!pt) return null
     const project = unwrapJoin((pt as unknown as ProjectTenantRow).projects as Record<string, unknown>[] | Record<string, unknown> | undefined)
     if (!project) return null
-    const { data: milestones } = await ctx.supabase.from('milestones').select('*').eq('project_id', project.id).order('order_num')
-    return { ...project, milestones: milestones ?? [] }
+    const [{ data: milestones }, { count: totalTenants }, { data: signedUsers }] = await Promise.all([
+      ctx.supabase.from('milestones').select('*').eq('project_id', project.id).order('order_num'),
+      ctx.supabase.from('project_tenants').select('*', { count: 'exact', head: true }).eq('project_id', project.id),
+      ctx.supabase.from('signatures').select('user_id, documents!inner(project_id)').eq('documents.project_id', project.id),
+    ])
+    // Count unique users who signed at least one document
+    const uniqueSigners = new Set((signedUsers ?? []).map((s: { user_id: string }) => s.user_id)).size
+    return { ...project, milestones: milestones ?? [], totalTenants: totalTenants ?? 0, signedCount: uniqueSigners }
   }),
 
   getDocuments: protectedProcedure.query(async ({ ctx }) => {
