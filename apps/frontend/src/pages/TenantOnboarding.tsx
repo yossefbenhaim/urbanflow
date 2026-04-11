@@ -57,8 +57,11 @@ type FormData = {
   apartmentNumber: string
   apartmentSqm: string
   isOwner: boolean
+  ownershipType: 'sole' | 'partial' | 'renter'
+  ownershipPercentage: string
   moveInYear: string
   apartmentsInBuilding: string
+  tenantsInBuilding: string
   specialRequests: string[]
   specialRequestsNotes: string
   apartmentExtras: string[]
@@ -73,6 +76,7 @@ const STEPS = [
   { id: 4, title: 'נסח טאבו', icon: '📄' },
   { id: 5, title: 'ציפיות לדירה חדשה', icon: '✨' },
   { id: 6, title: 'חריגות והצמדות', icon: '📎' },
+  { id: 7, title: 'סיכום', icon: '✅' },
 ]
 
 function StepBar({ current }: { current: number }) {
@@ -151,7 +155,7 @@ export default function TenantOnboarding() {
     idNumber: '', phone: '',
     city: '', street: '', buildingNumber: '',
     floor: '', apartmentNumber: '', apartmentSqm: '',
-    isOwner: true, moveInYear: '', apartmentsInBuilding: '',
+    isOwner: true, ownershipType: 'sole', ownershipPercentage: '', moveInYear: '', apartmentsInBuilding: '', tenantsInBuilding: '',
     specialRequests: [], specialRequestsNotes: '',
     apartmentExtras: [], apartmentExtrasNotes: '',
     hasSpecialAdvantage: null,
@@ -210,9 +214,9 @@ export default function TenantOnboarding() {
     if (step === 3) { const err = validateStep3(); if (err) { setError(err); return } }
     // Step 4 (tabu) is optional — no validation needed
 
-    if (step < 6) { setStep(s => s + 1); return }
+    if (step < 7) { setStep(s => s + 1); return }
 
-    // Final submit
+    // Final submit from summary step
     saveProfile.mutate({
       idNumber: form.idNumber,
       phone: form.phone,
@@ -223,8 +227,11 @@ export default function TenantOnboarding() {
       apartmentNumber: form.apartmentNumber,
       apartmentSqm: parseFloat(form.apartmentSqm),
       isOwner: form.isOwner,
+      ownershipType: form.ownershipType,
+      ownershipPercentage: form.ownershipType === 'partial' && form.ownershipPercentage ? parseInt(form.ownershipPercentage) : undefined,
       moveInYear: form.moveInYear ? parseInt(form.moveInYear) : undefined,
       apartmentsInBuilding: form.apartmentsInBuilding ? parseInt(form.apartmentsInBuilding) : undefined,
+      tenantsInBuilding: form.tenantsInBuilding ? parseInt(form.tenantsInBuilding) : undefined,
       specialRequests: form.specialRequests,
       specialRequestsNotes: form.specialRequestsNotes || undefined,
       apartmentExtras: form.apartmentExtras,
@@ -273,6 +280,12 @@ export default function TenantOnboarding() {
                   onChange={e => update('apartmentsInBuilding', e.target.value)} />
                 <p className="text-[11px] text-[#5a5a6e] mt-1">מידע זה יסייע בארגון הדיירים</p>
               </div>
+              <div>
+                <label className="block text-[13px] font-semibold text-[#212121] mb-1">כמה דיירים יש בבניין?</label>
+                <input className="sc-input" placeholder="לדוג׳ 48" type="number" min="1" value={form.tenantsInBuilding}
+                  onChange={e => update('tenantsInBuilding', e.target.value)} />
+                <p className="text-[11px] text-[#5a5a6e] mt-1">מספר הדיירים המתגוררים בפועל בבניין</p>
+              </div>
             </div>
           )}
 
@@ -304,18 +317,43 @@ export default function TenantOnboarding() {
                   {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                 </select>
               </div>
-              <div className="flex gap-2.5">
-                {['owner','renter'].map(type => (
-                  <button key={type} onClick={() => update('isOwner', type === 'owner')}
-                    className={`flex-1 py-2.5 rounded-[10px] border-2 font-semibold text-sm cursor-pointer transition-colors ${
-                      (form.isOwner ? 'owner' : 'renter') === type
-                        ? 'border-[#3b6b9c] bg-[#ebf1f7] text-[#3b6b9c]'
-                        : 'border-[#eeeeee] bg-white text-[#5a5a6e]'
-                    }`}>
-                    {type === 'owner' ? '🏠 בעל דירה' : '🔑 שוכר'}
-                  </button>
-                ))}
+              <div>
+                <label className="block text-[13px] font-semibold text-[#212121] mb-2">סוג בעלות *</label>
+                <div className="flex gap-2">
+                  {([
+                    { key: 'sole', label: '🏠 בעלים יחידי', desc: 'הנכס רשום על שמך בלבד' },
+                    { key: 'partial', label: '👥 בעלים חלקי', desc: 'הנכס רשום על מספר בעלים' },
+                    { key: 'renter', label: '🔑 שוכר', desc: 'אתה שוכר את הנכס' },
+                  ] as const).map(type => (
+                    <button key={type.key} onClick={() => {
+                      update('ownershipType', type.key)
+                      update('isOwner', type.key !== 'renter')
+                      if (type.key !== 'partial') update('ownershipPercentage', '')
+                    }}
+                      className={`flex-1 py-2.5 px-2 rounded-[10px] border-2 text-center cursor-pointer transition-colors ${
+                        form.ownershipType === type.key
+                          ? 'border-[#3b6b9c] bg-[#ebf1f7] text-[#3b6b9c]'
+                          : 'border-[#eeeeee] bg-white text-[#5a5a6e]'
+                      }`}>
+                      <span className="block font-semibold text-sm">{type.label}</span>
+                      <span className="block text-[10px] mt-0.5 opacity-70">{type.desc}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              {form.ownershipType === 'partial' && (
+                <div>
+                  <label className="block text-[13px] font-semibold text-[#212121] mb-1">אחוז הבעלות שלך *</label>
+                  <div className="flex items-center gap-2">
+                    <input className="sc-input flex-1" placeholder="לדוג׳ 50" type="number" min="1" max="99"
+                      value={form.ownershipPercentage}
+                      onChange={e => update('ownershipPercentage', e.target.value)} />
+                    <span className="text-lg font-bold text-[#5a5a6e]">%</span>
+                  </div>
+                  <p className="text-[11px] text-[#5a5a6e] mt-1">ציין את חלקך מתוך הבעלות הכוללת על הנכס</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -541,6 +579,43 @@ export default function TenantOnboarding() {
             </div>
           )}
 
+          {/* ─── Step 7 - Summary ─── */}
+          {step === 7 && (
+            <div className="flex flex-col items-center gap-6 py-4">
+              <div className="w-20 h-20 rounded-full bg-[#4a8c5c]/10 flex items-center justify-center">
+                <span className="text-4xl">✅</span>
+              </div>
+              <div className="text-center">
+                <h2 className="text-[20px] font-bold text-[#212121] mb-2">הטופס הוגש בהצלחה!</h2>
+                <p className="text-[15px] text-[#5a5a6e] leading-relaxed">
+                  המערכת מחכה להרשמה של כלל הדיירים בבניין.
+                  <br />
+                  ברגע שמספיק דיירים יצטרפו, תוכלו להתחיל בתהליך.
+                </p>
+              </div>
+
+              <div className="w-full bg-[#f8f9fa] rounded-xl p-4 flex flex-col gap-3">
+                <h3 className="text-[14px] font-bold text-[#212121]">📋 סיכום הפרטים שהוזנו:</h3>
+                <div className="flex flex-col gap-2 text-[13px]">
+                  <div className="flex justify-between"><span className="text-[#5a5a6e]">ת.ז.</span><span className="font-semibold text-[#212121]">{form.idNumber}</span></div>
+                  <div className="flex justify-between"><span className="text-[#5a5a6e]">כתובת</span><span className="font-semibold text-[#212121]">{address.street} {address.buildingNumber}, {address.city}</span></div>
+                  <div className="flex justify-between"><span className="text-[#5a5a6e]">דירה</span><span className="font-semibold text-[#212121]">דירה {form.apartmentNumber}, קומה {form.floor}</span></div>
+                  <div className="flex justify-between"><span className="text-[#5a5a6e]">גודל</span><span className="font-semibold text-[#212121]">{form.apartmentSqm} מ"ר</span></div>
+                  <div className="flex justify-between"><span className="text-[#5a5a6e]">בעלות</span><span className="font-semibold text-[#212121]">{form.ownershipType === 'sole' ? 'בעלים יחידי' : form.ownershipType === 'partial' ? `בעלים חלקי (${form.ownershipPercentage}%)` : 'שוכר'}</span></div>
+                  {tabuFile && <div className="flex justify-between"><span className="text-[#5a5a6e]">נסח טאבו</span><span className="font-semibold text-[#4a8c5c]">✓ הועלה</span></div>}
+                  {form.specialRequests.length > 0 && <div className="flex justify-between"><span className="text-[#5a5a6e]">דרישות לדירה חדשה</span><span className="font-semibold text-[#212121]">{form.specialRequests.length} נבחרו</span></div>}
+                  {form.apartmentExtras.length > 0 && <div className="flex justify-between"><span className="text-[#5a5a6e]">חריגות/הצמדות</span><span className="font-semibold text-[#212121]">{form.apartmentExtras.length} דווחו</span></div>}
+                </div>
+              </div>
+
+              <div className="w-full bg-[#3b6b9c]/10 border border-[#3b6b9c]/30 rounded-xl p-3">
+                <p className="text-xs text-[#3b6b9c] m-0 text-center">
+                  📬 תקבל עדכונים על התקדמות הפרויקט בזמן אמת
+                </p>
+              </div>
+            </div>
+          )}
+
           {error && (
             <div className="mt-4 p-2.5 bg-red-500/10 border border-sc-error/30 rounded-[10px] text-red-500 text-[13px]">
               {error}
@@ -556,13 +631,13 @@ export default function TenantOnboarding() {
             )}
             <button onClick={handleNext} disabled={saveProfile.isPending}
               className="sc-btn-primary flex-[2] text-[15px] disabled:opacity-70">
-              {saveProfile.isPending ? 'שומר...' : step === 6 ? '✓ סיום' : step >= 4 ? 'המשך ←' : 'המשך ←'}
+              {saveProfile.isPending ? 'שומר...' : step === 7 ? '✓ שמירה וסיום' : step === 6 ? 'לסיכום ←' : step >= 4 ? 'המשך ←' : 'המשך ←'}
             </button>
           </div>
 
-          {step >= 4 && (
+          {step >= 4 && step <= 6 && (
             <button
-              onClick={() => step === 6 ? handleNext() : setStep(s => s + 1)}
+              onClick={() => setStep(s => s + 1)}
               className="w-full mt-2.5 py-2.5 bg-transparent border-none text-[#5a5a6e] text-[13px] cursor-pointer underline"
             >
               דלג על שלב זה

@@ -263,7 +263,10 @@ export const tenantRouter = router({
     .input(z.object({
       idNumber: z.string().length(9), phone: z.string(), city: z.string(), street: z.string(),
       buildingNumber: z.string(), floor: z.number(), apartmentNumber: z.string(), apartmentSqm: z.number(),
-      isOwner: z.boolean(), moveInYear: z.number().optional(), apartmentsInBuilding: z.number().optional(),
+      isOwner: z.boolean(), ownershipType: z.enum(['sole', 'partial', 'renter']).optional(),
+      ownershipPercentage: z.number().min(1).max(99).optional(),
+      moveInYear: z.number().optional(), apartmentsInBuilding: z.number().optional(),
+      tenantsInBuilding: z.number().optional(),
       // New fields
       specialRequests: z.array(z.string()).optional(),
       specialRequestsNotes: z.string().optional(),
@@ -281,7 +284,10 @@ export const tenantRouter = router({
         address: `${input.street} ${input.buildingNumber}, ${input.city}`,
         building_number: input.buildingNumber, floor: input.floor, apartment_number: input.apartmentNumber,
         apartment_sqm: input.apartmentSqm, is_owner: input.isOwner, move_in_year: input.moveInYear,
+        ownership_type: input.ownershipType ?? (input.isOwner ? 'sole' : 'renter'),
+        ownership_percentage: input.ownershipPercentage ?? null,
         is_onboarded: true, building_id: buildingId, apartments_in_building: input.apartmentsInBuilding,
+        tenants_in_building: input.tenantsInBuilding ?? null,
         special_requests: input.specialRequests ?? [],
         special_requests_notes: input.specialRequestsNotes ?? null,
         apartment_extras: input.apartmentExtras ?? [],
