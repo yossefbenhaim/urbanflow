@@ -157,7 +157,7 @@ export default function AccessibilityWidget() {
         </div>
       )}
 
-      <div className={styles.fabWrap} style={{ display: isLandingPage ? undefined : 'none' }}>
+      <div className={styles.fabWrap}>
         {showTooltip && (
           <div className={styles.tooltip}>
             <span className={styles.tooltipWave}>👋</span>
