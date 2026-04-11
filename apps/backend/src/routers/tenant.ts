@@ -761,7 +761,7 @@ export const tenantRouter = router({
     }
     // Check tabu upload
     if (!(tp as TenantProfileRow).tabu_file_url) {
-      return { action: 'upload_tabu', text: 'העלה נסח טאבו', link: '/profile', icon: '📄' }
+      return { action: 'upload_tabu', text: 'העלה נסח טאבו', link: '/upload-tabu', icon: '📄' }
     }
     // Check open polls
     const { data: bgm } = await ctx.supabase.from('building_group_members').select('group_id').eq('user_id', ctx.user.id)
