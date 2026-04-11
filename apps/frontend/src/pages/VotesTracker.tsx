@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import PageLayout, { PageTitle } from '../components/PageLayout'
-import BuildingLoader from '../components/BuildingLoader'
+import LoadingScreen from '../components/LoadingScreen'
 
 const STATUS_CONFIG: Record<string, { icon: string; label: string; color: string; bg: string }> = {
   voted:       { icon: '✅', label: 'הצביעה',              color: 'text-[#4a8c5c]',  bg: 'bg-[#4a8c5c]/10' },
@@ -36,7 +36,7 @@ export default function VotesTracker() {
 
   if (!group) return (
     <PageLayout sidebarItems={votesTrackerSidebar}>
-      <div className="flex items-center justify-center h-64"><BuildingLoader size="lg" /></div>
+      <LoadingScreen />
     </PageLayout>
   )
 

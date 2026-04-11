@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
-import BuildingLoader from '../components/BuildingLoader'
+import LoadingScreen from '../components/LoadingScreen'
 
 export default function JoinProject() {
   const { code } = useParams<{ code: string }>()
@@ -39,7 +39,7 @@ export default function JoinProject() {
         {status === 'checking' || status === 'joining' ? (
           <>
             <div className="w-[50px] h-[50px] bg-[#ebf1f7] rounded-[24px] flex items-center justify-center text-2xl mx-auto mb-4">🏰</div>
-            <BuildingLoader size="lg" />
+            <LoadingScreen />
             <p className="text-[#5a5a6e] text-[13px]">מצטרף לפרויקט...</p>
           </>
         ) : status === 'done' ? (

@@ -5,7 +5,7 @@ import PageLayout, { PageTitle } from '../components/PageLayout'
 import { useUser, ROLE_LABELS } from '../hooks/useUser'
 import { trpc } from '../lib/trpc'
 import AddressPicker from '../components/AddressPicker/AddressPicker'
-import BuildingLoader from '../components/BuildingLoader'
+import LoadingScreen from '../components/LoadingScreen'
 
 const CURRENT_YEAR = new Date().getFullYear()
 const YEARS = Array.from({ length: 60 }, (_, i) => String(CURRENT_YEAR - i))
@@ -131,7 +131,7 @@ export default function Profile() {
           </div>
         </div>
 
-        {loading ? <div className="text-center py-12"><BuildingLoader size="lg" /></div> : (
+        {loading ? <LoadingScreen /> : (
           <div className="flex flex-col gap-4">
 
             {/* Role badge */}

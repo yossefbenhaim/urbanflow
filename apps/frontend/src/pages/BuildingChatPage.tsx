@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import PageLayout from '../components/PageLayout'
-import BuildingLoader from '../components/BuildingLoader'
+import LoadingScreen from '../components/LoadingScreen'
 import ElectionBanner from '../components/ElectionBanner'
 
 interface PollCandidate {

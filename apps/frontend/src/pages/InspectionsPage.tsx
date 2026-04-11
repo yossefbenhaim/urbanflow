@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import PageLayout, { PageTitle } from '../components/PageLayout'
-import BuildingLoader from '../components/BuildingLoader'
+import LoadingScreen from '../components/LoadingScreen'
 
 // ── Types ─────────────────────────────────────────────────
 type InspectionType =
@@ -116,7 +116,7 @@ export default function InspectionsPage() {
                 >⭐ שדרג ל-Pro</button>
               </div>
             ) : isLoading ? (
-              <div className="flex justify-center py-16"><BuildingLoader size="md" /></div>
+              <LoadingScreen />
             ) : (
               <div className="space-y-4">
                 {(projectsData?.projects ?? []).length === 0 ? (

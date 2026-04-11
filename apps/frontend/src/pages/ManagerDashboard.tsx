@@ -2,7 +2,7 @@ import { useState } from 'react'
 import PageLayout, { PageTitle } from '../components/PageLayout'
 import { trpc } from '../lib/trpc'
 import AddressPicker from '../components/AddressPicker/AddressPicker'
-import BuildingLoader from '../components/BuildingLoader'
+import LoadingScreen from '../components/LoadingScreen'
 
 export default function ManagerDashboard() {
   const { data: projects, isLoading, refetch } = trpc.organizer.getProjects.useQuery()
@@ -31,7 +31,7 @@ export default function ManagerDashboard() {
     { to: '/profile', icon: '👤', label: 'פרופיל' },
   ]
 
-  if (isLoading) return (<PageLayout sidebarItems={managerSidebar}><div className="flex justify-center items-center h-64"><BuildingLoader size="lg" /></div></PageLayout>)
+  if (isLoading) return <LoadingScreen />
 
   return (
     <PageLayout sidebarItems={managerSidebar}>

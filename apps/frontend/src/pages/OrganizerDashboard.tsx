@@ -2,7 +2,7 @@ import PageLayout, { PageTitle } from '../components/PageLayout'
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
-import BuildingLoader from '../components/BuildingLoader'
+import LoadingScreen from '../components/LoadingScreen'
 import Navbar from '../components/Navbar'
 
 type Tab = 'project' | 'tenants' | 'group' | 'contract' | 'stages'
@@ -216,7 +216,7 @@ function StageRequirementsTab({ projectId }: { projectId: string }) {
     },
   })
 
-  if (isLoading) return <div className="flex justify-center py-12"><BuildingLoader size="md" /></div>
+  if (isLoading) return <LoadingScreen />
   if (!data) return <p className="text-center text-[#5a5a6e] py-8">אין נתוני שלבים לפרויקט זה</p>
 
   const { currentStage, nextStage, requirements, canAdvance } = data as {

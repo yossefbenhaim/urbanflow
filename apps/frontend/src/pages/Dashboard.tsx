@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import PageLayout, { PageTitle } from '../components/PageLayout'
-import BuildingLoader from '../components/BuildingLoader'
 import { DashboardSkeleton } from '../components/Skeleton'
 import { useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
