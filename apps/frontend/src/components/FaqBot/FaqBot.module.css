@@ -4,33 +4,24 @@
 .floatBtn {
   position: relative;
   z-index: 1;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: #2563eb;
+  width: 36px;
+  height: 40px;
+  border-radius: 20px 0 0 20px;
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
   color: white;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  animation: pulse 2s infinite;
+  box-shadow: -2px 2px 10px rgba(37, 99, 235, 0.3);
+  transition: width 0.2s ease, box-shadow 0.2s ease;
+  padding-right: 2px;
 }
 
 .floatBtn:hover {
-  transform: scale(1.08);
-  box-shadow: 0 6px 28px rgba(37, 99, 235, 0.55);
-}
-
-@keyframes pulse {
-  0%, 100% {
-    box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
-  }
-  50% {
-    box-shadow: 0 4px 28px rgba(37, 99, 235, 0.65);
-  }
+  width: 42px;
+  box-shadow: -3px 3px 14px rgba(37, 99, 235, 0.45);
 }
 
 /* =====================
@@ -38,8 +29,8 @@
    ===================== */
 .panel {
   position: fixed;
-  bottom: 100px;
-  right: 24px;
+  bottom: 130px;
+  right: 16px;
   width: 380px;
   max-height: 520px;
   background: white;
@@ -368,9 +359,13 @@
 /* FAB wrapper */
 .fabWrap {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 1000;
+  bottom: 80px;
+  right: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
 }
 
 /* Tooltip — anchored to fab, opens to the left */
