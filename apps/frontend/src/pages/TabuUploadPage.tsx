@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageLayout from '../components/PageLayout'
 import { trpc } from '../lib/trpc'
-import { supabase } from '../lib/supabase'
 
 export default function TabuUploadPage() {
   const navigate = useNavigate()
@@ -32,12 +31,23 @@ export default function TabuUploadPage() {
     setUploading(true)
     setError('')
     try {
-      const ts = Date.now()
-      const path = `tabu/${ts}-${file.name}`
-      const { error: upErr } = await supabase.storage.from('documents').upload(path, file)
-      if (upErr) throw upErr
-      const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path)
-      await uploadTabu.mutateAsync({ fileUrl: urlData.publicUrl })
+      const token = localStorage.getItem('sb-token')
+      if (!token) throw new Error('אינך מחובר')
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/_+/g, '_')
+      const storagePath = `tabu/${Date.now()}-${safeName}`
+
+      const uploadRes = await fetch(`/api/upload?path=${encodeURIComponent(storagePath)}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': file.type },
+        body: file,
+      })
+      if (!uploadRes.ok) {
+        const errJson = await uploadRes.json().catch(() => ({}))
+        throw new Error(errJson.error || `שגיאה ${uploadRes.status}`)
+      }
+
+      const fileUrl = `https://supabase.byclick.co.il/storage/v1/object/public/documents/${storagePath}`
+      await uploadTabu.mutateAsync({ fileUrl })
       setSuccess(true)
       setTimeout(() => navigate('/dashboard'), 2000)
     } catch (err: unknown) {
