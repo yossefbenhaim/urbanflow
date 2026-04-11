@@ -1,5 +1,13 @@
 import rateLimit from 'express-rate-limit'
 
+const getClientIp = (req: any): string => {
+  const forwarded = req.headers['x-forwarded-for']
+  if (forwarded) {
+    return (typeof forwarded === 'string' ? forwarded : forwarded[0]).split(',')[0].trim()
+  }
+  return req.ip || req.socket.remoteAddress || 'unknown'
+}
+
 /**
  * Rate limiter for authentication endpoints (signIn, signUp, resetPassword).
  * 10 requests per 15 minutes per IP.
@@ -10,7 +18,8 @@ export const authRateLimiter = rateLimit({
   message: { error: 'יותר מדי ניסיונות. נסה שוב בעוד 15 דקות.' },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => req.ip || req.socket.remoteAddress || 'unknown',
+  keyGenerator: getClientIp,
+  validate: false as any,
 })
 
 /**
@@ -23,7 +32,8 @@ export const sensitiveRateLimiter = rateLimit({
   message: { error: 'יותר מדי בקשות. נסה שוב בעוד מספר דקות.' },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => req.ip || req.socket.remoteAddress || 'unknown',
+  keyGenerator: getClientIp,
+  validate: false as any,
 })
 
 /**
@@ -36,7 +46,8 @@ export const uploadRateLimiter = rateLimit({
   message: { error: 'יותר מדי העלאות. נסה שוב בעוד מספר דקות.' },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => req.ip || req.socket.remoteAddress || 'unknown',
+  keyGenerator: getClientIp,
+  validate: false as any,
 })
 
 /**
@@ -49,5 +60,6 @@ export const generalRateLimiter = rateLimit({
   message: { error: 'יותר מדי בקשות. נסה שוב בעוד דקה.' },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => req.ip || req.socket.remoteAddress || 'unknown',
+  keyGenerator: getClientIp,
+  validate: false as any,
 })

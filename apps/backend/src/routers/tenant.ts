@@ -1108,15 +1108,30 @@ export const tenantRouter = router({
     // Get all uploaded docs linked to specific doc IDs
     const { data: uploads } = await ctx.supabase
       .from('tenant_documents')
-      .select('linked_doc_id, file_url, file_name')
+      .select('linked_doc_id, file_url, file_name, storage_path')
       .eq('user_id', ctx.user.id)
       .not('linked_doc_id', 'is', null)
-    const uploadedMap: Record<string, { file_url: string; file_name: string }> = {}
-    for (const u of (uploads ?? []) as Array<{ linked_doc_id: string; file_url: string; file_name: string }>) {
-      if (u.linked_doc_id) uploadedMap[u.linked_doc_id] = { file_url: u.file_url, file_name: u.file_name }
+    const uploadedMap: Record<string, { file_url: string; file_name: string; storage_path?: string }> = {}
+    for (const u of (uploads ?? []) as Array<{ linked_doc_id: string; file_url: string; file_name: string; storage_path?: string }>) {
+      if (u.linked_doc_id) uploadedMap[u.linked_doc_id] = { file_url: u.file_url, file_name: u.file_name, storage_path: u.storage_path }
     }
 
     return { signedSlugs: Array.from(signedSlugs), uploadedMap }
   }),
+
+  // ─── Get uploaded file for a specific doc ──────────────────
+  getUploadedFile: protectedProcedure
+    .input(z.object({ docId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const { data } = await ctx.supabase
+        .from('tenant_documents')
+        .select('file_url, file_name, storage_path')
+        .eq('user_id', ctx.user.id)
+        .eq('linked_doc_id', input.docId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+      return data as { file_url: string; file_name: string; storage_path?: string } | null
+    }),
 
 })

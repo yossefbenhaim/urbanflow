@@ -23,6 +23,12 @@ export default function DocumentViewPage() {
   const { data: tenantProfile } = trpc.tenant.getMyProfile.useQuery()
   const { data: projectData } = trpc.tenant.getMyProject.useQuery()
 
+  // Check if user has uploaded a signed document for this docId
+  const { data: uploadedFile } = trpc.tenant.getUploadedFile.useQuery(
+    { docId: docId! },
+    { enabled: !!docId, staleTime: 0 }
+  )
+
   const signMutation = trpc.tenant.signDocumentWithSignature.useMutation({
     onSuccess: () => {
       refetch()
@@ -197,8 +203,50 @@ export default function DocumentViewPage() {
           {/* Auto-filled data is now rendered inline via TemplateRenderer */}
         </div>
 
-        {/* Agreement sections */}
-        {template ? (
+        {/* Show uploaded file if exists, otherwise show template */}
+        {uploadedFile ? (
+          <div className="bg-white rounded-[14px] shadow-sm border border-[#4a8c5c]/30 overflow-hidden">
+            <div className="p-5 space-y-4">
+              <div className="flex items-center gap-2 text-[#4a8c5c]">
+                <span className="text-xl">✅</span>
+                <h2 className="text-base font-bold">מסמך חתום הועלה</h2>
+              </div>
+              <p className="text-sm text-[#64748b]">שם קובץ: {uploadedFile.file_name}</p>
+              {(() => {
+                const storagePath = uploadedFile.file_url.replace(/.*\/object\/public\/documents\//, '')
+                const token = localStorage.getItem('sb-token')
+                const downloadUrl = `/api/download?path=${encodeURIComponent(storagePath)}`
+                const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(uploadedFile.file_name)
+                const isPdf = /\.pdf$/i.test(uploadedFile.file_name)
+                return (
+                  <div className="space-y-3">
+                    {isImage && (
+                      <img
+                        src={`${downloadUrl}&token=${encodeURIComponent(token || '')}`}
+                        alt={uploadedFile.file_name}
+                        className="max-w-full rounded-lg border border-[#e2e8f0]"
+                      />
+                    )}
+                    {isPdf && (
+                      <iframe
+                        src={`${downloadUrl}&token=${encodeURIComponent(token || '')}`}
+                        className="w-full h-[500px] rounded-lg border border-[#e2e8f0]"
+                        title={uploadedFile.file_name}
+                      />
+                    )}
+                    <a
+                      href={`${downloadUrl}&token=${encodeURIComponent(token || '')}&download=true`}
+                      download
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm text-white bg-[#1e3a5f] hover:bg-[#1a3350] transition-colors no-underline"
+                    >
+                      ⬇️ הורד מסמך
+                    </a>
+                  </div>
+                )
+              })()}
+            </div>
+          </div>
+        ) : template ? (
           <div className="bg-white rounded-[14px] shadow-sm border border-[#eeeeee] overflow-hidden">
             <div className="p-5 space-y-5">
               {template.sections.map((section, i) => (

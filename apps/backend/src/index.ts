@@ -87,6 +87,34 @@ app.post('/api/upload', uploadRateLimiter, express.raw({ type: '*/*', limit: '10
   res.status(r.status).json(data)
 })
 
+// File download proxy — serves files from Supabase storage using service role
+app.get('/api/download', async (req: import('express').Request, res: import('express').Response) => {
+  const token = (req.headers.authorization || '').replace('Bearer ', '') || (req.query.token as string) || ''
+  if (!token) { res.status(401).json({ error: 'No token' }); return }
+
+  const supabaseUrl = process.env.SUPABASE_URL || ''
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || ''
+  const supabase = createClient(supabaseUrl, supabaseKey)
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+  if (authError || !user) { res.status(401).json({ error: 'Token לא תקף' }); return }
+
+  const path = req.query.path as string
+  if (!path || path.includes('..')) { res.status(400).json({ error: 'Invalid path' }); return }
+
+  const r = await fetch(`${supabaseUrl}/storage/v1/object/documents/${path}`, {
+    headers: { Authorization: `Bearer ${supabaseKey}` },
+  })
+  if (!r.ok) { res.status(r.status).json({ error: 'File not found' }); return }
+
+  const contentType = r.headers.get('content-type') || 'application/octet-stream'
+  const fileName = path.split('/').pop() || 'document'
+  const isDownload = req.query.download === 'true'
+  res.setHeader('Content-Type', contentType)
+  res.setHeader('Content-Disposition', `${isDownload ? 'attachment' : 'inline'}; filename="${fileName}"`)
+  const buffer = Buffer.from(await r.arrayBuffer())
+  res.send(buffer)
+})
+
 app.get('/health', (_req: import('express').Request, res: import('express').Response) => res.json({ status: 'ok', app: 'silver-castle-backend' }))
 
 const PORT = process.env.PORT || 3000

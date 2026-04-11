@@ -282,9 +282,12 @@ function DocCard({ doc, isSigned, uploadedFile }: {
             </button>
             {uploadedFile && (
               <a
-                href={uploadedFile.file_url}
-                target="_blank"
-                rel="noopener noreferrer"
+                href={(() => {
+                  const storagePath = uploadedFile.file_url.replace(/.*\/object\/public\/documents\//, '')
+                  const token = localStorage.getItem('sb-token')
+                  return `/api/download?path=${encodeURIComponent(storagePath)}&token=${encodeURIComponent(token || '')}&download=true`
+                })()}
+                download
                 className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold text-[#3b6b9c] bg-[#ebf1f7] hover:bg-[#dce6f0] transition-colors no-underline"
               >
                 ⬇️ הורד קובץ
