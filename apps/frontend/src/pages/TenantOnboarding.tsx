@@ -23,6 +23,13 @@ const SPECIAL_REQUESTS_OPTIONS = [
 ]
 
 // ── Apartment Extras (חריגות והצמדות) ───────────────────
+const BUILDING_STAGE_OPTIONS = [
+  { key: 'just_starting', label: '🏁 רק עכשיו מתחילים' },
+  { key: 'chose_representatives', label: '👥 כבר בחרנו נציגות' },
+  { key: 'signed_lawyer', label: '⚖️ כבר חתמנו עם עו"ד / גורם מלווה' },
+  { key: 'signed_developer', label: '🏗️ כבר חתמנו עם יזם' },
+]
+
 const APARTMENT_EXTRAS_OPTIONS = [
   { key: 'closed_balcony', label: '🪟 סגירת מרפסת' },
   { key: 'expansion', label: '📐 הרחבת דירה' },
@@ -64,6 +71,7 @@ type FormData = {
   tenantsInBuilding: string
   specialRequests: string[]
   specialRequestsNotes: string
+  buildingStage: string
   apartmentExtras: string[]
   apartmentExtrasNotes: string
   hasSpecialAdvantage: boolean | null
@@ -157,6 +165,7 @@ export default function TenantOnboarding() {
     floor: '', apartmentNumber: '', apartmentSqm: '',
     isOwner: true, ownershipType: 'sole', ownershipPercentage: '', moveInYear: '', apartmentsInBuilding: '', tenantsInBuilding: '',
     specialRequests: [], specialRequestsNotes: '',
+    buildingStage: '',
     apartmentExtras: [], apartmentExtrasNotes: '',
     hasSpecialAdvantage: null,
   })
@@ -479,6 +488,29 @@ export default function TenantOnboarding() {
                 </p>
               </div>
 
+              <div>
+                <label className="block text-[13px] font-semibold text-[#212121] mb-2.5">באיזה שלב אתם בבניין?</label>
+                <div className="flex flex-col gap-2">
+                  {BUILDING_STAGE_OPTIONS.map(opt => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => update('buildingStage', opt.key)}
+                      className={`p-3 rounded-xl border-2 text-[13px] cursor-pointer text-right transition-all flex items-center gap-2 ${
+                        form.buildingStage === opt.key
+                          ? 'border-[#3b6b9c] bg-[#3b6b9c]/10 text-[#3b6b9c] font-semibold'
+                          : 'border-sc-border bg-white text-[#212121] hover:border-[#3b6b9c]/40'
+                      }`}
+                    >
+                      {form.buildingStage === opt.key && <span>✓</span>}
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="h-px bg-sc-border" />
+
               <CheckboxGroup
                 options={SPECIAL_REQUESTS_OPTIONS}
                 selected={form.specialRequests}
@@ -603,6 +635,7 @@ export default function TenantOnboarding() {
                   <div className="flex justify-between"><span className="text-[#5a5a6e]">גודל</span><span className="font-semibold text-[#212121]">{form.apartmentSqm} מ"ר</span></div>
                   <div className="flex justify-between"><span className="text-[#5a5a6e]">בעלות</span><span className="font-semibold text-[#212121]">{form.ownershipType === 'sole' ? 'בעלים יחידי' : form.ownershipType === 'partial' ? `בעלים חלקי (${form.ownershipPercentage}%)` : 'שוכר'}</span></div>
                   {tabuFile && <div className="flex justify-between"><span className="text-[#5a5a6e]">נסח טאבו</span><span className="font-semibold text-[#4a8c5c]">✓ הועלה</span></div>}
+                  {form.buildingStage && <div className="flex justify-between"><span className="text-[#5a5a6e]">שלב הבניין</span><span className="font-semibold text-[#212121]">{BUILDING_STAGE_OPTIONS.find(o => o.key === form.buildingStage)?.label}</span></div>}
                   {form.specialRequests.length > 0 && <div className="flex justify-between"><span className="text-[#5a5a6e]">דרישות לדירה חדשה</span><span className="font-semibold text-[#212121]">{form.specialRequests.length} נבחרו</span></div>}
                   {form.apartmentExtras.length > 0 && <div className="flex justify-between"><span className="text-[#5a5a6e]">חריגות/הצמדות</span><span className="font-semibold text-[#212121]">{form.apartmentExtras.length} דווחו</span></div>}
                 </div>
