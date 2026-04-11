@@ -281,7 +281,7 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-        )}
+        ) : null}
 
         {/* Leadership */}
         {leadership && (
