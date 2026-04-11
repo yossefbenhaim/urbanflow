@@ -254,12 +254,12 @@ export default function FaqBot() {
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           ) : (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="11" width="18" height="10" rx="2" />
-              <circle cx="9" cy="16" r="1" fill="currentColor" />
-              <circle cx="15" cy="16" r="1" fill="currentColor" />
-              <path d="M8 3v3" /><path d="M16 3v3" />
-              <path d="M12 6V3" />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2a2 2 0 0 1 2 2v1h3a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3h3V4a2 2 0 0 1 2-2z" />
+              <circle cx="9" cy="12" r="1.5" fill="currentColor" stroke="none" />
+              <circle cx="15" cy="12" r="1.5" fill="currentColor" stroke="none" />
+              <path d="M9 16.5c1 1 5 1 6 0" />
+              <path d="M2 10v4" /><path d="M22 10v4" />
             </svg>
           )}
         </button>
