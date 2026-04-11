@@ -26,152 +26,8 @@ function StageIndex(status?: string) {
   return order.indexOf(status ?? '') ?? 0
 }
 
-// --- Silver Castle: Join Project Screen ---
-function JoinProjectScreen({ onJoined }: { onJoined: () => void }) {
-  const [code, setCode] = useState('')
-  const joinProject = trpc.tenant.joinProject.useMutation({
-    onSuccess: () => onJoined(),
-  })
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa]" dir="rtl">
-      <div className="sc-card p-8 w-full max-w-sm mx-4 text-center">
-        <div className="text-5xl mb-4">🏢</div>
-        <h1 className="text-xl font-bold text-[#212121] mb-2">הצטרף לפרויקט</h1>
-        <p className="text-[#5a5a6e] text-sm mb-6">הזן את קוד ההצטרפות שקיבלת ממארגן הדיירים</p>
-        <input
-          type="text"
-          value={code}
-          onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 6))}
-          placeholder="XXXXXX"
-          maxLength={6}
-          className="sc-input text-center text-2xl font-mono tracking-widest mb-4"
-          dir="ltr"
-        />
-        {joinProject.isError && (
-          <p className="text-red-500 text-sm mb-3">קוד לא תקין, נסה שנית</p>
-        )}
-        <button
-          onClick={() => joinProject.mutate({ inviteCode: code })}
-          disabled={code.length !== 6 || joinProject.isPending}
-          className="sc-btn-primary w-full disabled:opacity-50"
-        >
-          {joinProject.isPending ? 'מצטרף...' : 'הצטרף'}
-        </button>
-      </div>
-    </div>
-  )
-}
-
-// --- Silver Castle: Apartment Profile Wizard ---
-function ApartmentProfileWizard({ onComplete }: { onComplete: () => void }) {
-  const [form, setForm] = useState({
-    floor: '',
-    apartmentNumber: '',
-    rooms: '',
-    apartmentSizeSqm: '',
-    ownershipType: 'owner' as 'owner' | 'renter',
-  })
-  const updateProfile = trpc.tenant.updateApartmentProfile.useMutation({
-    onSuccess: () => onComplete(),
-  })
-
-  const handleSubmit = () => {
-    updateProfile.mutate({
-      floor: form.floor ? parseInt(form.floor) : undefined,
-      apartmentNumber: form.apartmentNumber || undefined,
-      rooms: form.rooms ? parseInt(form.rooms) : undefined,
-      apartmentSizeSqm: form.apartmentSizeSqm ? parseFloat(form.apartmentSizeSqm) : undefined,
-      ownershipType: form.ownershipType,
-    })
-  }
-
-  return (
-    <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center" dir="rtl">
-      <div className="sc-card p-8 w-full max-w-sm mx-4">
-        <div className="text-4xl text-center mb-4">🏠</div>
-        <h1 className="text-xl font-bold text-[#212121] mb-1 text-center">פרטי הדירה</h1>
-        <p className="text-[#5a5a6e] text-sm mb-6 text-center">נא למלא את פרטי הדירה שלך</p>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-[#212121] mb-1">קומה</label>
-              <input type="number" value={form.floor} onChange={e => setForm(f => ({ ...f, floor: e.target.value }))}
-                className="sc-input" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#212121] mb-1">מס' דירה</label>
-              <input type="text" value={form.apartmentNumber} onChange={e => setForm(f => ({ ...f, apartmentNumber: e.target.value }))}
-                className="sc-input" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-[#212121] mb-1">חדרים</label>
-              <input type="number" value={form.rooms} onChange={e => setForm(f => ({ ...f, rooms: e.target.value }))}
-                className="sc-input" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#212121] mb-1">גודל (מ"ר)</label>
-              <input type="number" value={form.apartmentSizeSqm} onChange={e => setForm(f => ({ ...f, apartmentSizeSqm: e.target.value }))}
-                className="sc-input" />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[#212121] mb-2">סוג החזקה</label>
-            <div className="flex gap-3">
-              {(['owner', 'renter'] as const).map(type => (
-                <button
-                  key={type}
-                  onClick={() => setForm(f => ({ ...f, ownershipType: type }))}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                    form.ownershipType === type
-                      ? 'bg-[#3b6b9c] text-white border-[#3b6b9c]'
-                      : 'bg-white text-[#212121] border-[#eeeeee] hover:bg-[#f8f9fa]'
-                  }`}
-                >
-                  {type === 'owner' ? '🔑 בעלים' : '🏠 שוכר'}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-        <button
-          onClick={handleSubmit}
-          disabled={updateProfile.isPending}
-          className="sc-btn-primary w-full mt-6 disabled:opacity-50"
-        >
-          {updateProfile.isPending ? 'שומר...' : 'המשך'}
-        </button>
-      </div>
-    </div>
-  )
-}
 
 // --- Main Dashboard ---
-function JoinProjectInline({ onJoined }: { onJoined: () => void }) {
-  const [code, setCode] = useState('')
-  const join = trpc.tenant.joinProject.useMutation({ onSuccess: onJoined })
-  return (
-    <div className="flex gap-2 items-center">
-      <input
-        value={code}
-        onChange={e => setCode(e.target.value.toUpperCase().slice(0, 6))}
-        placeholder="קוד 6 ספרות"
-        maxLength={6}
-        className="sc-input w-[120px] text-center tracking-wider font-semibold text-[13px]"
-      />
-      <button
-        onClick={() => join.mutate({ inviteCode: code })}
-        disabled={code.length !== 6 || join.isPending}
-        className="sc-btn-primary px-4 py-1.5 text-[13px] disabled:opacity-50"
-      >
-        {join.isPending ? '...' : 'הצטרף'}
-      </button>
-      {join.isError && <span className="text-red-500 text-xs">קוד לא תקין</span>}
-    </div>
-  )
-}
 
 function TaskItem({ task }: { task: { icon: string; text: string; link: string; info: string } }) {
   const [showInfo, setShowInfo] = useState(false)
@@ -204,7 +60,7 @@ function TaskItem({ task }: { task: { icon: string; text: string; link: string; 
 export default function Dashboard() {
   const navigate = useNavigate()
   const { profile } = useUser()
-  const { data: myStatus, isLoading: statusLoading, refetch: refetchStatus } = trpc.tenant.getMyStatus.useQuery()
+  const { data: myStatus, isLoading: statusLoading } = trpc.tenant.getMyStatus.useQuery()
   const { data: myRole } = trpc.tenant.getMyRole.useQuery()
   const { data: buildingGroup } = trpc.tenant.getMyBuildingGroup.useQuery()
 
@@ -230,15 +86,6 @@ export default function Dashboard() {
 
   return (
     <PageLayout>
-      {/* Banner: no project */}
-      {myStatus && !myStatus.hasProject && (
-        <div className="bg-[#fcf4e7] border border-[#c4841d]/20 rounded-[14px] px-5 py-3 flex items-center justify-between gap-4 mb-5">
-          <span className="text-[#c4841d] text-[13px] font-medium">
-            ⚠️ טרם הצטרפת לפרויקט — הכנס קוד הצטרפות שקיבלת מהמארגן שלך
-          </span>
-          <JoinProjectInline onJoined={() => refetchStatus()} />
-        </div>
-      )}
       {(myRole as MyRoleData)?.isRepresentative && (
         <div className="bg-[#1e3a5f] rounded-[14px] px-5 py-3 flex items-center gap-3 mb-5">
           <span className="text-xl">🏛️</span>
@@ -346,8 +193,8 @@ export default function Dashboard() {
             </div>
             <div className="flex flex-col gap-2.5">
               {[
-                { icon: '📋', text: 'בחר ספק לפרויקט', link: '/directory',
-                  info: 'בחר ספק מקצועי (עורך דין, שמאי, אדריכל) שילווה את הפרויקט. בחירה נכונה תאיץ את קידום הפינוי-בינוי ותגן על זכויות הדיירים.' },
+                { icon: '📄', text: 'העלה נסח טאבו', link: '/upload-tabu',
+                  info: 'העלה את נסח הטאבו העדכני של הדירה שלך. הנסח נדרש לצורך אימות בעלות וקידום הפרויקט.' },
                 { icon: '📊', text: 'מעקב הצבעות דיירים', link: '/votes-tracker',
                   info: 'עקוב מי הצביע ומי לא בסקרים הפתוחים. שלח תזכורות לדיירים שלא הצביעו כדי להגיע ל-60% הנדרשים לקבלת החלטה.' },
                 { icon: '🏛️', text: 'פעולות ועד', link: '/committee-actions',
@@ -420,20 +267,19 @@ export default function Dashboard() {
               </div>
             )}
 
-            <div className="flex flex-wrap gap-1">
-              {STAGES.map((s, i) => (
-                <span key={i} className={`text-xs px-2 py-1 rounded-full ${
-                  i < currentStage ? 'bg-[#4a8c5c]/15 text-[#4a8c5c]' :
-                  i === currentStage ? 'bg-[#3b6b9c] text-white font-medium' :
-                  'bg-sc-border text-[#5a5a6e]'
-                }`}>{s}</span>
-              ))}
+            <div className="overflow-x-auto -mx-2 px-2 pb-1 scrollbar-hide">
+              <div className="flex gap-2 min-w-max" dir="rtl">
+                {STAGES.map((s, i) => (
+                  <span key={i} className={`text-[13px] px-4 py-2 rounded-full whitespace-nowrap transition-all ${
+                    i < currentStage ? 'bg-[#4a8c5c]/15 text-[#4a8c5c] font-medium' :
+                    i === currentStage ? 'bg-[#3b6b9c] text-white font-bold shadow-sm' :
+                    'bg-[#f0f0f5] text-[#8e8e9e]'
+                  }`}>
+                    {i < currentStage && '✓ '}{s}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="sc-card p-6 text-center text-[#5a5a6e]">
-            <div className="text-4xl mb-2">🏗️</div>
-            <p>טרם שויכת לפרויקט. פנה למארגן הדיירים.</p>
           </div>
         )}
 

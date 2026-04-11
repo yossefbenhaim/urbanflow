@@ -30,6 +30,7 @@ import InspectionsPage from './pages/InspectionsPage'
 import NewInspectionPage from './pages/NewInspectionPage'
 import OrganizerDashboard from './pages/OrganizerDashboard'
 import JoinProject from './pages/JoinProject'
+import JoinProjectPage from './pages/JoinProjectPage'
 import CommitteeActions from './pages/CommitteeActions'
 import PowerOfAttorneyForm from './pages/PowerOfAttorneyForm'
 import UnlocatedTenantForm from './pages/UnlocatedTenantForm'
@@ -110,6 +111,7 @@ export default function App() {
         <Route path="/quotes" element={<QuotesPage />} />
         <Route path="/organizer/*" element={<OrganizerDashboard />} />
         <Route path="/join/:code" element={<JoinProject />} />
+        <Route path="/join-project" element={<JoinProjectPage />} />
         <Route path="/building-chat/:groupId" element={<BuildingChatPage />} />
         <Route path="/committee-actions" element={<CommitteeActions />} />
         <Route path="/votes-tracker" element={<VotesTracker />} />

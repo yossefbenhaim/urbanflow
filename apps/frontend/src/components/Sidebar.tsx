@@ -90,6 +90,7 @@ function getSidebarItems(role: string, isRepresentative: boolean): NavItem[] {
         { to: '/documents', icon: '📄', label: 'מסמכים' },
         { to: '/chat', icon: '💬', label: 'צ\'אט' },
         { to: '/directory', icon: '📋', label: 'ספריית מומחים' },
+        { to: '/join-project', icon: '🔗', label: 'שיוך לפרויקט' },
         { to: '/profile', icon: '👤', label: 'פרופיל' },
       ]
     case 'manager':
