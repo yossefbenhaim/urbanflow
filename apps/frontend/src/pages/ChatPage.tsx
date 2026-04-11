@@ -2,14 +2,14 @@ import { useState, useRef, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import { useUser } from '../hooks/useUser'
-import PageLayout, { PageTitle } from '../components/PageLayout'
+import PageLayout from '../components/PageLayout'
+import Navbar from '../components/Navbar'
 
 export default function ChatPage() {
   const { conversationId } = useParams<{ conversationId: string }>()
   const navigate = useNavigate()
   const { profile } = useUser()
   const [message, setMessage] = useState('')
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const { data: conversations = [] } = trpc.chat.getConversations.useQuery()
@@ -32,11 +32,6 @@ export default function ChatPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
-
-  // Close sidebar on mobile when a conversation is selected
-  useEffect(() => {
-    if (conversationId) setSidebarOpen(false)
-  }, [conversationId])
 
   const meId = profile?.id
   const activeConv = conversations.find((c: { id: string }) => c.id === conversationId)
@@ -108,12 +103,102 @@ export default function ChatPage() {
     </div>
   )
 
+  /* ── Mobile: full-screen chat (no PageLayout wrapper) ── */
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+
+  // Mobile layout — standalone, no sidebar/navbar wrapper
+  if (isMobile) {
+    // Mobile: conversation list
+    if (!conversationId) {
+      return (
+        <div className="h-[100dvh] flex flex-col bg-[#f8f9fa]" dir="rtl">
+          <Navbar />
+          <div className="flex-1 flex flex-col bg-white overflow-hidden min-h-0">
+            <div className="px-4 py-3 border-b border-[#eeeeee] flex items-center justify-between flex-shrink-0">
+              <h2 className="font-semibold text-[#212121]">💬 הודעות</h2>
+              <span className="text-xs text-[#5a5a6e] bg-sc-border rounded-full px-2 py-0.5">{conversations.length}</span>
+            </div>
+            <ConvList />
+          </div>
+        </div>
+      )
+    }
+
+    // Mobile: active conversation
+    return (
+      <div className="h-[100dvh] flex flex-col bg-[#f8f9fa]" dir="rtl">
+        {/* Header */}
+        <div className="bg-[#1e3a5f] px-4 py-3 flex items-center gap-3 flex-shrink-0">
+          <button
+            onClick={() => navigate('/chat')}
+            className="text-white text-xl bg-white/15 rounded-lg w-9 h-9 flex items-center justify-center border-none cursor-pointer"
+            aria-label="חזור"
+          >
+            ›
+          </button>
+          <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center text-[#1e3a5f] text-sm font-bold flex-shrink-0">
+            {activeOther?.full_name?.[0]?.toUpperCase() ?? '?'}
+          </div>
+          <div>
+            <p className="font-semibold text-white text-sm">{activeOther?.full_name || 'משתמש'}</p>
+            {activeOther?.role && (
+              <p className="text-xs text-white/70">{roleLabel[activeOther.role] || activeOther.role}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2.5 min-h-0" style={{ WebkitOverflowScrolling: 'touch' }}>
+          {messages.map((msg: { id: string; sender_id: string; content: string; created_at: string }) => {
+            const isMe = msg.sender_id === meId
+            return (
+              <div key={msg.id} className={`flex ${isMe ? 'justify-start' : 'justify-end'}`}>
+                <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 ${
+                  isMe
+                    ? 'bg-[#3b6b9c] text-white rounded-bl-sm'
+                    : 'bg-white text-[#212121] shadow-sm border border-[#eeeeee] rounded-br-sm'
+                }`}>
+                  <p className="text-[13px] leading-relaxed break-words">{msg.content}</p>
+                  <p className={`text-[10px] mt-0.5 ${isMe ? 'text-white/60' : 'text-[#5a5a6e]'}`}>
+                    {new Date(msg.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              </div>
+            )
+          })}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input */}
+        <div className="bg-white border-t border-[#eeeeee] px-3 py-2.5 pb-[env(safe-area-inset-bottom,12px)] flex gap-2 items-end flex-shrink-0">
+          <button
+            onClick={handleSend}
+            disabled={!message.trim() || sendMessage.isPending}
+            className="sc-btn-primary rounded-xl px-4 py-2.5 text-sm disabled:opacity-40 flex-shrink-0 active:scale-95"
+          >
+            ↩
+          </button>
+          <textarea
+            value={message}
+            onChange={e => setMessage(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
+            placeholder="כתוב הודעה..."
+            rows={1}
+            className="sc-input flex-1 resize-none bg-[#f8f9fa]"
+            style={{ maxHeight: 100 }}
+          />
+        </div>
+      </div>
+    )
+  }
+
+  // Desktop layout — with PageLayout
   return (
     <PageLayout>
       <div className="flex overflow-hidden rounded-[14px] border border-[#eeeeee]" style={{ height: 'calc(100vh - 140px)' }}>
 
-        {/* ── Desktop contacts (always visible >= md) ── */}
-        <aside className="hidden md:flex w-[300px] flex-shrink-0 bg-white border-l border-[#eeeeee] flex-col">
+        {/* ── Desktop contacts ── */}
+        <aside className="flex w-[300px] flex-shrink-0 bg-white border-l border-[#eeeeee] flex-col">
           <div className="px-4 py-3 border-b border-[#eeeeee] flex items-center justify-between">
             <h2 className="font-semibold text-[#212121] text-[13px]">💬 הודעות</h2>
             <span className="text-xs text-[#5a5a6e] bg-sc-border rounded-full px-2 py-0.5">{conversations.length}</span>
@@ -121,19 +206,8 @@ export default function ChatPage() {
           <ConvList />
         </aside>
 
-        {/* ── Mobile: no conversation selected -> show list ── */}
-        {!conversationId && (
-          <div className="flex flex-col flex-1 md:hidden bg-white">
-            <div className="px-4 py-3 border-b border-[#eeeeee] flex items-center justify-between">
-              <h2 className="font-semibold text-[#212121]">💬 הודעות</h2>
-              <span className="text-xs text-[#5a5a6e] bg-sc-border rounded-full px-2 py-0.5">{conversations.length}</span>
-            </div>
-            <ConvList />
-          </div>
-        )}
-
         {/* ── Chat area ── */}
-        <main className={`flex-col flex-1 ${conversationId ? 'flex' : 'hidden md:flex'}`}>
+        <main className="flex flex-col flex-1">
           {!conversationId ? (
             <div className="flex-1 flex items-center justify-center text-[#5a5a6e]">
               <div className="text-center">
@@ -145,14 +219,6 @@ export default function ChatPage() {
             <>
               {/* Header */}
               <div className="bg-white border-b border-[#eeeeee] px-4 py-3 flex items-center gap-3">
-                {/* Back button on mobile */}
-                <button
-                  onClick={() => navigate('/chat')}
-                  className="md:hidden text-[#3b6b9c] text-lg pl-1"
-                  aria-label="חזור"
-                >
-                  ‹
-                </button>
                 <div className="w-9 h-9 bg-[#3b6b9c] rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
                   {activeOther?.full_name?.[0]?.toUpperCase() ?? '?'}
                 </div>
@@ -175,8 +241,8 @@ export default function ChatPage() {
                           ? 'bg-[#3b6b9c] text-white rounded-bl-sm'
                           : 'bg-white text-[#212121] shadow-sm border border-[#eeeeee] rounded-br-sm'
                       }`}>
-                        <p className="text-sm leading-relaxed">{msg.content}</p>
-                        <p className={`text-xs mt-1 ${isMe ? 'text-sc-light-blue' : 'text-[#5a5a6e]'}`}>
+                        <p className="text-sm leading-relaxed break-words">{msg.content}</p>
+                        <p className={`text-xs mt-1 ${isMe ? 'text-white/60' : 'text-[#5a5a6e]'}`}>
                           {new Date(msg.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
