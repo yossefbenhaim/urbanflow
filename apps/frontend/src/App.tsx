@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import LoadingScreen from './components/LoadingScreen'
 import ErrorBoundary from './components/ErrorBoundary'
 import NotFoundPage from './pages/NotFoundPage'
 import VotesTracker from './pages/VotesTracker'
-import { useEffect } from 'react'
+import { supabase } from './lib/supabase'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -49,32 +49,57 @@ import DocumentViewPage from './pages/DocumentViewPage'
 function OAuthCallback() {
   const navigate = useNavigate()
   useEffect(() => {
-    const hash = window.location.hash
-    const search = window.location.search
-    let token: string | null = null
-    let refresh: string | null = null
+    async function handleCallback() {
+      const hash = window.location.hash
+      const search = window.location.search
+      let token: string | null = null
+      let refresh: string | null = null
 
-    // Check hash fragment (implicit flow)
-    if (hash.includes('access_token')) {
-      const params = new URLSearchParams(hash.substring(1))
-      token = params.get('access_token')
-      refresh = params.get('refresh_token')
-    }
-    // Check query params (PKCE flow)
-    if (!token && search.includes('access_token')) {
-      const params = new URLSearchParams(search)
-      token = params.get('access_token')
-      refresh = params.get('refresh_token')
-    }
+      // Check hash fragment (implicit flow)
+      if (hash.includes('access_token')) {
+        const params = new URLSearchParams(hash.substring(1))
+        token = params.get('access_token')
+        refresh = params.get('refresh_token')
+      }
 
-    if (token) {
-      localStorage.setItem('sb-token', token)
-      if (refresh) localStorage.setItem('sb-refresh-token', refresh)
-      navigate('/oauth-role', { replace: true })
-    } else {
-      // No token = something went wrong, go to login
-      navigate('/login', { replace: true })
+      // Check query params for access_token
+      if (!token && search.includes('access_token')) {
+        const params = new URLSearchParams(search)
+        token = params.get('access_token')
+        refresh = params.get('refresh_token')
+      }
+
+      // Handle PKCE flow: exchange code for session
+      if (!token && search.includes('code=')) {
+        const params = new URLSearchParams(search)
+        const code = params.get('code')
+        if (code) {
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+          if (data?.session && !error) {
+            token = data.session.access_token
+            refresh = data.session.refresh_token
+          }
+        }
+      }
+
+      // Also try: Supabase might have set the session automatically via URL
+      if (!token) {
+        const { data } = await supabase.auth.getSession()
+        if (data?.session) {
+          token = data.session.access_token
+          refresh = data.session.refresh_token
+        }
+      }
+
+      if (token) {
+        localStorage.setItem('sb-token', token)
+        if (refresh) localStorage.setItem('sb-refresh-token', refresh)
+        navigate('/oauth-role', { replace: true })
+      } else {
+        navigate('/login', { replace: true })
+      }
     }
+    handleCallback()
   }, [navigate])
 
   return (

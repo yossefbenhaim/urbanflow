@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import { getDeviceInfo } from '../lib/deviceInfo'
+import { supabase } from '../lib/supabase'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -31,11 +32,14 @@ export default function Login() {
     onError: (err) => setError(err.message || 'אימייל או סיסמה שגויים'),
   })
 
-  const handleGoogle = () => {
-    const SUPABASE_URL = 'https://supabase.byclick.co.il'
-    const ANON_KEY = 'eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJyb2xlIjogImFub24iLCAiaXNzIjogInN1cGFiYXNlIiwgImlhdCI6IDE3MDAwMDAwMDAsICJleHAiOiAyMDAwMDAwMDAwfQ.wTmOz3TCdhnx-swY9p2aHf6gvg9zgI0_TLTs8W28Ris'
-    const redirectTo = encodeURIComponent('https://urbanflow.byclick.co.il/auth/callback')
-    window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${redirectTo}&apikey=${ANON_KEY}`
+  const handleGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: 'https://urbanflow.byclick.co.il/auth/callback',
+      },
+    })
+    if (error) setError(error.message)
   }
 
   const handleLogin = (e: React.FormEvent) => {
