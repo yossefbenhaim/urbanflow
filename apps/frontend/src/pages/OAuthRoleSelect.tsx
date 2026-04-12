@@ -31,7 +31,7 @@ export default function OAuthRoleSelect() {
 
   const complete = trpc.auth.completeOAuthProfile.useMutation({
     onSuccess: (data: { success: boolean; role: string }) => {
-      const map: Record<string, string> = { tenant: '/dashboard', organizer: '/organizer', manager: '/organizer', provider: '/provider' }
+      const map: Record<string, string> = { tenant: '/onboarding', organizer: '/organizer', manager: '/organizer', provider: '/provider' }
       navigate(map[data.role] ?? '/dashboard', { replace: true })
     },
     onError: (err: { message: string }) => setError(err.message),

@@ -67,6 +67,13 @@ export default function Dashboard() {
   const { data: tenantSteps } = trpc.tenant.getTenantSteps.useQuery()
   const signDoc = trpc.tenant.signDocument.useMutation()
 
+  // Auto-redirect to onboarding if profile not completed
+  useEffect(() => {
+    if (myStatus && !myStatus.isOnboarded) {
+      navigate('/onboarding', { replace: true })
+    }
+  }, [myStatus, navigate])
+
   // Show skeleton while loading
   if (statusLoading || (isLoading && !isFetched)) return (
     <PageLayout><DashboardSkeleton /></PageLayout>
