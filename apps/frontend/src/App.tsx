@@ -71,11 +71,20 @@ function OAuthCallback() {
       localStorage.setItem('sb-token', token)
       if (refresh) localStorage.setItem('sb-refresh-token', refresh)
       navigate('/oauth-role', { replace: true })
+    } else {
+      // No token = something went wrong, go to login
+      navigate('/login', { replace: true })
     }
-    // No token in URL = regular navigation (email/password login), do nothing
   }, [navigate])
 
-  return null
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa]">
+      <div className="text-center">
+        <div className="w-10 h-10 border-4 border-[#3b6b9c] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-[#5a5a6e] font-heebo">מתחבר...</p>
+      </div>
+    </div>
+  )
 }
 
 export default function App() {
@@ -96,7 +105,8 @@ export default function App() {
         <Route path="/register/manager" element={<RegisterManager />} />
         <Route path="/register/provider" element={<RegisterProvider />} />
         <Route path="/onboarding" element={<TenantOnboarding />} />
-        <Route path="/dashboard" element={<><OAuthCallback /><Dashboard /></>} />
+        <Route path="/auth/callback" element={<OAuthCallback />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/documents" element={<Documents />} />
         <Route path="/documents/:docId" element={<DocumentViewPage />} />
         <Route path="/profile" element={<Profile />} />

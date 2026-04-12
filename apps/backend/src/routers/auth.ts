@@ -248,6 +248,22 @@ export const authRouter = router({
       }, { onConflict: 'id' })
 
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+
+      // Create role-specific sub-profile
+      if (input.role === 'tenant') {
+        await ctx.supabase.from('tenant_profiles').upsert({
+          user_id: userId, phone: '', id_number: '',
+        }, { onConflict: 'user_id' })
+      } else if (input.role === 'manager' || input.role === 'organizer') {
+        await ctx.supabase.from('manager_profiles').upsert({
+          id: userId, company_name: '',
+        }, { onConflict: 'id' })
+      } else if (input.role === 'provider') {
+        await ctx.supabase.from('provider_profiles').upsert({
+          id: userId, bio: '', service_types: [], operating_regions: [],
+        }, { onConflict: 'id' })
+      }
+
       return { success: true, role: input.role }
     }),
 })
