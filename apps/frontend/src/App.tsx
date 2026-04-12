@@ -49,57 +49,65 @@ import DocumentViewPage from './pages/DocumentViewPage'
 function OAuthCallback() {
   const navigate = useNavigate()
   useEffect(() => {
-    async function handleCallback() {
-      const hash = window.location.hash
-      const search = window.location.search
-      let token: string | null = null
-      let refresh: string | null = null
+    let done = false
 
-      // Check hash fragment (implicit flow)
+    function saveAndRedirect(session: { access_token: string; refresh_token?: string | null }) {
+      if (done) return
+      done = true
+      localStorage.setItem('sb-token', session.access_token)
+      if (session.refresh_token) localStorage.setItem('sb-refresh-token', session.refresh_token)
+      navigate('/oauth-role', { replace: true })
+    }
+
+    // Listen for Supabase to auto-detect the auth params in URL
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION')) {
+        saveAndRedirect(session)
+      }
+    })
+
+    // Also try manually: exchange code or check existing session
+    async function tryManual() {
+      // Wait a moment for Supabase auto-detection
+      await new Promise(r => setTimeout(r, 1000))
+      if (done) return
+
+      const search = window.location.search
+      const hash = window.location.hash
+
+      // Try PKCE code exchange
+      if (search.includes('code=')) {
+        const code = new URLSearchParams(search).get('code')
+        if (code) {
+          const { data } = await supabase.auth.exchangeCodeForSession(code)
+          if (data?.session) { saveAndRedirect(data.session); return }
+        }
+      }
+
+      // Try hash fragment (implicit flow)
       if (hash.includes('access_token')) {
         const params = new URLSearchParams(hash.substring(1))
-        token = params.get('access_token')
-        refresh = params.get('refresh_token')
+        const token = params.get('access_token')
+        const refresh = params.get('refresh_token')
+        if (token) { saveAndRedirect({ access_token: token, refresh_token: refresh }); return }
       }
 
-      // Check query params for access_token
-      if (!token && search.includes('access_token')) {
-        const params = new URLSearchParams(search)
-        token = params.get('access_token')
-        refresh = params.get('refresh_token')
-      }
+      // Try existing session
+      const { data } = await supabase.auth.getSession()
+      if (data?.session) { saveAndRedirect(data.session); return }
 
-      // Handle PKCE flow: exchange code for session
-      if (!token && search.includes('code=')) {
-        const params = new URLSearchParams(search)
-        const code = params.get('code')
-        if (code) {
-          const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-          if (data?.session && !error) {
-            token = data.session.access_token
-            refresh = data.session.refresh_token
-          }
-        }
-      }
+      // Last resort: wait more and try again
+      await new Promise(r => setTimeout(r, 2000))
+      if (done) return
+      const { data: retry } = await supabase.auth.getSession()
+      if (retry?.session) { saveAndRedirect(retry.session); return }
 
-      // Also try: Supabase might have set the session automatically via URL
-      if (!token) {
-        const { data } = await supabase.auth.getSession()
-        if (data?.session) {
-          token = data.session.access_token
-          refresh = data.session.refresh_token
-        }
-      }
-
-      if (token) {
-        localStorage.setItem('sb-token', token)
-        if (refresh) localStorage.setItem('sb-refresh-token', refresh)
-        navigate('/oauth-role', { replace: true })
-      } else {
-        navigate('/login', { replace: true })
-      }
+      // Give up
+      if (!done) navigate('/login', { replace: true })
     }
-    handleCallback()
+    tryManual()
+
+    return () => { subscription.unsubscribe() }
   }, [navigate])
 
   return (
