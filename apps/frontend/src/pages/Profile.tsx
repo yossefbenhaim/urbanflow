@@ -194,9 +194,38 @@ export default function Profile() {
   const [tabuUploading, setTabuUploading] = useState(false)
   const [tabuUrl, setTabuUrl] = useState<string | null>(null)
   const [tabuError, setTabuError] = useState('')
-  const [ownershipDocs, setOwnershipDocs] = useState<Array<{ file: File; type: string; name: string; url?: string }>>([])
+  const [ownershipDocs, setOwnershipDocs] = useState<Array<{ file: File; type: string; name: string; url?: string } | { type: string; name: string; url: string; fromDb: true }>>([])
 
   const uploadTabu = trpc.tenant.uploadTabu.useMutation()
+
+  // Load existing tabu status
+  const { data: tabuStatus } = trpc.tenant.getTabuStatus.useQuery(undefined, {
+    enabled: profile?.role === 'tenant',
+  })
+  // Load existing ownership documents
+  const { data: existingDocs } = trpc.tenant.getTenantDocuments.useQuery({ category: 'ownership' }, {
+    enabled: profile?.role === 'tenant',
+  })
+
+  // Set tabu from DB on load
+  useEffect(() => {
+    if (tabuStatus?.uploaded && tabuStatus.url && !tabuUrl) {
+      setTabuUrl(tabuStatus.url)
+    }
+  }, [tabuStatus])
+
+  // Set ownership docs from DB on load
+  useEffect(() => {
+    if (existingDocs && existingDocs.length > 0 && ownershipDocs.length === 0) {
+      const dbDocs = existingDocs.map((doc: { category: string; file_name: string; file_url: string }) => ({
+        type: doc.category,
+        name: doc.file_name,
+        url: doc.file_url,
+        fromDb: true as const,
+      }))
+      setOwnershipDocs(dbDocs)
+    }
+  }, [existingDocs])
 
   const update = (field: keyof FormData, value: FormData[keyof FormData]) =>
     setForm(p => ({ ...p, [field]: value }))
@@ -612,7 +641,17 @@ export default function Profile() {
                           <p className="text-xs text-[#5a5a6e]">{(tabuFile.size / 1024).toFixed(0)} KB</p>
                           <p className="text-xs text-[#4a8c5c] font-semibold">הועלה בהצלחה!</p>
                           <button onClick={e => { e.stopPropagation(); setTabuFile(null); setTabuUrl(null) }}
-                            className="text-xs text-red-500 underline bg-transparent border-none cursor-pointer mt-1">הסר קובץ</button>
+                            className="text-xs text-red-500 underline bg-transparent border-none cursor-pointer mt-1">החלף קובץ</button>
+                        </div>
+                      ) : !tabuFile && tabuUrl ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <span className="text-3xl">✅</span>
+                          <p className="text-sm font-semibold text-[#212121]">נסח טאבו הועלה</p>
+                          <p className="text-xs text-[#4a8c5c] font-semibold">הקובץ קיים במערכת</p>
+                          <a href={tabuUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                            className="text-xs text-[#3b6b9c] underline">צפה בקובץ</a>
+                          <button onClick={e => { e.stopPropagation(); setTabuUrl(null) }}
+                            className="text-xs text-red-500 underline bg-transparent border-none cursor-pointer mt-1">החלף קובץ</button>
                         </div>
                       ) : (
                         <div className="flex flex-col items-center gap-2">
@@ -665,8 +704,14 @@ export default function Profile() {
                           <span className="text-lg flex-shrink-0">✅</span>
                           <div className="flex-1 min-w-0">
                             <p className="text-[13px] font-semibold text-[#212121] truncate">{doc.name}</p>
-                            <p className="text-[11px] text-[#5a5a6e]">{doc.file.name} · {(doc.file.size / 1024).toFixed(0)} KB</p>
+                            <p className="text-[11px] text-[#5a5a6e]">
+                              {'fromDb' in doc ? 'קיים במערכת' : `${doc.file.name} · ${(doc.file.size / 1024).toFixed(0)} KB`}
+                            </p>
                           </div>
+                          {'fromDb' in doc && doc.url && (
+                            <a href={doc.url} target="_blank" rel="noopener noreferrer"
+                              className="text-xs text-[#3b6b9c] underline flex-shrink-0">צפה</a>
+                          )}
                           <button onClick={() => setOwnershipDocs(prev => prev.filter((_, idx) => idx !== i))}
                             className="text-red-500 text-sm font-bold bg-transparent border-none cursor-pointer px-2">✕</button>
                         </div>

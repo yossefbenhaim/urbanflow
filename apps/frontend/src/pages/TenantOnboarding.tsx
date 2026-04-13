@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import { trpc } from '../lib/trpc'
 import AddressPicker from '../components/AddressPicker/AddressPicker'
 import PageLayout from '../components/PageLayout'
@@ -280,8 +281,8 @@ export default function TenantOnboarding() {
   }, [])
 
   const saveProfile = trpc.tenant.saveProfile.useMutation({
-    onSuccess: () => navigate('/dashboard'),
-    onError: (e) => setError(e.message || 'שגיאה בשמירה'),
+    onSuccess: () => { toast.success('הפרופיל נשמר בהצלחה! 🎉'); navigate('/dashboard') },
+    onError: (e) => { setError(e.message || 'שגיאה בשמירה'); toast.error('שגיאה בשמירת הפרופיל') },
   })
 
   const validateStep1 = () => {
