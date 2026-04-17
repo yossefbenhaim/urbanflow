@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import { getDeviceInfo } from '../lib/deviceInfo'
+import { sendWelcomeEmail } from '../lib/emailService'
 import AddressPicker from '../components/AddressPicker/AddressPicker'
 
 type FormData = {
@@ -71,8 +72,10 @@ export default function RegisterTenant() {
   }
 
   const registerTenant = trpc.auth.registerTenant.useMutation({
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       if (data.accessToken) { localStorage.setItem('sb-token', data.accessToken); if ('refreshToken' in data && data.refreshToken) localStorage.setItem('sb-refresh-token', data.refreshToken as string) }
+      // Send welcome email via EmailJS
+      sendWelcomeEmail({ to_email: form.email, to_name: form.fullName })
       navigate('/onboarding')
     },
     onError: (err) => setError(err.message || 'שגיאה בהרשמה'),
