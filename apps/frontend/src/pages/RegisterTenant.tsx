@@ -74,8 +74,8 @@ export default function RegisterTenant() {
   const registerTenant = trpc.auth.registerTenant.useMutation({
     onSuccess: async (data) => {
       if (data.accessToken) { localStorage.setItem('sb-token', data.accessToken); if ('refreshToken' in data && data.refreshToken) localStorage.setItem('sb-refresh-token', data.refreshToken as string) }
-      // Send welcome email via EmailJS
-      sendWelcomeEmail({ to_email: form.email, to_name: form.fullName })
+      // Send welcome email via EmailJS (await so it completes before navigating)
+      await sendWelcomeEmail({ to_email: form.email, to_name: form.fullName })
       navigate('/onboarding')
     },
     onError: (err) => setError(err.message || 'שגיאה בהרשמה'),
