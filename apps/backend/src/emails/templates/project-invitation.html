@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>הזמנה לפרויקט - Silver Castle</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Heebo', Arial, sans-serif; background-color: #f8f9fa; direction: rtl; color: #212121; }
+    .email-wrapper { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+    .email-header { background: linear-gradient(135deg, #1e3a5f 0%, #3b6b9c 100%); padding: 40px 30px; text-align: center; }
+    .email-header img { width: 80px; height: 80px; margin-bottom: 16px; }
+    .email-header h1 { color: #ffffff; font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+    .email-header p { color: #5A8DB8; font-size: 14px; font-weight: 300; }
+    .email-body { padding: 40px 30px; }
+    .greeting { font-size: 20px; font-weight: 600; color: #1e3a5f; margin-bottom: 16px; }
+    .message { font-size: 15px; line-height: 1.8; color: #5a5a6e; margin-bottom: 24px; }
+    .project-card { background: linear-gradient(135deg, #ebf1f7 0%, #f5f0e8 100%); border-radius: 10px; padding: 24px; margin-bottom: 24px; border-right: 4px solid #8b6f47; }
+    .project-card h3 { font-size: 18px; font-weight: 700; color: #1e3a5f; margin-bottom: 12px; }
+    .project-detail { display: flex; gap: 8px; padding: 6px 0; font-size: 14px; color: #5a5a6e; }
+    .project-detail strong { color: #1e3a5f; min-width: 80px; }
+    .invite-code-box { background-color: #1e3a5f; border-radius: 10px; padding: 24px; text-align: center; margin-bottom: 24px; }
+    .invite-code-box p { font-size: 14px; color: #5A8DB8; margin-bottom: 8px; }
+    .invite-code { font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #8b6f47; direction: ltr; }
+    .cta-button { display: block; width: 100%; padding: 14px 24px; background: linear-gradient(135deg, #8b6f47 0%, #A6895F 100%); color: #ffffff !important; text-decoration: none; text-align: center; border-radius: 8px; font-size: 16px; font-weight: 600; font-family: 'Heebo', Arial, sans-serif; margin-bottom: 24px; }
+    .steps-list { margin-bottom: 24px; }
+    .step-item { display: flex; gap: 12px; padding: 10px 0; align-items: flex-start; }
+    .step-number { width: 28px; height: 28px; background-color: #3b6b9c; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: 600; flex-shrink: 0; }
+    .step-text { font-size: 14px; color: #5a5a6e; line-height: 1.6; padding-top: 3px; }
+    .email-footer { background-color: #f8f9fa; padding: 24px 30px; text-align: center; }
+    .footer-brand { font-size: 14px; font-weight: 600; color: #1e3a5f; margin-bottom: 4px; }
+    .footer-text { font-size: 12px; color: #8e8e9e; line-height: 1.6; }
+    .footer-links { margin-top: 12px; }
+    .footer-links a { color: #3b6b9c; text-decoration: none; font-size: 12px; margin: 0 8px; }
+  </style>
+</head>
+<body>
+  <div style="padding: 20px;">
+    <div class="email-wrapper">
+      <div class="email-header">
+        <img src="{{logoUrl}}" alt="Silver Castle" />
+        <h1>הוזמנת להצטרף לפרויקט!</h1>
+        <p>Silver Castle | טירת כסף</p>
+      </div>
+
+      <div class="email-body">
+        <p class="greeting">שלום {{userName}},</p>
+
+        <p class="message">
+          {{inviterName}} הזמין אותך להצטרף לפרויקט פינוי-בינוי במערכת Silver Castle.
+        </p>
+
+        <div class="project-card">
+          <h3>&#127970; פרטי הפרויקט</h3>
+          <div class="project-detail">
+            <strong>כתובת:</strong>
+            <span>{{projectAddress}}</span>
+          </div>
+          <div class="project-detail">
+            <strong>עיר:</strong>
+            <span>{{projectCity}}</span>
+          </div>
+          <div class="project-detail">
+            <strong>דירות:</strong>
+            <span>{{unitsCount}} יחידות דיור</span>
+          </div>
+        </div>
+
+        <div class="invite-code-box">
+          <p>קוד ההזמנה שלך</p>
+          <div class="invite-code">{{inviteCode}}</div>
+        </div>
+
+        <div class="steps-list">
+          <div class="step-item">
+            <div class="step-number">1</div>
+            <span class="step-text">לחץ על הכפתור למטה להרשמה</span>
+          </div>
+          <div class="step-item">
+            <div class="step-number">2</div>
+            <span class="step-text">הזן את קוד ההזמנה שלמעלה</span>
+          </div>
+          <div class="step-item">
+            <div class="step-number">3</div>
+            <span class="step-text">מלא את פרטי הדירה שלך</span>
+          </div>
+        </div>
+
+        <a href="{{joinUrl}}" class="cta-button">הצטרפות לפרויקט</a>
+
+        <p class="message" style="font-size: 13px; text-align: center;">
+          יש שאלות? פנה אל {{inviterName}} או צור קשר עם צוות Silver Castle.
+        </p>
+      </div>
+
+      <div class="email-footer">
+        <p class="footer-brand">Silver Castle | טירת כסף</p>
+        <p class="footer-text">מערכת ניהול דיירים לפרויקטי פינוי-בינוי</p>
+        <div class="footer-links">
+          <a href="{{siteUrl}}">אתר</a>
+          <a href="{{siteUrl}}/privacy">מדיניות פרטיות</a>
+        </div>
+        <p class="footer-text" style="margin-top: 12px;">הודעה זו נשלחה אל {{userEmail}}</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

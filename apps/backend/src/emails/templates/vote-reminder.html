@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>תזכורת הצבעה - Silver Castle</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Heebo', Arial, sans-serif; background-color: #f8f9fa; direction: rtl; color: #212121; }
+    .email-wrapper { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+    .email-header { background: linear-gradient(135deg, #1e3a5f 0%, #3b6b9c 100%); padding: 40px 30px; text-align: center; }
+    .email-header img { width: 80px; height: 80px; margin-bottom: 16px; }
+    .email-header h1 { color: #ffffff; font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+    .email-header p { color: #5A8DB8; font-size: 14px; font-weight: 300; }
+    .email-body { padding: 40px 30px; }
+    .greeting { font-size: 20px; font-weight: 600; color: #1e3a5f; margin-bottom: 16px; }
+    .message { font-size: 15px; line-height: 1.8; color: #5a5a6e; margin-bottom: 24px; }
+    .poll-card { background: linear-gradient(135deg, #ebf1f7 0%, #ffffff 100%); border: 2px solid #3b6b9c; border-radius: 10px; padding: 24px; margin-bottom: 24px; text-align: center; }
+    .poll-card h3 { font-size: 20px; font-weight: 700; color: #1e3a5f; margin-bottom: 8px; }
+    .poll-card .poll-type { font-size: 14px; color: #8b6f47; font-weight: 600; margin-bottom: 16px; }
+    .progress-bar { background-color: #ebf1f7; border-radius: 20px; height: 12px; margin-bottom: 8px; overflow: hidden; }
+    .progress-fill { background: linear-gradient(90deg, #3b6b9c, #5A8DB8); height: 100%; border-radius: 20px; }
+    .progress-text { font-size: 13px; color: #5a5a6e; margin-bottom: 16px; }
+    .deadline-box { background-color: #fcf4e7; border-radius: 8px; padding: 12px; margin-top: 16px; }
+    .deadline-box p { font-size: 14px; color: #c4841d; font-weight: 600; }
+    .cta-button { display: block; width: 100%; padding: 14px 24px; background: linear-gradient(135deg, #3b6b9c 0%, #5A8DB8 100%); color: #ffffff !important; text-decoration: none; text-align: center; border-radius: 8px; font-size: 16px; font-weight: 600; font-family: 'Heebo', Arial, sans-serif; margin-bottom: 24px; }
+    .why-matters { background-color: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 24px; }
+    .why-matters h4 { font-size: 14px; font-weight: 600; color: #1e3a5f; margin-bottom: 10px; }
+    .why-matters p { font-size: 13px; color: #5a5a6e; line-height: 1.8; }
+    .email-footer { background-color: #f8f9fa; padding: 24px 30px; text-align: center; }
+    .footer-brand { font-size: 14px; font-weight: 600; color: #1e3a5f; margin-bottom: 4px; }
+    .footer-text { font-size: 12px; color: #8e8e9e; line-height: 1.6; }
+    .footer-links { margin-top: 12px; }
+    .footer-links a { color: #3b6b9c; text-decoration: none; font-size: 12px; margin: 0 8px; }
+  </style>
+</head>
+<body>
+  <div style="padding: 20px;">
+    <div class="email-wrapper">
+      <div class="email-header">
+        <img src="{{logoUrl}}" alt="Silver Castle" />
+        <h1>&#128499;&#65039; ההצבעה שלך חשובה!</h1>
+        <p>Silver Castle | טירת כסף</p>
+      </div>
+
+      <div class="email-body">
+        <p class="greeting">שלום {{userName}},</p>
+
+        <p class="message">
+          סקר חדש פעיל בפרויקט שלך וטרם הצבעת.<br>
+          הקול שלך חשוב כדי לקדם את תהליך הפינוי-בינוי!
+        </p>
+
+        <div class="poll-card">
+          <h3>{{pollTitle}}</h3>
+          <div class="poll-type">{{pollType}}</div>
+
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: {{votePercentage}}%"></div>
+          </div>
+          <p class="progress-text">{{votedCount}} מתוך {{totalCount}} דיירים הצביעו ({{votePercentage}}%)</p>
+
+          <div class="deadline-box">
+            <p>&#9200; ההצבעה נסגרת ב-{{deadline}}</p>
+          </div>
+        </div>
+
+        <a href="{{voteUrl}}" class="cta-button">להצביע עכשיו</a>
+
+        <div class="why-matters">
+          <h4>&#128161; למה חשוב להצביע?</h4>
+          <p>
+            בפרויקט פינוי-בינוי, נדרש רוב של הדיירים כדי לקדם החלטות חשובות.
+            כל קול משפיע על עתיד הבניין שלך. ההצבעה היא אנונימית ומאובטחת.
+          </p>
+        </div>
+      </div>
+
+      <div class="email-footer">
+        <p class="footer-brand">Silver Castle | טירת כסף</p>
+        <p class="footer-text">מערכת ניהול דיירים לפרויקטי פינוי-בינוי</p>
+        <div class="footer-links">
+          <a href="{{siteUrl}}">אתר</a>
+          <a href="{{siteUrl}}/privacy">מדיניות פרטיות</a>
+        </div>
+        <p class="footer-text" style="margin-top: 12px;">הודעה זו נשלחה אל {{userEmail}}</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

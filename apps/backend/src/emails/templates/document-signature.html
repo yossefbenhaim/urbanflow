@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מסמך ממתין לחתימה - Silver Castle</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Heebo', Arial, sans-serif; background-color: #f8f9fa; direction: rtl; color: #212121; }
+    .email-wrapper { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+    .email-header { background: linear-gradient(135deg, #1e3a5f 0%, #3b6b9c 100%); padding: 40px 30px; text-align: center; }
+    .email-header img { width: 80px; height: 80px; margin-bottom: 16px; }
+    .email-header h1 { color: #ffffff; font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+    .email-header p { color: #5A8DB8; font-size: 14px; font-weight: 300; }
+    .email-body { padding: 40px 30px; }
+    .greeting { font-size: 20px; font-weight: 600; color: #1e3a5f; margin-bottom: 16px; }
+    .message { font-size: 15px; line-height: 1.8; color: #5a5a6e; margin-bottom: 24px; }
+    .document-card { background-color: #ffffff; border: 2px solid #ebf1f7; border-radius: 10px; padding: 24px; margin-bottom: 24px; }
+    .document-icon { font-size: 40px; margin-bottom: 12px; }
+    .document-card h3 { font-size: 18px; font-weight: 600; color: #1e3a5f; margin-bottom: 16px; }
+    .document-meta { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eeeeee; font-size: 14px; }
+    .document-meta:last-child { border-bottom: none; }
+    .meta-label { color: #8e8e9e; }
+    .meta-value { color: #1e3a5f; font-weight: 500; }
+    .urgency-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .urgency-high { background-color: #fde8e8; color: #B94A48; }
+    .urgency-normal { background-color: #edf5ef; color: #4a8c5c; }
+    .cta-button { display: block; width: 100%; padding: 14px 24px; background: linear-gradient(135deg, #8b6f47 0%, #A6895F 100%); color: #ffffff !important; text-decoration: none; text-align: center; border-radius: 8px; font-size: 16px; font-weight: 600; font-family: 'Heebo', Arial, sans-serif; margin-bottom: 24px; }
+    .info-box { background-color: #edf5ef; border-right: 4px solid #4a8c5c; border-radius: 8px; padding: 16px; margin-bottom: 24px; }
+    .info-box p { font-size: 13px; color: #4a8c5c; line-height: 1.6; }
+    .email-footer { background-color: #f8f9fa; padding: 24px 30px; text-align: center; }
+    .footer-brand { font-size: 14px; font-weight: 600; color: #1e3a5f; margin-bottom: 4px; }
+    .footer-text { font-size: 12px; color: #8e8e9e; line-height: 1.6; }
+    .footer-links { margin-top: 12px; }
+    .footer-links a { color: #3b6b9c; text-decoration: none; font-size: 12px; margin: 0 8px; }
+  </style>
+</head>
+<body>
+  <div style="padding: 20px;">
+    <div class="email-wrapper">
+      <div class="email-header">
+        <img src="{{logoUrl}}" alt="Silver Castle" />
+        <h1>&#9997;&#65039; מסמך ממתין לחתימתך</h1>
+        <p>Silver Castle | טירת כסף</p>
+      </div>
+
+      <div class="email-body">
+        <p class="greeting">שלום {{userName}},</p>
+
+        <p class="message">
+          מסמך חדש ממתין לחתימתך במערכת Silver Castle.<br>
+          נא לעיין במסמך ולחתום בהקדם האפשרי.
+        </p>
+
+        <div class="document-card">
+          <div class="document-icon">&#128196;</div>
+          <h3>{{documentTitle}}</h3>
+          <div class="document-meta">
+            <span class="meta-label">סוג מסמך</span>
+            <span class="meta-value">{{documentType}}</span>
+          </div>
+          <div class="document-meta">
+            <span class="meta-label">נשלח על ידי</span>
+            <span class="meta-value">{{senderName}}</span>
+          </div>
+          <div class="document-meta">
+            <span class="meta-label">תאריך</span>
+            <span class="meta-value">{{sendDate}}</span>
+          </div>
+          <div class="document-meta">
+            <span class="meta-label">תוקף חתימה</span>
+            <span class="meta-value">{{expiryDate}}</span>
+          </div>
+          <div class="document-meta">
+            <span class="meta-label">דחיפות</span>
+            <span class="urgency-badge {{urgencyClass}}">{{urgencyText}}</span>
+          </div>
+        </div>
+
+        <a href="{{documentUrl}}" class="cta-button">צפייה וחתימה על המסמך</a>
+
+        <div class="info-box">
+          <p>
+            &#128274; החתימה הדיגיטלית שלך מאובטחת ומוגנת.<br>
+            המסמך ייחתם באמצעות Silver Castle ויישמר בצורה מאובטחת.
+          </p>
+        </div>
+      </div>
+
+      <div class="email-footer">
+        <p class="footer-brand">Silver Castle | טירת כסף</p>
+        <p class="footer-text">מערכת ניהול דיירים לפרויקטי פינוי-בינוי</p>
+        <div class="footer-links">
+          <a href="{{siteUrl}}">אתר</a>
+          <a href="{{siteUrl}}/privacy">מדיניות פרטיות</a>
+        </div>
+        <p class="footer-text" style="margin-top: 12px;">הודעה זו נשלחה אל {{userEmail}}</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
