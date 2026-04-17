@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import { getDeviceInfo } from '../lib/deviceInfo'
 import { supabase } from '../lib/supabase'
+import { sendWelcomeEmail } from '../lib/emailService'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -22,6 +23,8 @@ export default function Login() {
         localStorage.removeItem('pending_join_code')
         try { await joinByCode.mutateAsync({ code: pendingCode }) } catch {}
       }
+      // Send welcome email on login
+      await sendWelcomeEmail({ to_email: data.user.email, to_name: data.user.fullName || data.user.email })
       const role = data.user.role
       if (role === 'manager') navigate('/manager', { replace: true })
       else if (role === 'provider') navigate('/provider', { replace: true })
