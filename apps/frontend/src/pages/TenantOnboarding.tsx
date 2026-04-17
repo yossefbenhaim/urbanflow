@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { trpc } from '../lib/trpc'
@@ -191,6 +191,7 @@ function CheckboxGroup({ options, selected, onChange }: {
 
 export default function TenantOnboarding() {
   const navigate = useNavigate()
+  const utils = trpc.useUtils()
   const [step, setStep] = useState(1)
   const [error, setError] = useState('')
   const [address, setAddress] = useState({ city: '', street: '', buildingNumber: '' })
@@ -214,6 +215,45 @@ export default function TenantOnboarding() {
     // Section 10
     declarations: [false, false, false, false],
   })
+
+  // Load existing profile - redirect if already onboarded, pre-fill if partial
+  const { data: existingProfile } = trpc.tenant.getMyProfile.useQuery()
+  useEffect(() => {
+    if (!existingProfile) return
+    const p = existingProfile as Record<string, unknown>
+    if (p.is_onboarded) { navigate('/dashboard', { replace: true }); return }
+    // Pre-fill form with existing data
+    const addrParts = typeof p.address === 'string' ? p.address.split(',')[0]?.trim().split(' ') : []
+    const bldNum = addrParts.pop() || ''
+    const streetName = addrParts.join(' ')
+    setForm(prev => ({
+      ...prev,
+      idNumber: (p.id_number as string) || prev.idNumber,
+      phone: (p.phone as string) || prev.phone,
+      floor: p.floor != null ? String(p.floor) : prev.floor,
+      apartmentNumber: p.apartment_number != null ? String(p.apartment_number) : prev.apartmentNumber,
+      apartmentSqm: p.apartment_sqm != null ? String(p.apartment_sqm) : prev.apartmentSqm,
+      isOwner: p.is_owner != null ? !!p.is_owner : prev.isOwner,
+      ownershipType: (p.ownership_type as FormData['ownershipType']) || prev.ownershipType,
+      ownershipPercentage: p.ownership_percentage != null ? String(p.ownership_percentage) : prev.ownershipPercentage,
+      moveInYear: p.move_in_year != null ? String(p.move_in_year) : prev.moveInYear,
+      apartmentsInBuilding: p.apartments_in_building != null ? String(p.apartments_in_building) : prev.apartmentsInBuilding,
+      tenantsInBuilding: p.tenants_in_building != null ? String(p.tenants_in_building) : prev.tenantsInBuilding,
+      specialRequests: Array.isArray(p.special_requests) ? p.special_requests as string[] : prev.specialRequests,
+      specialRequestsNotes: (p.special_requests_notes as string) || prev.specialRequestsNotes,
+      apartmentExtras: Array.isArray(p.apartment_extras) ? p.apartment_extras as string[] : prev.apartmentExtras,
+      apartmentExtrasNotes: (p.apartment_extras_notes as string) || prev.apartmentExtrasNotes,
+      hasSpecialAdvantage: p.has_special_advantage != null ? !!p.has_special_advantage : prev.hasSpecialAdvantage,
+      isResiding: p.is_residing != null ? !!p.is_residing : prev.isResiding,
+      residingStatus: (p.residing_status as FormData['residingStatus']) || prev.residingStatus,
+      propertyRelation: (p.property_relation as FormData['propertyRelation']) || prev.propertyRelation,
+      coOwnersCount: p.co_owners_count != null ? String(p.co_owners_count) : prev.coOwnersCount,
+      declarations: p.declarations_accepted ? [true, true, true, true] : prev.declarations,
+    }))
+    if (streetName || bldNum) {
+      setAddress(prev => ({ ...prev, street: streetName, buildingNumber: bldNum }))
+    }
+  }, [existingProfile, navigate])
 
   const update = (field: keyof FormData, value: FormData[keyof FormData]) =>
     setForm(p => ({ ...p, [field]: value }))
@@ -281,7 +321,11 @@ export default function TenantOnboarding() {
   }, [])
 
   const saveProfile = trpc.tenant.saveProfile.useMutation({
-    onSuccess: () => { toast.success('הפרופיל נשמר בהצלחה! 🎉'); navigate('/dashboard') },
+    onSuccess: async () => {
+      await utils.tenant.getMyStatus.invalidate()
+      toast.success('הפרופיל נשמר בהצלחה! 🎉')
+      navigate('/dashboard')
+    },
     onError: (e) => { setError(e.message || 'שגיאה בשמירה'); toast.error('שגיאה בשמירת הפרופיל') },
   })
 
