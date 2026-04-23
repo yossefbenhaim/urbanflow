@@ -1187,9 +1187,30 @@ export const tenantRouter = router({
       description: z.string().optional(),
       storagePath: z.string(),
       linkedDocId: z.string().optional(),
+      // Phase 5: classification + tenant-friendly description + versioning
+      classification: z.enum(['public', 'project_only', 'private']).optional(),
+      shareableWithTenants: z.boolean().optional(),
+      containsSensitiveData: z.boolean().optional(),
+      plainLanguageDescription: z.string().min(10, 'תיאור בשפה פשוטה חייב להיות לפחות 10 תווים').optional(),
+      parentDocumentId: z.string().uuid().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const { data: tp } = await ctx.supabase.from('tenant_profiles').select('building_id').eq('user_id', ctx.user.id).single()
+
+      // Versioning: if parent supplied, compute next version number
+      let version = 1
+      if (input.parentDocumentId) {
+        const { data: parent } = await ctx.supabase
+          .from('tenant_documents')
+          .select('version, user_id')
+          .eq('id', input.parentDocumentId)
+          .single()
+        if (!parent || (parent as { user_id: string }).user_id !== ctx.user.id) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'גרסת מקור לא נמצאה' })
+        }
+        version = ((parent as { version: number | null }).version ?? 1) + 1
+      }
+
       const { data, error } = await ctx.supabase.from('tenant_documents').insert({
         user_id: ctx.user.id,
         building_id: (tp as TenantProfileRow | null)?.building_id ?? null,
@@ -1202,9 +1223,46 @@ export const tenantRouter = router({
         is_confidential: true,
         storage_path: input.storagePath,
         linked_doc_id: input.linkedDocId ?? null,
+        classification: input.classification ?? 'private',
+        shareable_with_tenants: input.shareableWithTenants ?? false,
+        contains_sensitive_data: input.containsSensitiveData ?? false,
+        plain_language_description: input.plainLanguageDescription ?? null,
+        parent_document_id: input.parentDocumentId ?? null,
+        version,
       }).select().single()
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
       return data
+    }),
+
+  // Phase 5: return version chain for a document
+  getDocumentVersions: protectedProcedure
+    .input(z.object({ documentId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      // walk up to the root
+      const visited = new Set<string>()
+      let currentId: string | null = input.documentId
+      let rootId = input.documentId
+      while (currentId && !visited.has(currentId)) {
+        visited.add(currentId)
+        const res: { data: { parent_document_id: string | null } | null } = await ctx.supabase
+          .from('tenant_documents')
+          .select('parent_document_id')
+          .eq('id', currentId)
+          .eq('user_id', ctx.user.id)
+          .maybeSingle()
+        const parentId = res.data?.parent_document_id ?? null
+        if (!parentId) break
+        rootId = parentId
+        currentId = parentId
+      }
+      // fetch all descendants via self-joining query (simple: fetch where id=root OR parent_document_id IN chain)
+      const { data: chain } = await ctx.supabase
+        .from('tenant_documents')
+        .select('*')
+        .eq('user_id', ctx.user.id)
+        .or(`id.eq.${rootId},parent_document_id.eq.${rootId}`)
+        .order('version', { ascending: false })
+      return chain ?? []
     }),
 
   deleteTenantDocument: protectedProcedure

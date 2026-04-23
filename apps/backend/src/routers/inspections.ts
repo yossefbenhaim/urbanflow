@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { router, protectedProcedure } from '../middleware/auth'
 import { TRPCError } from '@trpc/server'
 import { SupabaseClient } from '@supabase/supabase-js'
+import { REQUIRED_FILE_KINDS_BY_INSPECTION } from '../constants/uploadChecklists'
 
 interface ProtectedCtx {
   supabase: SupabaseClient
@@ -339,6 +340,31 @@ export const inspectionsRouter = router({
   submit: protectedProcedure
     .input(z.object({ inspectionId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
+      // Phase 5: server-side verification that required file kinds are uploaded
+      const { data: insp } = await ctx.supabase
+        .from('inspections')
+        .select('inspection_type')
+        .eq('id', input.inspectionId)
+        .eq('provider_id', ctx.user.id)
+        .single()
+      if (!insp) throw new TRPCError({ code: 'NOT_FOUND', message: 'בדיקה לא נמצאה' })
+
+      const required = REQUIRED_FILE_KINDS_BY_INSPECTION[(insp as { inspection_type: string }).inspection_type] ?? []
+      if (required.length > 0) {
+        const { data: files } = await ctx.supabase
+          .from('inspection_files')
+          .select('file_type')
+          .eq('inspection_id', input.inspectionId)
+        const uploaded = new Set((files ?? []).map((f: { file_type: string }) => f.file_type))
+        const missing = required.filter(k => !uploaded.has(k))
+        if (missing.length > 0) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: `חסרים קבצים חובה לפני הגשה: ${missing.join(', ')}`,
+          })
+        }
+      }
+
       const { data, error } = await ctx.supabase
         .from('inspections')
         .update({ status: 'submitted', submitted_at: new Date().toISOString() })
