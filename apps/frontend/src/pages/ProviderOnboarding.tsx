@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
+import CityAutocomplete from '../components/CityAutocomplete'
 
 type ProviderType = 'architect' | 'appraiser' | 'developer'
 
@@ -108,7 +109,13 @@ export default function ProviderOnboarding() {
               <h3 className="font-bold text-[#1e3a5f]">פרטים אישיים</h3>
               <LabeledInput label="שם מלא *" value={fullName} onChange={setFullName} />
               <LabeledInput label="טלפון *" value={phone} onChange={setPhone} placeholder="050-1234567" />
-              <LabeledInput label="עיר פעילות ראשית *" value={mainCity} onChange={setMainCity} placeholder="לדוגמה: תל אביב" />
+              <CityAutocomplete
+                label="עיר פעילות ראשית"
+                required
+                value={mainCity}
+                onChange={setMainCity}
+                placeholder="הקלד שם עיר ובחר מהרשימה"
+              />
               <LabeledInput label="מספר רישיון מקצועי" value={license} onChange={setLicense} placeholder="אם קיים" />
             </div>
 
