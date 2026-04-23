@@ -46,6 +46,7 @@ import ValidationPage from './pages/ValidationPage'
 import LearningPage from './pages/LearningPage'
 import DocumentViewPage from './pages/DocumentViewPage'
 import DeveloperForms from './pages/DeveloperForms'
+import MatchPreferences from './pages/MatchPreferences'
 
 function OAuthCallback() {
   const navigate = useNavigate()
@@ -150,6 +151,7 @@ export default function App() {
         <Route path="/inspections" element={<InspectionsPage />} />
         <Route path="/inspections/:projectId/new/:inspectionType" element={<NewInspectionPage />} />
         <Route path="/developer/forms" element={<DeveloperForms />} />
+        <Route path="/provider/preferences" element={<MatchPreferences />} />
         <Route path="/oauth-role" element={<OAuthRoleSelect />} />
         <Route path="/directory" element={<Directory />} />
         <Route path="/chat" element={<ChatPage />} />

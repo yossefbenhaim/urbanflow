@@ -1,13 +1,23 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import PageLayout, { PageTitle } from '../components/PageLayout'
+import { trpc } from '../lib/trpc'
 
 const providerSidebar = [
   { to: '/provider', icon: '🏠', label: 'ראשי' },
   { to: '/provider', icon: '💼', label: 'משרות פתוחות' },
   { to: '/quotes', icon: '📋', label: 'הגשות שלי' },
   { to: '/inspections', icon: '🔍', label: 'בדיקות' },
+  { to: '/provider/preferences', icon: '⚙️', label: 'העדפות' },
   { to: '/profile', icon: '👤', label: 'פרופיל' },
 ]
+
+const PROJECT_TYPE_HE: Record<string, string> = {
+  pinuy_binuy: 'פינוי בינוי',
+  tama_38_2: `תמ"א 38/2`,
+  chalufat_shaked: 'חלופת שקד',
+  binui_pinui: 'בינוי פינוי',
+}
 
 const mockJobs = [
   { id: '1', title: 'עורך דין לייצוג דיירים', project: 'פרויקט הרצל 15', type: 'עו"ד התחדשות עירונית', location: 'תל אביב', engagement: 'ליווי מלא', published: '20/02/2026' },
@@ -15,13 +25,18 @@ const mockJobs = [
   { id: '3', title: 'שמאי מקרקעין', project: 'פרויקט הרצל 15', type: 'שמאי', location: 'תל אביב', engagement: 'חד-פעמי', published: '23/02/2026' },
 ]
 
-type Tab = 'jobs' | 'applications' | 'profile'
+type Tab = 'matches' | 'jobs' | 'applications' | 'profile'
 
 export default function ProviderDashboard() {
-  const [tab, setTab] = useState<Tab>('jobs')
+  const [tab, setTab] = useState<Tab>('matches')
   const [applying, setApplying] = useState<string | null>(null)
   const [coverLetter, setCoverLetter] = useState('')
   const [applied, setApplied] = useState<Set<string>>(new Set())
+
+  const { data: recommendations, isLoading: loadingRec } = trpc.match.getRecommendedProjects.useQuery(
+    { limit: 10 },
+    { enabled: tab === 'matches' }
+  )
 
   const submitApp = (jobId: string) => {
     setApplied(s => new Set([...s, jobId]))
@@ -34,10 +49,10 @@ export default function ProviderDashboard() {
       <PageTitle>לוח הבקרה — נותן שירות</PageTitle>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-5">
-        {([['jobs','משרות פתוחות'],['applications','המועמדויות שלי'],['profile','הפרופיל שלי']] as [Tab,string][]).map(([v,l]) => (
+      <div className="flex gap-2 mb-5 overflow-x-auto">
+        {([['matches','המלצות'],['jobs','משרות פתוחות'],['applications','המועמדויות שלי'],['profile','הפרופיל שלי']] as [Tab,string][]).map(([v,l]) => (
           <button key={v} onClick={() => setTab(v)}
-            className={`px-4 py-2 rounded-[8px] text-[13px] font-semibold transition-colors ${
+            className={`px-4 py-2 rounded-[8px] text-[13px] font-semibold transition-colors whitespace-nowrap ${
               tab === v ? 'bg-[#3b6b9c] text-white' : 'bg-[#f8f9fa] text-[#8e8e9e]'
             }`}>
             {l}
@@ -46,6 +61,62 @@ export default function ProviderDashboard() {
       </div>
 
       <div className="space-y-4">
+        {tab === 'matches' && (
+          <>
+            {loadingRec && <p className="text-center text-[#5a5a6e] py-8">טוען המלצות...</p>}
+            {!loadingRec && recommendations && !recommendations.hasPreferences && (
+              <div className="sc-card p-6 text-center">
+                <div className="text-4xl mb-3">⚙️</div>
+                <h3 className="font-bold text-[#1e3a5f] mb-2">הגדר העדפות התאמה</h3>
+                <p className="text-sm text-[#5a5a6e] mb-4">
+                  כדי שמנוע ההתאמה יציג פרויקטים מתאימים עבורך, הגדר העדפות: ערים, סוגי פרויקטים,
+                  רמת סיכון ורווחיות רצויה.
+                </p>
+                <Link to="/provider/preferences" className="inline-block sc-btn-primary">הגדר העדפות</Link>
+              </div>
+            )}
+            {!loadingRec && recommendations && recommendations.hasPreferences && recommendations.recommendations.length === 0 && (
+              <div className="text-center py-16 text-[#8e8e9e]">
+                <div className="text-5xl mb-3">🔍</div>
+                <p className="text-[13px]">אין כרגע פרויקטים מתאימים. ננסה שוב בקרוב.</p>
+              </div>
+            )}
+            {!loadingRec && recommendations && recommendations.recommendations.length > 0 && (
+              <>
+                <p className="text-xs text-[#5a5a6e] text-center">
+                  {recommendations.recommendations.length} פרויקטים מותאמים, ממוין לפי ציון התאמה
+                </p>
+                {recommendations.recommendations.map(r => (
+                  <div key={r.project.id} className="sc-card p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h3 className="font-bold text-[#212121] text-[15px]">{r.project.name}</h3>
+                        {r.project.address && (
+                          <p className="text-[12px] text-[#5a5a6e] mt-0.5">📍 {r.project.address}</p>
+                        )}
+                      </div>
+                      <ScoreBadge score={r.score} />
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {r.project.project_type && (
+                        <span className="bg-[#ebf1f7] text-[#3b6b9c] text-[10px] rounded-full px-3 py-1 font-semibold">
+                          {PROJECT_TYPE_HE[r.project.project_type] ?? r.project.project_type}
+                        </span>
+                      )}
+                      <span className="bg-[#f8f9fa] text-[#5a5a6e] text-[10px] rounded-full px-3 py-1 font-semibold">
+                        {r.project.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                <Link to="/provider/preferences" className="block text-center text-[13px] text-[#3b6b9c] font-semibold pt-4">
+                  ⚙️ עדכן העדפות
+                </Link>
+              </>
+            )}
+          </>
+        )}
+
         {tab === 'jobs' && (
           <>
             {applying && (
@@ -142,5 +213,21 @@ export default function ProviderDashboard() {
         )}
       </div>
     </PageLayout>
+  )
+}
+
+function ScoreBadge({ score }: { score: number }) {
+  const { bg, fg, label } = score >= 80
+    ? { bg: 'bg-[#edf5ef]', fg: 'text-[#4a8c5c]', label: 'מתאים מאוד' }
+    : score >= 60
+      ? { bg: 'bg-[#ebf1f7]', fg: 'text-[#3b6b9c]', label: 'מתאים' }
+      : score >= 40
+        ? { bg: 'bg-[#fcf4e7]', fg: 'text-[#c4841d]', label: 'בינוני' }
+        : { bg: 'bg-gray-100', fg: 'text-gray-500', label: 'נמוך' }
+  return (
+    <div className={`${bg} ${fg} rounded-xl px-3 py-1.5 text-center min-w-[72px]`}>
+      <div className="text-xs font-semibold">{label}</div>
+      <div className="text-lg font-bold leading-tight">{score}</div>
+    </div>
   )
 }
