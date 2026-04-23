@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import CityAutocomplete from '../components/CityAutocomplete'
@@ -19,6 +19,9 @@ const SPECIALIZATIONS: Record<ProviderType, string[]> = {
 
 export default function ProviderOnboarding() {
   const navigate = useNavigate()
+  const { data: existing, isLoading: loadingExisting } = trpc.provider.getMyDetails.useQuery()
+  const isEdit = !!existing?.providerType
+
   const [type, setType] = useState<ProviderType | null>(null)
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
@@ -34,6 +37,23 @@ export default function ProviderOnboarding() {
   const [c2, setC2] = useState(false)
   const [c3, setC3] = useState(false)
   const [error, setError] = useState('')
+
+  // Pre-fill form in edit mode
+  useEffect(() => {
+    if (!existing) return
+    if (existing.providerType) setType(existing.providerType as ProviderType)
+    setFullName(existing.fullName ?? '')
+    setPhone(existing.phone ?? '')
+    setMainCity(existing.mainCity ?? '')
+    setLicense(existing.licenseNumber ?? '')
+    setYears(existing.experienceYears != null ? String(existing.experienceYears) : '')
+    setProjects(existing.completedProjects != null ? String(existing.completedProjects) : '')
+    setSpecs(existing.specializations ?? [])
+    setPortfolio(existing.portfolioUrls ?? [])
+    setRatingUrl(existing.ratingUrl ?? '')
+    // In edit mode: consents were already captured on first run, default to true
+    if (existing.providerType) { setC1(true); setC2(true); setC3(true) }
+  }, [existing])
 
   const submit = trpc.provider.completeOnboarding.useMutation({
     onSuccess: () => navigate('/provider', { replace: true }),
@@ -74,12 +94,26 @@ export default function ProviderOnboarding() {
     })
   }
 
+  if (loadingExisting) {
+    return (
+      <div dir="rtl" className="min-h-screen bg-[#f8f9fa] flex items-center justify-center">
+        <p className="text-[#5a5a6e]">טוען...</p>
+      </div>
+    )
+  }
+
   return (
     <div dir="rtl" className="min-h-screen bg-[#f8f9fa] py-8 px-4 font-heebo">
       <div className="max-w-2xl mx-auto">
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-extrabold text-[#1e3a5f] mb-1">הגדרת פרופיל מקצועי</h1>
-          <p className="text-sm text-[#5a5a6e]">בחר את סוג השירות שלך והשלם את הפרופיל כדי להתחיל לקבל פרויקטים מותאמים</p>
+          <h1 className="text-2xl font-extrabold text-[#1e3a5f] mb-1">
+            {isEdit ? 'עריכת פרופיל' : 'הגדרת פרופיל מקצועי'}
+          </h1>
+          <p className="text-sm text-[#5a5a6e]">
+            {isEdit
+              ? 'עדכן את הפרטים שלך. שינויים ישמרו מיידית.'
+              : 'בחר את סוג השירות שלך והשלם את הפרופיל כדי להתחיל לקבל פרויקטים מותאמים'}
+          </p>
         </div>
 
         {/* Type selector */}
@@ -173,13 +207,15 @@ export default function ProviderOnboarding() {
               <LabeledInput label="קישור לאתר דירוג (אופציונלי)" value={ratingUrl} onChange={setRatingUrl} placeholder="https://..." type="url" />
             </div>
 
-            {/* Consents */}
-            <div className="sc-card p-4 mb-4 space-y-3">
-              <h3 className="font-bold text-[#1e3a5f]">אישורים נדרשים</h3>
-              <Checkbox checked={c1} onChange={setC1} label="אני מאשר/ת את התקנון (כולל מודל עסקי: מנוי + עמלה על הצלחה)" />
-              <Checkbox checked={c2} onChange={setC2} label="אני מסכים/ה לשימוש במידע שלי בהתאם למדיניות הפרטיות" />
-              <Checkbox checked={c3} onChange={setC3} label="אני מסכים/ה לשיתוף נתוני הפרויקט עם גורמים רלוונטיים במערכת" />
-            </div>
+            {/* Consents (hidden in edit mode — captured once on first submit) */}
+            {!isEdit && (
+              <div className="sc-card p-4 mb-4 space-y-3">
+                <h3 className="font-bold text-[#1e3a5f]">אישורים נדרשים</h3>
+                <Checkbox checked={c1} onChange={setC1} label="אני מאשר/ת את התקנון (כולל מודל עסקי: מנוי + עמלה על הצלחה)" />
+                <Checkbox checked={c2} onChange={setC2} label="אני מסכים/ה לשימוש במידע שלי בהתאם למדיניות הפרטיות" />
+                <Checkbox checked={c3} onChange={setC3} label="אני מסכים/ה לשיתוף נתוני הפרויקט עם גורמים רלוונטיים במערכת" />
+              </div>
+            )}
 
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 mb-4 text-sm">{error}</div>
@@ -190,8 +226,17 @@ export default function ProviderOnboarding() {
               disabled={submit.isPending}
               className="w-full py-4 rounded-2xl bg-[#1e3a5f] text-white font-bold text-lg disabled:opacity-60"
             >
-              {submit.isPending ? 'שומר...' : 'סיים הגדרת פרופיל והמשך'}
+              {submit.isPending ? 'שומר...' : isEdit ? 'שמור שינויים' : 'סיים הגדרת פרופיל והמשך'}
             </button>
+
+            {isEdit && (
+              <button
+                onClick={() => navigate('/provider')}
+                className="w-full mt-2 py-3 rounded-2xl bg-white border border-[#eeeeee] text-[#5a5a6e] font-semibold"
+              >
+                ביטול
+              </button>
+            )}
           </>
         )}
       </div>

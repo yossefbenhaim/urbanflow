@@ -186,34 +186,82 @@ export default function ProviderDashboard() {
           </div>
         )}
 
-        {tab === 'profile' && (
-          <div className="sc-card p-6 space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-[#1e3a5f] rounded-full flex items-center justify-center text-white text-[18px] font-bold">ד</div>
-              <div>
-                <p className="font-bold text-[#212121] text-[15px]">עו"ד דנה כהן</p>
-                <p className="text-[13px] text-[#8e8e9e]">כהן ושות' — משרד עורכי דין</p>
-              </div>
-            </div>
-            <div className="space-y-3 pt-2">
-              {[
-                { label: 'התמחות', value: 'עו"ד התחדשות עירונית, נדל"ן' },
-                { label: 'אזורי פעילות', value: 'תל אביב, גוש דן, ירושלים' },
-                { label: 'מספר רישיון', value: '12345' },
-                { label: 'ניסיון', value: '15 שנות ניסיון בפרויקטי פינוי-בינוי' },
-              ].map(f => (
-                <div key={f.label} className="border-b border-[#eeeeee] pb-3">
-                  <p className="text-[11px] text-[#5a5a6e]">{f.label}</p>
-                  <p className="text-[13px] text-[#212121] mt-0.5">{f.value}</p>
-                </div>
-              ))}
-            </div>
-            <button className="sc-btn-secondary w-full">עריכת פרופיל</button>
-          </div>
-        )}
+        {tab === 'profile' && <ProfileTab navigate={navigate} />}
       </div>
     </PageLayout>
   )
+}
+
+const PROVIDER_TYPE_LABELS: Record<string, string> = {
+  architect: '🏛️ אדריכל',
+  appraiser: '📊 שמאי',
+  developer: '🏢 יזם',
+}
+
+function ProfileTab({ navigate }: { navigate: (to: string) => void }) {
+  const { data, isLoading } = trpc.provider.getMyDetails.useQuery()
+  if (isLoading) return <p className="text-center text-[#5a5a6e] py-8">טוען פרופיל...</p>
+  if (!data) return <p className="text-center text-[#5a5a6e] py-8">לא נמצאו פרטי פרופיל</p>
+
+  const initial = (data.fullName || data.email || '?')[0].toUpperCase()
+  const rows: { label: string; value: string | null }[] = [
+    { label: 'סוג שירות', value: data.providerType ? PROVIDER_TYPE_LABELS[data.providerType] : null },
+    { label: 'טלפון', value: data.phone },
+    { label: 'אימייל', value: data.email },
+    { label: 'עיר פעילות ראשית', value: data.mainCity },
+    { label: 'מספר רישיון', value: data.licenseNumber },
+    { label: 'שנות ניסיון', value: data.experienceYears != null ? `${data.experienceYears} שנים` : null },
+    { label: 'פרויקטים שבוצעו', value: data.completedProjects != null ? String(data.completedProjects) : null },
+    { label: 'התמחויות', value: (data.specializations ?? []).length > 0 ? (data.specializations as string[]).join(', ') : null },
+    { label: 'קישור לדירוג', value: data.ratingUrl },
+  ]
+
+  return (
+    <div className="sc-card p-6 space-y-4">
+      <div className="flex items-center gap-4">
+        <div className="w-14 h-14 bg-[#1e3a5f] rounded-full flex items-center justify-center text-white text-[18px] font-bold">{initial}</div>
+        <div className="min-w-0">
+          <p className="font-bold text-[#212121] text-[15px] truncate">{data.fullName ?? data.email ?? ''}</p>
+          {data.providerType && (
+            <p className="text-[13px] text-[#3b6b9c] font-semibold">{PROVIDER_TYPE_LABELS[data.providerType]}</p>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-3 pt-2">
+        {rows.map(f => (
+          <div key={f.label} className="border-b border-[#eeeeee] pb-3">
+            <p className="text-[11px] text-[#5a5a6e]">{f.label}</p>
+            <p className="text-[13px] text-[#212121] mt-0.5">{f.value ?? <span className="text-[#9ca3af]">—</span>}</p>
+          </div>
+        ))}
+
+        {(data.portfolioUrls ?? []).length > 0 && (
+          <div className="border-b border-[#eeeeee] pb-3">
+            <p className="text-[11px] text-[#5a5a6e] mb-1">קישורים / תיק עבודות</p>
+            <div className="flex gap-2 flex-wrap">
+              {(data.portfolioUrls as string[]).map((url, i) => (
+                <a key={i} href={url} target="_blank" rel="noopener" className="text-[12px] text-[#3b6b9c] underline">
+                  {safeHost(url)}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <button
+        onClick={() => navigate('/provider/onboarding')}
+        className="sc-btn-primary w-full"
+      >
+        ערוך פרופיל
+      </button>
+    </div>
+  )
+}
+
+function safeHost(url: string): string {
+  try { return new URL(url).hostname } catch { return url }
 }
 
 function ScoreBadge({ score }: { score: number }) {

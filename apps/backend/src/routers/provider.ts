@@ -55,6 +55,49 @@ export const providerRouter = router({
     return { completed: role !== null, role }
   }),
 
+  /** Aggregated provider identity: merges profiles.full_name +
+   * provider_profiles (phone / main city) + the type-specific profile.
+   * Used by the Profile tab and by the onboarding form in edit mode. */
+  getMyDetails: protectedProcedure.query(async ({ ctx }) => {
+    const [p, pp, arch, apr, dev, ratings] = await Promise.all([
+      ctx.supabase.from('profiles').select('full_name, email, role').eq('id', ctx.user.id).maybeSingle(),
+      ctx.supabase.from('provider_profiles').select('phone, full_name, operating_regions').eq('id', ctx.user.id).maybeSingle(),
+      ctx.supabase.from('architect_profiles').select('*').eq('id', ctx.user.id).maybeSingle(),
+      ctx.supabase.from('appraiser_profiles').select('*').eq('id', ctx.user.id).maybeSingle(),
+      ctx.supabase.from('developer_profiles').select('*').eq('id', ctx.user.id).maybeSingle(),
+      ctx.supabase.from('provider_ratings').select('source, external_url').eq('user_id', ctx.user.id),
+    ])
+    const providerType = arch.data ? 'architect' : apr.data ? 'appraiser' : dev.data ? 'developer' : null
+    const typeRow = arch.data ?? apr.data ?? dev.data
+    const typeRowObj = (typeRow ?? {}) as Record<string, unknown>
+    const ppObj = (pp.data ?? {}) as Record<string, unknown>
+    const pObj = (p.data ?? {}) as Record<string, unknown>
+    const specializations = Array.isArray(typeRowObj.specializations)
+      ? typeRowObj.specializations as string[]
+      : Array.isArray(typeRowObj.specialization_types)
+        ? typeRowObj.specialization_types as string[]
+        : []
+    const ops = Array.isArray(ppObj.operating_regions) && (ppObj.operating_regions as string[]).length > 0
+      ? (ppObj.operating_regions as string[])
+      : Array.isArray(typeRowObj.operating_regions)
+        ? typeRowObj.operating_regions as string[]
+        : []
+    const ratingRow = (ratings.data ?? [])[0] as { external_url?: string | null } | undefined
+    return {
+      providerType,
+      fullName: (pObj.full_name as string | null) ?? (ppObj.full_name as string | null) ?? null,
+      email: (pObj.email as string | null) ?? null,
+      phone: (ppObj.phone as string | null) ?? null,
+      mainCity: ops[0] ?? null,
+      licenseNumber: (typeRowObj.license_number as string | null) ?? null,
+      experienceYears: (typeRowObj.experience_years as number | null) ?? null,
+      completedProjects: (typeRowObj.completed_projects as number | null) ?? null,
+      specializations,
+      portfolioUrls: Array.isArray(typeRowObj.portfolio_urls) ? typeRowObj.portfolio_urls as string[] : [],
+      ratingUrl: ratingRow?.external_url ?? null,
+    }
+  }),
+
   /** Populate the type-specific profile row and capture consent. */
   completeOnboarding: protectedProcedure
     .input(z.object({
@@ -78,6 +121,14 @@ export const providerRouter = router({
       }
 
       await ctx.supabase.from('profiles').update({ full_name: input.fullName }).eq('id', ctx.user.id)
+
+      // Ensure a provider_profiles row exists and save phone + main city there
+      await ctx.supabase.from('provider_profiles').upsert({
+        id: ctx.user.id,
+        phone: input.phone,
+        full_name: input.fullName,
+        operating_regions: [input.mainCity],
+      }, { onConflict: 'id' })
 
       const commonRow = {
         id: ctx.user.id,
