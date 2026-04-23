@@ -204,7 +204,10 @@ const PROVIDER_TYPE_LABELS: Record<string, string> = {
 }
 
 function ProfileTab({ navigate }: { navigate: (to: string) => void }) {
-  const { data, isLoading } = trpc.provider.getMyDetails.useQuery()
+  const { data, isLoading, refetch, isFetching } = trpc.provider.getMyDetails.useQuery(undefined, {
+    refetchOnMount: 'always',
+    staleTime: 0,
+  })
   if (isLoading) return <p className="text-center text-[#5a5a6e] py-8">טוען פרופיל...</p>
   if (!data) return <p className="text-center text-[#5a5a6e] py-8">לא נמצאו פרטי פרופיל</p>
 
@@ -260,6 +263,13 @@ function ProfileTab({ navigate }: { navigate: (to: string) => void }) {
         className="sc-btn-primary w-full"
       >
         ערוך פרופיל
+      </button>
+      <button
+        onClick={() => refetch()}
+        disabled={isFetching}
+        className="w-full py-2 rounded-xl text-sm text-[#5a5a6e] border border-[#eeeeee] disabled:opacity-50"
+      >
+        {isFetching ? 'מרענן...' : '🔄 רענן נתונים'}
       </button>
     </div>
   )
