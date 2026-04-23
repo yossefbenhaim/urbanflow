@@ -16,6 +16,9 @@ import { validationRouter } from './routers/validation'
 import { learningRouter } from './routers/learning'
 import { developerRouter } from './routers/developer'
 import { matchRouter } from './routers/match'
+import { meetingsRouter } from './routers/meetings'
+import { tasksRouter } from './routers/tasks'
+import { insightsRouter } from './routers/insights'
 
 export const appRouter = router({
   auth: authRouter,
@@ -35,6 +38,9 @@ export const appRouter = router({
   learning: learningRouter,
   developer: developerRouter,
   match: matchRouter,
+  meetings: meetingsRouter,
+  tasks: tasksRouter,
+  insights: insightsRouter,
 })
 
 export type AppRouter = typeof appRouter
