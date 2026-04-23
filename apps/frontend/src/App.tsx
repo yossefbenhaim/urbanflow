@@ -45,6 +45,7 @@ import TimelinePage from './pages/TimelinePage'
 import ValidationPage from './pages/ValidationPage'
 import LearningPage from './pages/LearningPage'
 import DocumentViewPage from './pages/DocumentViewPage'
+import DeveloperForms from './pages/DeveloperForms'
 
 function OAuthCallback() {
   const navigate = useNavigate()
@@ -148,6 +149,7 @@ export default function App() {
         <Route path="/provider/*" element={<ProviderDashboard />} />
         <Route path="/inspections" element={<InspectionsPage />} />
         <Route path="/inspections/:projectId/new/:inspectionType" element={<NewInspectionPage />} />
+        <Route path="/developer/forms" element={<DeveloperForms />} />
         <Route path="/oauth-role" element={<OAuthRoleSelect />} />
         <Route path="/directory" element={<Directory />} />
         <Route path="/chat" element={<ChatPage />} />
