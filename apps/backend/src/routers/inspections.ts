@@ -16,6 +16,33 @@ const InspectionTypeEnum = z.enum([
 const ArchitectConclusionEnum = z.enum(['single_building', 'prefer_cluster', 'complex', 'not_recommended'])
 const AppraiserConclusionEnum = z.enum(['economic', 'borderline', 'not_economic'])
 
+const TbaStatusEnum = z.enum(['approved', 'in_process', 'expired', 'none'])
+const RecommendedProjectTypeEnum = z.enum(['pinuy_binuy', 'tama_38_2', 'chalufat_shaked', 'binui_pinui', 'none'])
+const FeasibilityLevelEnum = z.enum(['low', 'medium', 'high'])
+
+// ── Shared architect extension fields (spec 2a) ────────
+const ArchitectExtFields = {
+  tbaStatus: TbaStatusEnum.optional(),
+  buildingPctExisting: z.number().min(0).max(999).optional(),
+  buildingPctProposed: z.number().min(0).max(999).optional(),
+  densityUnitsPerDunam: z.number().min(0).optional(),
+  connectsBuildings: z.boolean().optional(),
+  rightsTransfer: z.boolean().optional(),
+  preservationRequired: z.boolean().optional(),
+  recommendedProjectType: RecommendedProjectTypeEnum.optional(),
+  tenantFriendlyInsights: z.string().optional(),
+  planningRisks: z.string().optional(),
+}
+
+// ── Shared appraiser extension fields (spec 2b) ────────
+const AppraiserExtFields = {
+  tenantCompensation: z.number().optional(),
+  developerProfit: z.number().optional(),
+  feasibilityLevel: FeasibilityLevelEnum.optional(),
+  marketAnalysis: z.string().optional(),
+  economicRisks: z.string().optional(),
+}
+
 const FileTypeEnum = z.enum([
   'report_pdf', 'sketch', 'blueprint', 'map', 'photo',
   'tama_doc', 'cluster_map', 'valuation_report', 'rent_table', 'commercial_report', 'other'
@@ -42,6 +69,7 @@ const ArchitectFeasibilityInput = BaseInspectionInput.extend({
   parkingNotes: z.string().optional(),
   infrastructureNotes: z.string().optional(),
   conclusion: ArchitectConclusionEnum,
+  ...ArchitectExtFields,
 })
 
 const PlanningCheckInput = BaseInspectionInput.extend({
@@ -51,6 +79,7 @@ const PlanningCheckInput = BaseInspectionInput.extend({
   buildingCoveragePct: z.number().optional(),
   planningLimitations: z.string().optional(),
   conclusion: ArchitectConclusionEnum,
+  ...ArchitectExtFields,
 })
 
 const ClusterFeasibilityInput = BaseInspectionInput.extend({
@@ -59,6 +88,7 @@ const ClusterFeasibilityInput = BaseInspectionInput.extend({
   recommendedClusterCount: z.number().int().optional(),
   clusterNotes: z.string().optional(),
   conclusion: ArchitectConclusionEnum,
+  ...ArchitectExtFields,
 })
 
 const ConstraintsCheckInput = BaseInspectionInput.extend({
@@ -79,6 +109,7 @@ const EconomicFeasibilityInput = BaseInspectionInput.extend({
   newUnitValue: z.number().optional(),
   constructionCostPerSqm: z.number().optional(),
   conclusion: AppraiserConclusionEnum,
+  ...AppraiserExtFields,
 })
 
 const PropertyValuationInput = BaseInspectionInput.extend({
@@ -86,6 +117,7 @@ const PropertyValuationInput = BaseInspectionInput.extend({
   avgPropertyValue: z.number().optional(),
   floorVariancePct: z.number().optional(),
   conclusion: AppraiserConclusionEnum,
+  ...AppraiserExtFields,
 })
 
 const RentalAssessmentInput = BaseInspectionInput.extend({
@@ -279,6 +311,23 @@ export const inspectionsRouter = router({
           evacuation_period_months: field(input, 'evacuationPeriodMonths'),
           commercial_use_type: field(input, 'commercialUseType'),
           commercial_value: field(input, 'commercialValue'),
+          // Architect extensions (Phase 2a)
+          tba_status: field(input, 'tbaStatus'),
+          building_pct_existing: field(input, 'buildingPctExisting'),
+          building_pct_proposed: field(input, 'buildingPctProposed'),
+          density_units_per_dunam: field(input, 'densityUnitsPerDunam'),
+          connects_buildings: field(input, 'connectsBuildings'),
+          rights_transfer: field(input, 'rightsTransfer'),
+          preservation_required: field(input, 'preservationRequired'),
+          recommended_project_type: field(input, 'recommendedProjectType'),
+          tenant_friendly_insights: field(input, 'tenantFriendlyInsights'),
+          planning_risks: field(input, 'planningRisks'),
+          // Appraiser extensions (Phase 2b)
+          tenant_compensation: field(input, 'tenantCompensation'),
+          developer_profit: field(input, 'developerProfit'),
+          feasibility_level: field(input, 'feasibilityLevel'),
+          market_analysis: field(input, 'marketAnalysis'),
+          economic_risks: field(input, 'economicRisks'),
         }, { onConflict: 'project_id,inspection_type,provider_id' })
         .select().single()
 

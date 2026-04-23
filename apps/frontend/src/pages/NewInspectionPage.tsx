@@ -215,6 +215,106 @@ export default function NewInspectionPage() {
               </Section>
             )}
 
+            {/* ─── Architect extensions (Phase 2a) — shared across planning forms ─── */}
+            {(inspectionType === 'architectural_feasibility'
+              || inspectionType === 'planning_check'
+              || inspectionType === 'cluster_feasibility') && (
+              <>
+                <Section title={`תב"ע ואחוזי בנייה`}>
+                  <Select
+                    label={`סטטוס תב"ע`}
+                    value={form.tbaStatus as string | undefined}
+                    onChange={v => set('tbaStatus', v)}
+                    options={[
+                      { value: '', label: '— בחר —' },
+                      { value: 'approved', label: 'מאושרת' },
+                      { value: 'in_process', label: 'בתהליך' },
+                      { value: 'expired', label: 'פגה' },
+                      { value: 'none', label: 'אין' },
+                    ]}
+                  />
+                  <Row>
+                    <Field label="אחוזי בנייה קיימים (%)" value={form.buildingPctExisting} onChange={v => set('buildingPctExisting', +v)} type="number" />
+                    <Field label="אחוזי בנייה מוצעים (%)" value={form.buildingPctProposed} onChange={v => set('buildingPctProposed', +v)} type="number" />
+                  </Row>
+                  <Field label="צפיפות (יחידות לדונם)" value={form.densityUnitsPerDunam} onChange={v => set('densityUnitsPerDunam', +v)} type="number" />
+                </Section>
+                <Section title="אפיוני מתחם">
+                  <Toggle label="חיבור מספר בניינים" value={form.connectsBuildings} onChange={v => set('connectsBuildings', v)} />
+                  <Toggle label="ניוד זכויות" value={form.rightsTransfer} onChange={v => set('rightsTransfer', v)} />
+                  <Toggle label="מבנה לשימור" value={form.preservationRequired} onChange={v => set('preservationRequired', v)} />
+                </Section>
+                <Section title="המלצה ותובנות">
+                  <Select
+                    label="סוג פרויקט מומלץ"
+                    value={form.recommendedProjectType as string | undefined}
+                    onChange={v => set('recommendedProjectType', v)}
+                    options={[
+                      { value: '', label: '— בחר —' },
+                      { value: 'pinuy_binuy', label: 'פינוי בינוי' },
+                      { value: 'tama_38_2', label: `תמ"א 38/2` },
+                      { value: 'chalufat_shaked', label: 'חלופת שקד' },
+                      { value: 'binui_pinui', label: 'בינוי פינוי' },
+                      { value: 'none', label: 'לא מומלץ' },
+                    ]}
+                  />
+                  <Field
+                    label="תובנות בשפה פשוטה לדיירים"
+                    value={form.tenantFriendlyInsights}
+                    onChange={v => set('tenantFriendlyInsights', v)}
+                    textarea
+                    placeholder="הסבר קצר ונגיש שהדייר יוכל להבין — מה המשמעות בפועל?"
+                  />
+                  <Field
+                    label="סיכונים תכנוניים"
+                    value={form.planningRisks}
+                    onChange={v => set('planningRisks', v)}
+                    textarea
+                    placeholder="סיכונים אפשריים שעשויים להשפיע על היתכנות או לוחות זמנים"
+                  />
+                </Section>
+              </>
+            )}
+
+            {/* ─── Appraiser extensions (Phase 2b) ─── */}
+            {(inspectionType === 'economic_feasibility' || inspectionType === 'property_valuation') && (
+              <>
+                <Section title="תמורות ורווחיות">
+                  <Row>
+                    <Field label="תמורות לדיירים (₪)" value={form.tenantCompensation} onChange={v => set('tenantCompensation', +v)} type="number" />
+                    <Field label="רווח יזמי משוער (₪)" value={form.developerProfit} onChange={v => set('developerProfit', +v)} type="number" />
+                  </Row>
+                  <Select
+                    label="רמת כדאיות"
+                    value={form.feasibilityLevel as string | undefined}
+                    onChange={v => set('feasibilityLevel', v)}
+                    options={[
+                      { value: '', label: '— בחר —' },
+                      { value: 'low', label: 'נמוכה' },
+                      { value: 'medium', label: 'בינונית' },
+                      { value: 'high', label: 'גבוהה' },
+                    ]}
+                  />
+                </Section>
+                <Section title="ניתוח שוק וסיכונים">
+                  <Field
+                    label="ניתוח שוק"
+                    value={form.marketAnalysis}
+                    onChange={v => set('marketAnalysis', v)}
+                    textarea
+                    placeholder="מצב שוק הדיור באזור, ביקוש, מחירים דומים באותה סביבה"
+                  />
+                  <Field
+                    label="סיכונים כלכליים"
+                    value={form.economicRisks}
+                    onChange={v => set('economicRisks', v)}
+                    textarea
+                    placeholder="סיכונים פיננסיים — עליות עלויות, ריביות, שינויי רגולציה וכד'"
+                  />
+                </Section>
+              </>
+            )}
+
             {/* Notes */}
             <Section title="הערות">
               <Field label="הערות כלליות" value={form.notes} onChange={v => set('notes', v)} textarea />
@@ -400,6 +500,28 @@ function Field({ label, value, onChange, type = 'text', textarea = false, placeh
       ) : (
         <input type={type} value={String(value ?? '')} onChange={e => onChange(e.target.value)} placeholder={placeholder} className="sc-input" />
       )}
+    </div>
+  )
+}
+
+function Select({ label, value, onChange, options }: {
+  label: string
+  value: string | undefined
+  onChange: (v: string) => void
+  options: { value: string; label: string }[]
+}) {
+  return (
+    <div>
+      <label className="block text-xs text-[#5a5a6e] mb-1">{label}</label>
+      <select
+        value={value ?? ''}
+        onChange={e => onChange(e.target.value)}
+        className="sc-input bg-white"
+      >
+        {options.map(o => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
     </div>
   )
 }
