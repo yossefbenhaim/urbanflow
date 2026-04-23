@@ -1,11 +1,10 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import PageLayout, { PageTitle } from '../components/PageLayout'
 import { trpc } from '../lib/trpc'
 
 const providerSidebar = [
   { to: '/provider', icon: '🏠', label: 'ראשי' },
-  { to: '/provider', icon: '💼', label: 'משרות פתוחות' },
   { to: '/quotes', icon: '📋', label: 'הגשות שלי' },
   { to: '/inspections', icon: '🔍', label: 'בדיקות' },
   { to: '/provider/preferences', icon: '⚙️', label: 'העדפות' },
@@ -28,14 +27,23 @@ const mockJobs = [
 type Tab = 'matches' | 'jobs' | 'applications' | 'profile'
 
 export default function ProviderDashboard() {
+  const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('matches')
   const [applying, setApplying] = useState<string | null>(null)
   const [coverLetter, setCoverLetter] = useState('')
   const [applied, setApplied] = useState<Set<string>>(new Set())
 
+  // Redirect to onboarding if the provider hasn't chosen a type yet
+  const { data: onboarding, isLoading: loadingOnboarding } = trpc.provider.getOnboardingStatus.useQuery()
+  useEffect(() => {
+    if (!loadingOnboarding && onboarding && !onboarding.completed) {
+      navigate('/provider/onboarding', { replace: true })
+    }
+  }, [loadingOnboarding, onboarding, navigate])
+
   const { data: recommendations, isLoading: loadingRec } = trpc.match.getRecommendedProjects.useQuery(
     { limit: 10 },
-    { enabled: tab === 'matches' }
+    { enabled: tab === 'matches' && onboarding?.completed === true }
   )
 
   const submitApp = (jobId: string) => {

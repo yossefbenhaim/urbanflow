@@ -43,6 +43,83 @@ export const providerRouter = router({
     return data
   }),
 
+  /** Returns which type-specific profile has been populated for the
+   * current user. Used by the dashboard guard to redirect to onboarding. */
+  getOnboardingStatus: protectedProcedure.query(async ({ ctx }) => {
+    const [arch, apr, dev] = await Promise.all([
+      ctx.supabase.from('architect_profiles').select('id').eq('id', ctx.user.id).maybeSingle(),
+      ctx.supabase.from('appraiser_profiles').select('id').eq('id', ctx.user.id).maybeSingle(),
+      ctx.supabase.from('developer_profiles').select('id').eq('id', ctx.user.id).maybeSingle(),
+    ])
+    const role = arch.data ? 'architect' : apr.data ? 'appraiser' : dev.data ? 'developer' : null
+    return { completed: role !== null, role }
+  }),
+
+  /** Populate the type-specific profile row and capture consent. */
+  completeOnboarding: protectedProcedure
+    .input(z.object({
+      providerType: z.enum(['architect', 'appraiser', 'developer']),
+      fullName: z.string().min(2),
+      phone: z.string().min(6),
+      mainCity: z.string().min(1),
+      licenseNumber: z.string().optional(),
+      experienceYears: z.number().int().min(0).optional(),
+      completedProjects: z.number().int().min(0).optional(),
+      specializations: z.array(z.string()).default([]),
+      portfolioUrls: z.array(z.string().url()).default([]),
+      ratingUrl: z.string().url().optional(),
+      acceptTerms: z.boolean(),
+      acceptDataUse: z.boolean(),
+      acceptProjectSharing: z.boolean(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!input.acceptTerms || !input.acceptDataUse || !input.acceptProjectSharing) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'יש לאשר את כל ההצהרות החובה' })
+      }
+
+      await ctx.supabase.from('profiles').update({ full_name: input.fullName }).eq('id', ctx.user.id)
+
+      const commonRow = {
+        id: ctx.user.id,
+        license_number: input.licenseNumber ?? null,
+        operating_regions: [input.mainCity],
+        experience_years: input.experienceYears ?? null,
+        completed_projects: input.completedProjects ?? 0,
+        portfolio_urls: input.portfolioUrls,
+      }
+
+      let upsertErr: string | undefined
+      if (input.providerType === 'architect') {
+        const { error } = await ctx.supabase
+          .from('architect_profiles')
+          .upsert({ ...commonRow, specializations: input.specializations }, { onConflict: 'id' })
+        upsertErr = error?.message
+      } else if (input.providerType === 'appraiser') {
+        const { error } = await ctx.supabase
+          .from('appraiser_profiles')
+          .upsert({ ...commonRow, specialization_types: input.specializations }, { onConflict: 'id' })
+        upsertErr = error?.message
+      } else {
+        const { error } = await ctx.supabase
+          .from('developer_profiles')
+          .upsert(commonRow, { onConflict: 'id' })
+        upsertErr = error?.message
+      }
+
+      if (upsertErr) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: upsertErr })
+
+      if (input.ratingUrl) {
+        await ctx.supabase.from('provider_ratings').insert({
+          user_id: ctx.user.id,
+          source: 'custom',
+          external_url: input.ratingUrl,
+          review_count: 0,
+        })
+      }
+
+      return { success: true, providerType: input.providerType }
+    }),
+
   getJobListings: protectedProcedure
     .input(z.object({ serviceType: z.string().optional(), location: z.string().optional() }).optional())
     .query(async ({ ctx, input }) => {

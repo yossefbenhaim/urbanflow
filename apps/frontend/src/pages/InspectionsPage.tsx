@@ -47,39 +47,21 @@ export default function InspectionsPage() {
   const unreadCount = notifications?.filter(n => !n.is_read).length ?? 0
 
   const markRead = trpc.inspections.markNotificationRead.useMutation()
-  const upgradeToPro = trpc.inspections.upgradeToPro.useMutation()
-
-  const isPro = planData?.plan === 'pro'
 
   return (
     <PageLayout>
       <PageTitle>בדיקות</PageTitle>
 
-      {/* Plan Banner */}
-      <div className={`${isPro ? 'bg-gradient-to-l from-[#8b6f47] to-[#a5854f]' : 'bg-[#ebf1f7]'} ${isPro ? 'text-white' : 'text-[#3b6b9c]'} py-3 px-5 rounded-[14px] mb-5`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">{isPro ? '⭐' : '🔒'}</span>
-            <div>
-              <p className="font-bold text-[13px]">{isPro ? 'חשבון Pro — גישה מלאה לבדיקות' : 'חשבון Basic'}</p>
-              {isPro ? (
-                <p className="text-[11px] opacity-80">
-                  ניקוד: {planData?.ranking_score ?? 0} | תרומה: {planData?.contribution_score ?? 0} | איכות: {planData?.quality_score ?? 0}
-                </p>
-              ) : (
-                <p className="text-[11px] opacity-80">שדרג ל-Pro לקבלת התראות ובדיקות</p>
-              )}
-            </div>
+      {/* Score Banner (Pro gating removed — everyone has full access for now) */}
+      <div className="bg-gradient-to-l from-[#1e3a5f] to-[#3b6b9c] text-white py-3 px-5 rounded-[14px] mb-5">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">⭐</span>
+          <div>
+            <p className="font-bold text-[13px]">גישה מלאה לבדיקות</p>
+            <p className="text-[11px] opacity-80">
+              ניקוד: {planData?.ranking_score ?? 0} | תרומה: {planData?.contribution_score ?? 0} | איכות: {planData?.quality_score ?? 0}
+            </p>
           </div>
-          {!isPro && (
-            <button
-              onClick={() => upgradeToPro.mutate()}
-              disabled={upgradeToPro.isPending}
-              className="bg-[#8b6f47] text-white px-4 py-1.5 rounded-xl text-sm font-bold hover:bg-[#8b6f47]/90 transition-colors"
-            >
-              {upgradeToPro.isPending ? '...' : 'שדרג ל-Pro'}
-            </button>
-          )}
         </div>
       </div>
 
@@ -105,17 +87,7 @@ export default function InspectionsPage() {
         {/* ─── Projects Tab ─── */}
         {activeTab === 'projects' && (
           <>
-            {!isPro ? (
-              <div className="text-center py-16">
-                <div className="text-6xl mb-4">🔒</div>
-                <h3 className="text-xl font-bold text-[#212121] mb-2">גישה ל-Pro בלבד</h3>
-                <p className="text-[#5a5a6e] text-sm mb-6">שדרג ל-Pro כדי לראות פרויקטים פתוחים ולהגיש בדיקות</p>
-                <button
-                  onClick={() => upgradeToPro.mutate()}
-                  className="bg-[#8b6f47] text-white px-8 py-3 rounded-2xl font-bold hover:bg-[#8b6f47]/90"
-                >⭐ שדרג ל-Pro</button>
-              </div>
-            ) : isLoading ? (
+            {isLoading ? (
               <LoadingScreen />
             ) : (
               <div className="space-y-4">

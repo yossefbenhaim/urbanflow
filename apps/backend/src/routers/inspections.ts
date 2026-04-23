@@ -210,14 +210,9 @@ export const inspectionsRouter = router({
       region: z.string().optional(),
     }).optional())
     .query(async ({ ctx, input }) => {
-      // Check plan
-      const { data: pp } = await ctx.supabase
-        .from('provider_profiles').select('plan').eq('id', ctx.user.id).single()
-
-      if (pp?.plan !== 'pro') {
-        return { projects: [], isPro: false }
-      }
-
+      // Pro-plan gating disabled for now — every provider gets full access.
+      // Re-introduce by re-adding the provider_profiles.plan check when
+      // billing is ready.
       let q = ctx.supabase
         .from('projects')
         .select(`
@@ -467,11 +462,10 @@ export const inspectionsRouter = router({
         throw new TRPCError({ code: 'FORBIDDEN' })
       }
 
-      // Get all Pro providers
+      // Notify every provider (pro-gate removed for now)
       const { data: proProviders } = await ctx.supabase
         .from('provider_profiles')
         .select('id')
-        .eq('plan', 'pro')
 
       if (!proProviders?.length) return { sent: 0 }
 
