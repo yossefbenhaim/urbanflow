@@ -16,6 +16,9 @@ interface Props {
   onChange: (city: string) => void
   placeholder?: string
   required?: boolean
+  /** When true, the input clears itself after a pick — useful for
+   *  multi-add flows where you add cities to a chip list. */
+  clearOnPick?: boolean
 }
 
 /**
@@ -23,10 +26,10 @@ interface Props {
  * (address.searchCities tRPC endpoint). Accepts only values selected
  * from the dropdown — typing alone does not commit a value.
  */
-export default function CityAutocomplete({ label, value, onChange, placeholder, required }: Props) {
+export default function CityAutocomplete({ label, value, onChange, placeholder, required, clearOnPick }: Props) {
   const [query, setQuery] = useState(value || '')
   const [open, setOpen] = useState(false)
-  const [confirmed, setConfirmed] = useState(!!value)
+  const [confirmed, setConfirmed] = useState(!!value && !clearOnPick)
   const ref = useRef<HTMLDivElement>(null)
   const debounced = useDebounce(query, 250)
 
@@ -42,10 +45,15 @@ export default function CityAutocomplete({ label, value, onChange, placeholder, 
   }, [])
 
   const pick = (name: string) => {
-    setQuery(name)
     onChange(name)
-    setConfirmed(true)
     setOpen(false)
+    if (clearOnPick) {
+      setQuery('')
+      setConfirmed(false)
+    } else {
+      setQuery(name)
+      setConfirmed(true)
+    }
   }
 
   const border = confirmed ? '#22c55e' : open ? '#3b6b9c' : '#d1d5db'

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import PageLayout from '../components/PageLayout'
+import CityAutocomplete from '../components/CityAutocomplete'
 
 type ProjectType = 'pinuy_binuy' | 'tama_38_2' | 'chalufat_shaked' | 'binui_pinui'
 type AnyLevel = 'low' | 'medium' | 'high' | 'any'
@@ -19,7 +20,6 @@ export default function MatchPreferences() {
   const { data: existing, refetch } = trpc.match.getPreferences.useQuery()
   const save = trpc.match.setPreferences.useMutation()
 
-  const [cityInput, setCityInput] = useState('')
   const [cities, setCities] = useState<string[]>([])
   const [projectTypes, setProjectTypes] = useState<ProjectType[]>([])
   const [complexity, setComplexity] = useState<AnyLevel>('any')
@@ -52,10 +52,8 @@ export default function MatchPreferences() {
     setMinScore(e.min_score_for_notification ?? 70)
   }, [existing])
 
-  const addCity = () => {
-    const c = cityInput.trim()
+  const addCity = (c: string) => {
     if (c && !cities.includes(c)) setCities([...cities, c])
-    setCityInput('')
   }
 
   const togglePt = (pt: ProjectType) => {
@@ -88,16 +86,12 @@ export default function MatchPreferences() {
         <div className="space-y-4">
           <div className="sc-card p-4 space-y-3">
             <h3 className="font-bold text-[#1e3a5f]">ערים פעילות</h3>
-            <div className="flex gap-2">
-              <input
-                value={cityInput}
-                onChange={e => setCityInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addCity())}
-                placeholder="שם עיר"
-                className="sc-input flex-1"
-              />
-              <button onClick={addCity} className="px-4 py-2 rounded-xl bg-[#1e3a5f] text-white font-semibold">+</button>
-            </div>
+            <CityAutocomplete
+              value=""
+              onChange={addCity}
+              clearOnPick
+              placeholder="הקלד שם עיר ובחר מהרשימה כדי להוסיף"
+            />
             {cities.length > 0 && (
               <div className="flex gap-2 flex-wrap">
                 {cities.map(c => (

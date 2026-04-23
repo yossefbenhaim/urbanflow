@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import { getDeviceInfo } from '../lib/deviceInfo'
+import CityAutocomplete from '../components/CityAutocomplete'
 
 type FormData = {
   // Auth
@@ -200,12 +201,13 @@ export default function RegisterManager() {
                   onChange={e => update('licenseNumber', e.target.value)} className="sc-input" />
               </Field>
 
-              <Field label="עיר פעילות ראשית *">
-                <select value={form.city} onChange={e => update('city', e.target.value)} className="sc-input">
-                  <option value="">בחר עיר...</option>
-                  {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </Field>
+              <CityAutocomplete
+                label="עיר פעילות ראשית"
+                required
+                value={form.city}
+                onChange={v => update('city', v)}
+                placeholder="הקלד שם עיר ובחר מהרשימה"
+              />
 
               <div className="grid grid-cols-2 gap-3">
                 <Field label="שנות ניסיון">

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import PageLayout from '../components/PageLayout'
+import CityAutocomplete from '../components/CityAutocomplete'
 
 type Tab = 'proposal' | 'accompaniment' | 'economic' | 'bids'
 
@@ -108,7 +109,13 @@ function ProposalTab({ activeId, onActivate }: { activeId: string | null; onActi
         <div className="sc-card p-4 space-y-3">
           <h3 className="font-bold text-[#1e3a5f]">פתיחת פרויקט חדש</h3>
           <FieldX label="כתובת *" value={form.address} onChange={v => setForm(f => ({ ...f, address: v }))} />
-          <FieldX label="עיר *" value={form.city} onChange={v => setForm(f => ({ ...f, city: v }))} />
+          <CityAutocomplete
+            label="עיר"
+            required
+            value={typeof form.city === 'string' ? form.city : ''}
+            onChange={v => setForm(f => ({ ...f, city: v }))}
+            placeholder="הקלד שם עיר ובחר מהרשימה"
+          />
           <SelectX
             label="סוג פרויקט *"
             value={form.projectType as string | undefined}
