@@ -152,9 +152,17 @@ export default function Sidebar({ overrideItems }: { overrideItems?: NavItem[] }
   if (loading || !profile) return null
 
   const roleInfo = ROLE_LABELS[profile.role ?? ''] ?? { label: '', icon: '👤', color: '' }
-  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/')
 
   const navItems = overrideItems || getSidebarItems(profile.role ?? '', isRepresentative)
+
+  // Pick the nav item whose path is the LONGEST prefix of the current URL.
+  // This prevents both /provider and /provider/preferences from highlighting
+  // when the user is on /provider/preferences.
+  const activePath = navItems
+    .map(i => i.to)
+    .filter(p => location.pathname === p || location.pathname.startsWith(p + '/'))
+    .sort((a, b) => b.length - a.length)[0]
+  const isActive = (path: string) => path === activePath
 
   const SidebarContent = () => (
     <div className="h-full flex flex-col py-4 px-3" dir="rtl">

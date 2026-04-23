@@ -25,8 +25,13 @@ export default function ProviderDashboard() {
   const [coverLetter, setCoverLetter] = useState('')
   const [applied, setApplied] = useState<Set<string>>(new Set())
 
-  // Redirect to onboarding if the provider hasn't chosen a type yet
-  const { data: onboarding, isLoading: loadingOnboarding } = trpc.provider.getOnboardingStatus.useQuery()
+  // Redirect to onboarding if the provider hasn't chosen a type yet.
+  // Always fetch fresh to avoid redirecting based on a stale cache right
+  // after the user has just completed onboarding.
+  const { data: onboarding, isLoading: loadingOnboarding } = trpc.provider.getOnboardingStatus.useQuery(
+    undefined,
+    { refetchOnMount: 'always', staleTime: 0 }
+  )
   useEffect(() => {
     if (!loadingOnboarding && onboarding && !onboarding.completed) {
       navigate('/provider/onboarding', { replace: true })

@@ -19,7 +19,12 @@ const SPECIALIZATIONS: Record<ProviderType, string[]> = {
 
 export default function ProviderOnboarding() {
   const navigate = useNavigate()
-  const { data: existing, isLoading: loadingExisting } = trpc.provider.getMyDetails.useQuery()
+  const utils = trpc.useUtils()
+  const { data: existing, isLoading: loadingExisting } = trpc.provider.getMyDetails.useQuery(undefined, {
+    // Always fetch fresh on mount so we don't re-show consents after a save
+    refetchOnMount: 'always',
+    staleTime: 0,
+  })
   const isEdit = !!existing?.providerType
 
   const [type, setType] = useState<ProviderType | null>(null)
@@ -56,7 +61,16 @@ export default function ProviderOnboarding() {
   }, [existing])
 
   const submit = trpc.provider.completeOnboarding.useMutation({
-    onSuccess: () => navigate('/provider', { replace: true }),
+    onSuccess: async () => {
+      // Invalidate everything that reads profile state so dashboard guard
+      // and profile tab see fresh data immediately (no post-submit loop).
+      await Promise.all([
+        utils.provider.getMyDetails.invalidate(),
+        utils.provider.getOnboardingStatus.invalidate(),
+        utils.provider.getProfile.invalidate(),
+      ])
+      navigate('/provider', { replace: true })
+    },
     onError: (e) => setError(e.message || 'שגיאה'),
   })
 
