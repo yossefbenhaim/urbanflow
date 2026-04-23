@@ -1,9 +1,16 @@
-const CACHE_NAME = 'silver-castle-v2';
-const STATIC_ASSETS = ['/', '/index.html', '/manifest.json', '/castle-icon.svg', '/icon-192.png', '/icon-512.png'];
+// Bumped on every release — the browser installs a new SW when this file's
+// bytes change, so the version string doubles as the cache-bust key.
+const CACHE_NAME = 'silver-castle-v3-2026-04-23-22';
+const PRECACHE_ASSETS = ['/manifest.json', '/castle-icon.svg', '/icon-192.png', '/icon-512.png'];
+
+// Paths that MUST always hit the network so users never get stuck on an
+// outdated bundle. Everything under /assets/ carries a content hash so
+// opaque-cache is safe, but the HTML shell is mutable and must stay fresh.
+const NETWORK_ONLY_PATTERNS = [/^\/$/, /^\/index\.html$/];
 
 // ── Keepalive Logic (1 hour) ──────────────────────────────────────────────
-const KEEPALIVE_INTERVAL_MS = 20 * 1000; // ping every 20 seconds
-const KEEPALIVE_DURATION_MS = 60 * 60 * 1000; // stay alive for 1 hour
+const KEEPALIVE_INTERVAL_MS = 20 * 1000;
+const KEEPALIVE_DURATION_MS = 60 * 60 * 1000;
 let keepaliveTimer = null;
 let keepaliveStart = null;
 
@@ -17,7 +24,6 @@ function startKeepalive() {
       keepaliveTimer = null;
       return;
     }
-    // Self-ping to stay alive
     self.registration.active && self.clients.matchAll().then(clients => {
       clients.forEach(client => {
         client.postMessage({ type: 'SW_KEEPALIVE', elapsed: Math.round(elapsed / 1000) });
@@ -29,12 +35,12 @@ function startKeepalive() {
 // ── Install ───────────────────────────────────────────────────────────────
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_ASSETS))
   );
   self.skipWaiting();
 });
 
-// ── Activate ──────────────────────────────────────────────────────────────
+// ── Activate: nuke every old cache so stale index.html can't survive ──────
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -45,23 +51,30 @@ self.addEventListener('activate', (event) => {
   startKeepalive();
 });
 
-// ── Message handler ───────────────────────────────────────────────────────
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'KEEPALIVE_PING') {
-    // Reset keepalive timer on explicit ping from client
     startKeepalive();
   }
 });
 
-// ── Fetch handler ─────────────────────────────────────────────────────────
+// ── Fetch ─────────────────────────────────────────────────────────────────
 self.addEventListener('fetch', (event) => {
-  // Restart keepalive on any fetch activity
   if (!keepaliveTimer) startKeepalive();
 
-  // Only cache GET requests, skip API/tRPC calls
   if (event.request.method !== 'GET') return;
   if (event.request.url.includes('/api/') || event.request.url.includes('/trpc/')) return;
 
+  const url = new URL(event.request.url);
+
+  // Never cache the HTML shell — always fetch from network, no fallback.
+  // This guarantees the user gets fresh <script src="…-{hash}.js">
+  // references after every deploy.
+  if (NETWORK_ONLY_PATTERNS.some((re) => re.test(url.pathname))) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Network-first for everything else (hashed assets, images, icons).
   event.respondWith(
     fetch(event.request)
       .then((res) => {
