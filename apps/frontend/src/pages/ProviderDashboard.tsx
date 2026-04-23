@@ -3,14 +3,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import PageLayout, { PageTitle } from '../components/PageLayout'
 import { trpc } from '../lib/trpc'
 
-const providerSidebar = [
-  { to: '/provider', icon: '🏠', label: 'ראשי' },
-  { to: '/quotes', icon: '📋', label: 'הגשות שלי' },
-  { to: '/inspections', icon: '🔍', label: 'בדיקות' },
-  { to: '/provider/preferences', icon: '⚙️', label: 'העדפות' },
-  { to: '/profile', icon: '👤', label: 'פרופיל' },
-]
-
 const PROJECT_TYPE_HE: Record<string, string> = {
   pinuy_binuy: 'פינוי בינוי',
   tama_38_2: `תמ"א 38/2`,
@@ -53,7 +45,7 @@ export default function ProviderDashboard() {
   }
 
   return (
-    <PageLayout sidebarItems={providerSidebar}>
+    <PageLayout>
       <PageTitle>לוח הבקרה — נותן שירות</PageTitle>
 
       {/* Tabs */}

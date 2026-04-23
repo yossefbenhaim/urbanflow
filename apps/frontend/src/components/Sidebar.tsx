@@ -106,9 +106,9 @@ function getSidebarItems(role: string, isRepresentative: boolean): NavItem[] {
     case 'provider':
       return [
         { to: '/provider', icon: '🏠', label: 'ראשי' },
-        { to: '/provider', icon: '💼', label: 'משרות פתוחות' },
         { to: '/quotes', icon: '📋', label: 'הגשות שלי' },
         { to: '/inspections', icon: '🔍', label: 'בדיקות' },
+        { to: '/provider/preferences', icon: '⚙️', label: 'העדפות' },
         { to: '/profile', icon: '👤', label: 'פרופיל' },
       ]
     case 'organizer':
