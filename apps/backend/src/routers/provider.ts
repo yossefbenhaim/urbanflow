@@ -46,12 +46,21 @@ export const providerRouter = router({
   /** Returns which type-specific profile has been populated for the
    * current user. Used by the dashboard guard to redirect to onboarding. */
   getOnboardingStatus: protectedProcedure.query(async ({ ctx }) => {
-    const [arch, apr, dev] = await Promise.all([
+    const [arch, apr, dev, law] = await Promise.all([
       ctx.supabase.from('architect_profiles').select('id').eq('id', ctx.user.id).maybeSingle(),
       ctx.supabase.from('appraiser_profiles').select('id').eq('id', ctx.user.id).maybeSingle(),
       ctx.supabase.from('developer_profiles').select('id').eq('id', ctx.user.id).maybeSingle(),
+      ctx.supabase.from('lawyer_profiles').select('id').eq('id', ctx.user.id).maybeSingle(),
     ])
-    const role = arch.data ? 'architect' : apr.data ? 'appraiser' : dev.data ? 'developer' : null
+    const role = arch.data
+      ? 'architect'
+      : apr.data
+        ? 'appraiser'
+        : dev.data
+          ? 'developer'
+          : law.data
+            ? 'lawyer'
+            : null
     return { completed: role !== null, role }
   }),
 
@@ -59,16 +68,25 @@ export const providerRouter = router({
    * provider_profiles (phone / main city) + the type-specific profile.
    * Used by the Profile tab and by the onboarding form in edit mode. */
   getMyDetails: protectedProcedure.query(async ({ ctx }) => {
-    const [p, pp, arch, apr, dev, ratings] = await Promise.all([
+    const [p, pp, arch, apr, dev, law, ratings] = await Promise.all([
       ctx.supabase.from('profiles').select('full_name, email, role, phone').eq('id', ctx.user.id).maybeSingle(),
       ctx.supabase.from('provider_profiles').select('*').eq('id', ctx.user.id).maybeSingle(),
       ctx.supabase.from('architect_profiles').select('*').eq('id', ctx.user.id).maybeSingle(),
       ctx.supabase.from('appraiser_profiles').select('*').eq('id', ctx.user.id).maybeSingle(),
       ctx.supabase.from('developer_profiles').select('*').eq('id', ctx.user.id).maybeSingle(),
+      ctx.supabase.from('lawyer_profiles').select('*').eq('id', ctx.user.id).maybeSingle(),
       ctx.supabase.from('provider_ratings').select('source, external_url').eq('user_id', ctx.user.id),
     ])
-    const providerType = arch.data ? 'architect' : apr.data ? 'appraiser' : dev.data ? 'developer' : null
-    const typeRow = arch.data ?? apr.data ?? dev.data
+    const providerType = arch.data
+      ? 'architect'
+      : apr.data
+        ? 'appraiser'
+        : dev.data
+          ? 'developer'
+          : law.data
+            ? 'lawyer'
+            : null
+    const typeRow = arch.data ?? apr.data ?? dev.data ?? law.data
     const typeRowObj = (typeRow ?? {}) as Record<string, unknown>
     const ppObj = (pp.data ?? {}) as Record<string, unknown>
     const pObj = (p.data ?? {}) as Record<string, unknown>
@@ -81,13 +99,18 @@ export const providerRouter = router({
       : Array.isArray(typeRowObj.specialization_types) && (typeRowObj.specialization_types as unknown[]).length > 0
         ? typeRowObj.specialization_types as string[]
         : []
+    // Lawyer profile uses `city` (single) instead of `operating_regions[]`.
     const ops = Array.isArray(typeRowObj.operating_regions) && (typeRowObj.operating_regions as string[]).length > 0
       ? (typeRowObj.operating_regions as string[])
-      : Array.isArray(ppObj.operating_regions)
-        ? ppObj.operating_regions as string[]
-        : []
+      : typeof typeRowObj.city === 'string' && (typeRowObj.city as string).length > 0
+        ? [typeRowObj.city as string]
+        : Array.isArray(ppObj.operating_regions)
+          ? ppObj.operating_regions as string[]
+          : []
     const portfolioUrls = Array.isArray(typeRowObj.portfolio_urls) && (typeRowObj.portfolio_urls as unknown[]).length > 0
       ? typeRowObj.portfolio_urls as string[]
+      : Array.isArray(typeRowObj.sample_documents_urls) && (typeRowObj.sample_documents_urls as unknown[]).length > 0
+        ? typeRowObj.sample_documents_urls as string[]
       : Array.isArray(ppObj.portfolio_url) ? ppObj.portfolio_url as string[]
       : ppObj.portfolio_url ? [ppObj.portfolio_url as string] : []
     const ratingRow = (ratings.data ?? [])[0] as { external_url?: string | null } | undefined
@@ -101,12 +124,15 @@ export const providerRouter = router({
       licenseNumber: pickStr(typeRowObj.license_number, ppObj.license_number),
       licenseAuthority: pickStr(typeRowObj.license_authority, ppObj.license_authority),
       licenseExpiry: pickStr(typeRowObj.license_expiry, ppObj.license_expiry),
-      experienceYears: pickNum(typeRowObj.experience_years, ppObj.experience_years),
-      completedProjects: pickNum(typeRowObj.completed_projects),
+      // Lawyer table uses `years_of_experience` instead of `experience_years`.
+      experienceYears: pickNum(typeRowObj.experience_years, typeRowObj.years_of_experience, ppObj.experience_years),
+      // Lawyer table uses `completed_projects_count` instead of `completed_projects`.
+      completedProjects: pickNum(typeRowObj.completed_projects, typeRowObj.completed_projects_count),
       specializations,
       portfolioUrls,
-      company: pickStr(typeRowObj.company, ppObj.company),
-      bio: pickStr(typeRowObj.bio, ppObj.bio),
+      // Lawyer table uses `office_name` instead of `company`.
+      company: pickStr(typeRowObj.company, typeRowObj.office_name, ppObj.company),
+      bio: pickStr(typeRowObj.bio, typeRowObj.why_choose_me, ppObj.bio),
       website: pickStr(typeRowObj.website, ppObj.website),
       linkedinUrl: pickStr(typeRowObj.linkedin_url, ppObj.linkedin_url),
       ratingUrl: ratingRow?.external_url ?? null,
@@ -116,7 +142,7 @@ export const providerRouter = router({
   /** Populate the type-specific profile row and capture consent. */
   completeOnboarding: protectedProcedure
     .input(z.object({
-      providerType: z.enum(['architect', 'appraiser', 'developer']),
+      providerType: z.enum(['architect', 'appraiser', 'developer', 'lawyer']),
       fullName: z.string().min(2),
       phone: z.string().min(6),
       mainCity: z.string().min(1),
@@ -126,6 +152,26 @@ export const providerRouter = router({
       specializations: z.array(z.string()).default([]),
       portfolioUrls: z.array(z.string().url()).default([]),
       ratingUrl: z.string().url().optional(),
+      // ── Lawyer-specific (all optional, only used when providerType==='lawyer') ──
+      officeName: z.string().optional(),
+      neighborhoods: z.array(z.string()).default([]),
+      preferredProjectSizes: z.array(z.enum(['small','medium','large'])).default([]),
+      preferredComplexity: z.array(z.enum(['low','medium','high'])).default([]),
+      acceptsLowFeasibility: z.boolean().optional(),
+      acceptsDifficultProjects: z.boolean().optional(),
+      inProgressProjectsCount: z.number().int().min(0).optional(),
+      completedProjectTypes: z.array(z.string()).default([]),
+      sampleDocumentsUrls: z.array(z.string().url()).default([]),
+      lawyerReferences: z.array(z.object({
+        name: z.string(),
+        phone: z.string(),
+        project_name: z.string(),
+      })).default([]),
+      whyChooseMe: z.string().optional(),
+      feeStructure: z.enum(['from_developer','from_tenants','mixed']).optional(),
+      feePercent: z.number().min(0).max(100).optional(),
+      feeFixedAmount: z.number().min(0).optional(),
+      feeSpecialTerms: z.string().optional(),
       acceptTerms: z.boolean(),
       acceptDataUse: z.boolean(),
       acceptProjectSharing: z.boolean(),
@@ -169,6 +215,38 @@ export const providerRouter = router({
           .from('appraiser_profiles')
           .upsert({ ...commonRow, specialization_types: input.specializations }, { onConflict: 'id' })
         upsertErr = error?.message
+      } else if (input.providerType === 'lawyer') {
+        // Lawyer profile uses different column names (city, years_of_experience,
+        // completed_projects_count, sample_documents_urls). Map accordingly.
+        const lawyerRow: Record<string, unknown> = {
+          id: ctx.user.id,
+          office_name: input.officeName ?? null,
+          license_number: input.licenseNumber ?? null,
+          years_of_experience: input.experienceYears ?? null,
+          city: input.mainCity,
+          neighborhoods: input.neighborhoods,
+          specializations: input.specializations,
+          preferred_project_sizes: input.preferredProjectSizes,
+          preferred_complexity: input.preferredComplexity,
+          accepts_low_feasibility: input.acceptsLowFeasibility ?? false,
+          accepts_difficult_projects: input.acceptsDifficultProjects ?? false,
+          completed_projects_count: input.completedProjects ?? 0,
+          in_progress_projects_count: input.inProgressProjectsCount ?? 0,
+          completed_project_types: input.completedProjectTypes,
+          sample_documents_urls: input.sampleDocumentsUrls.length > 0
+            ? input.sampleDocumentsUrls
+            : input.portfolioUrls,
+          references: input.lawyerReferences,
+          why_choose_me: input.whyChooseMe ?? null,
+          fee_structure: input.feeStructure ?? null,
+          fee_percent: input.feePercent ?? null,
+          fee_fixed_amount: input.feeFixedAmount ?? null,
+          fee_special_terms: input.feeSpecialTerms ?? null,
+        }
+        const { error } = await ctx.supabase
+          .from('lawyer_profiles')
+          .upsert(lawyerRow, { onConflict: 'id' })
+        upsertErr = error?.message
       } else {
         const { error } = await ctx.supabase
           .from('developer_profiles')
@@ -194,7 +272,7 @@ export const providerRouter = router({
    * minus the one-time consent flags (already captured). */
   updateMyDetails: protectedProcedure
     .input(z.object({
-      providerType: z.enum(['architect', 'appraiser', 'developer']),
+      providerType: z.enum(['architect', 'appraiser', 'developer', 'lawyer']),
       fullName: z.string().min(2),
       phone: z.string().min(6),
       mainCity: z.string().min(1),
@@ -204,6 +282,26 @@ export const providerRouter = router({
       specializations: z.array(z.string()).default([]),
       portfolioUrls: z.array(z.string().url()).default([]),
       ratingUrl: z.string().url().optional(),
+      // ── Lawyer-specific (all optional, only used when providerType==='lawyer') ──
+      officeName: z.string().optional(),
+      neighborhoods: z.array(z.string()).default([]),
+      preferredProjectSizes: z.array(z.enum(['small','medium','large'])).default([]),
+      preferredComplexity: z.array(z.enum(['low','medium','high'])).default([]),
+      acceptsLowFeasibility: z.boolean().optional(),
+      acceptsDifficultProjects: z.boolean().optional(),
+      inProgressProjectsCount: z.number().int().min(0).optional(),
+      completedProjectTypes: z.array(z.string()).default([]),
+      sampleDocumentsUrls: z.array(z.string().url()).default([]),
+      lawyerReferences: z.array(z.object({
+        name: z.string(),
+        phone: z.string(),
+        project_name: z.string(),
+      })).default([]),
+      whyChooseMe: z.string().optional(),
+      feeStructure: z.enum(['from_developer','from_tenants','mixed']).optional(),
+      feePercent: z.number().min(0).max(100).optional(),
+      feeFixedAmount: z.number().min(0).optional(),
+      feeSpecialTerms: z.string().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const { error: profErr } = await ctx.supabase.from('profiles')
@@ -238,6 +336,36 @@ export const providerRouter = router({
         const { error } = await ctx.supabase
           .from('appraiser_profiles')
           .upsert({ ...commonRow, specialization_types: input.specializations }, { onConflict: 'id' })
+        upsertErr = error?.message
+      } else if (input.providerType === 'lawyer') {
+        const lawyerRow: Record<string, unknown> = {
+          id: ctx.user.id,
+          office_name: input.officeName ?? null,
+          license_number: input.licenseNumber ?? null,
+          years_of_experience: input.experienceYears ?? null,
+          city: input.mainCity,
+          neighborhoods: input.neighborhoods,
+          specializations: input.specializations,
+          preferred_project_sizes: input.preferredProjectSizes,
+          preferred_complexity: input.preferredComplexity,
+          accepts_low_feasibility: input.acceptsLowFeasibility ?? false,
+          accepts_difficult_projects: input.acceptsDifficultProjects ?? false,
+          completed_projects_count: input.completedProjects ?? 0,
+          in_progress_projects_count: input.inProgressProjectsCount ?? 0,
+          completed_project_types: input.completedProjectTypes,
+          sample_documents_urls: input.sampleDocumentsUrls.length > 0
+            ? input.sampleDocumentsUrls
+            : input.portfolioUrls,
+          references: input.lawyerReferences,
+          why_choose_me: input.whyChooseMe ?? null,
+          fee_structure: input.feeStructure ?? null,
+          fee_percent: input.feePercent ?? null,
+          fee_fixed_amount: input.feeFixedAmount ?? null,
+          fee_special_terms: input.feeSpecialTerms ?? null,
+        }
+        const { error } = await ctx.supabase
+          .from('lawyer_profiles')
+          .upsert(lawyerRow, { onConflict: 'id' })
         upsertErr = error?.message
       } else {
         const { error } = await ctx.supabase
