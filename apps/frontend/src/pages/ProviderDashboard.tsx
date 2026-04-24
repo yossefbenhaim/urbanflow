@@ -26,7 +26,21 @@ const PROPOSAL_STATUS_HE: Record<string, { label: string; fg: string; bg: string
   rejected:  { label: 'נדחה',  fg: 'text-red-600',   bg: 'bg-red-50' },
 }
 
-type Tab = 'matches' | 'jobs' | 'applications' | 'assignments' | 'profile'
+type Tab = 'matches' | 'jobs' | 'applications' | 'assignments' | 'negotiations' | 'profile'
+
+const RECOMMENDATION_HE: Record<string, { label: string; fg: string; bg: string }> = {
+  accept:    { label: 'מומלץ לקבל',    fg: 'text-[#4a8c5c]', bg: 'bg-[#edf5ef]' },
+  reject:    { label: 'מומלץ לדחות',   fg: 'text-red-600',   bg: 'bg-red-50' },
+  negotiate: { label: 'המשך מו״מ',     fg: 'text-[#c4841d]', bg: 'bg-[#fcf4e7]' },
+  neutral:   { label: 'ניטרלי',        fg: 'text-[#5a5a6e]', bg: 'bg-[#f0f0f0]' },
+}
+
+const ROUND_STATUS_HE: Record<string, string> = {
+  open: 'פתוח',
+  improved: 'שופר',
+  pending: 'ממתין',
+  closed: 'סגור',
+}
 
 const ASSIGNMENT_STATUS_HE: Record<string, { label: string; fg: string; bg: string; emoji: string }> = {
   pending_meeting:     { label: 'ממתין לפגישה',    fg: 'text-[#c4841d]', bg: 'bg-[#fcf4e7]', emoji: '📅' },
@@ -79,8 +93,14 @@ export default function ProviderDashboard() {
 
   const { data: myAssignments, isLoading: loadingAssignments, refetch: refetchAssignments } =
     trpc.tenders.listMyAssignments.useQuery(undefined, {
-      enabled: tab === 'assignments' && onboarding?.completed === true,
+      enabled: (tab === 'assignments' || tab === 'negotiations') && onboarding?.completed === true,
     })
+
+  // Lawyer-only "מו״מ" tab — fetch lightweight provider type to decide whether to show it.
+  const { data: myDetails } = trpc.provider.getMyDetails.useQuery(undefined, {
+    enabled: onboarding?.completed === true,
+  })
+  const isLawyer = myDetails?.providerType === 'lawyer'
 
   return (
     <PageLayout>
@@ -88,7 +108,14 @@ export default function ProviderDashboard() {
 
       {/* Tabs */}
       <div className="flex gap-2 mb-5 overflow-x-auto">
-        {([['matches','המלצות'],['jobs','משרות פתוחות'],['applications','המועמדויות שלי'],['assignments','הפרויקטים שלי'],['profile','הפרופיל שלי']] as [Tab,string][]).map(([v,l]) => (
+        {(([
+          ['matches','המלצות'],
+          ['jobs','משרות פתוחות'],
+          ['applications','המועמדויות שלי'],
+          ['assignments','הפרויקטים שלי'],
+          ...(isLawyer ? [['negotiations','מו״מ'] as [Tab,string]] : []),
+          ['profile','הפרופיל שלי'],
+        ]) as [Tab,string][]).map(([v,l]) => (
           <button key={v} onClick={() => setTab(v)}
             className={`px-4 py-2 rounded-[8px] text-[13px] font-semibold transition-colors whitespace-nowrap ${
               tab === v ? 'bg-[#3b6b9c] text-white' : 'bg-[#f8f9fa] text-[#8e8e9e]'
@@ -335,6 +362,33 @@ export default function ProviderDashboard() {
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {tab === 'negotiations' && (
+          <div className="space-y-3">
+            {loadingAssignments && <p className="text-center text-[#5a5a6e] py-8">טוען...</p>}
+            {!loadingAssignments && (myAssignments ?? []).length === 0 && (
+              <div className="text-center py-16 text-[#8e8e9e]">
+                <div className="text-5xl mb-3">⚖️</div>
+                <p className="text-[13px]">אין פרויקטים פעילים לניהול מו״מ</p>
+                <p className="text-[11px] mt-2">רק אחרי שיוך לפרויקט ניתן לנהל מו״מ</p>
+              </div>
+            )}
+            {!loadingAssignments && (myAssignments ?? []).map((a: {
+              id: string; status: string;
+              project?: { id: string; name: string; address?: string } | null;
+              tender?: { id: string; title: string } | null;
+            }) => (
+              <NegotiationsCard
+                key={a.id}
+                assignmentId={a.id}
+                tenderId={a.tender?.id ?? null}
+                projectName={a.project?.name ?? '—'}
+                projectAddress={a.project?.address}
+                tenderTitle={a.tender?.title}
+              />
+            ))}
           </div>
         )}
 
@@ -768,6 +822,261 @@ function ScoreBadge({ score }: { score: number }) {
     <div className={`${bg} ${fg} rounded-xl px-3 py-1.5 text-center min-w-[72px]`}>
       <div className="text-xs font-semibold">{label}</div>
       <div className="text-lg font-bold leading-tight">{score}</div>
+    </div>
+  )
+}
+
+function NegotiationsCard({ assignmentId, tenderId, projectName, projectAddress, tenderTitle }: {
+  assignmentId: string
+  tenderId: string | null
+  projectName: string
+  projectAddress?: string
+  tenderTitle?: string
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const [mode, setMode] = useState<'rounds' | 'opinion' | 'newRound' | null>(null)
+
+  const { data: rounds, refetch: refetchRounds } = trpc.tenders.getNegotiationHistory.useQuery(
+    { tenderId: tenderId ?? '' },
+    { enabled: expanded && !!tenderId }
+  )
+  const { data: opinion, refetch: refetchOpinion } = trpc.tenders.getLegalOpinion.useQuery(
+    { assignmentId },
+    { enabled: expanded }
+  )
+
+  return (
+    <div className="sc-card p-4">
+      <button onClick={() => setExpanded(e => !e)} className="w-full flex items-start justify-between">
+        <div className="min-w-0 text-right">
+          <h3 className="font-bold text-[#212121] text-[15px] truncate">{projectName}</h3>
+          {projectAddress && <p className="text-[11px] text-[#5a5a6e] mt-0.5">📍 {projectAddress}</p>}
+          {tenderTitle && <p className="text-[12px] text-[#3b6b9c] mt-1">ממכרז: {tenderTitle}</p>}
+        </div>
+        <span className="text-[#8e8e9e] text-lg">{expanded ? '▾' : '◂'}</span>
+      </button>
+
+      {expanded && (
+        <div className="mt-4 space-y-3">
+          <div className="flex gap-2 flex-wrap">
+            <button onClick={() => setMode('rounds')}
+              className={`text-[12px] px-3 py-1.5 rounded-[8px] font-semibold ${mode === 'rounds' ? 'bg-[#3b6b9c] text-white' : 'bg-[#f8f9fa] text-[#5a5a6e]'}`}>
+              📊 סבבי מו״מ ({rounds?.length ?? 0})
+            </button>
+            <button onClick={() => setMode('newRound')} disabled={!tenderId}
+              className={`text-[12px] px-3 py-1.5 rounded-[8px] font-semibold ${mode === 'newRound' ? 'bg-[#3b6b9c] text-white' : 'bg-[#f8f9fa] text-[#5a5a6e]'} ${!tenderId ? 'opacity-50 cursor-not-allowed' : ''}`}>
+              ➕ סבב חדש
+            </button>
+            <button onClick={() => setMode('opinion')}
+              className={`text-[12px] px-3 py-1.5 rounded-[8px] font-semibold ${mode === 'opinion' ? 'bg-[#3b6b9c] text-white' : 'bg-[#f8f9fa] text-[#5a5a6e]'}`}>
+              ⚖️ חוות דעת {opinion ? '✓' : ''}
+            </button>
+          </div>
+
+          {mode === 'rounds' && (
+            <div className="space-y-2">
+              {(!rounds || rounds.length === 0) && (
+                <p className="text-center text-[#8e8e9e] text-[12px] py-4">אין סבבי מו״מ עדיין</p>
+              )}
+              {rounds?.map((r) => (
+                <div key={r.id} className="border border-[#e5e5ea] rounded-[8px] p-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="font-semibold text-[13px] text-[#212121]">
+                      סבב {r.round_number}: {r.title}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {r.status && (
+                        <span className="text-[10px] bg-[#f0f0f0] text-[#5a5a6e] rounded-full px-2 py-0.5">
+                          {ROUND_STATUS_HE[r.status] ?? r.status}
+                        </span>
+                      )}
+                      {r.recommendation && RECOMMENDATION_HE[r.recommendation] && (
+                        <span className={`text-[10px] ${RECOMMENDATION_HE[r.recommendation].bg} ${RECOMMENDATION_HE[r.recommendation].fg} rounded-full px-2 py-0.5 font-semibold`}>
+                          {RECOMMENDATION_HE[r.recommendation].label}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {r.summary && <p className="text-[12px] text-[#5a5a6e] mb-2">{r.summary}</p>}
+                  {(r.what_it_means || r.pros || r.cons || r.risks) && (
+                    <div className="mt-2 space-y-1 text-[11px] bg-[#fafbfc] rounded p-2">
+                      {r.what_it_means && <div><b className="text-[#3b6b9c]">מה זה אומר:</b> {r.what_it_means}</div>}
+                      {r.pros && <div><b className="text-[#4a8c5c]">יתרונות:</b> {r.pros}</div>}
+                      {r.cons && <div><b className="text-red-600">חסרונות:</b> {r.cons}</div>}
+                      {r.risks && <div><b className="text-[#c4841d]">סיכונים:</b> {r.risks}</div>}
+                    </div>
+                  )}
+                  {r.document_url && (
+                    <a href={r.document_url} target="_blank" rel="noopener"
+                      className="inline-block mt-2 text-[11px] text-[#3b6b9c] underline">📎 מסמך</a>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {mode === 'newRound' && tenderId && (
+            <NewRoundForm tenderId={tenderId} onDone={() => { refetchRounds(); setMode('rounds') }} />
+          )}
+
+          {mode === 'opinion' && (
+            <LegalOpinionForm
+              assignmentId={assignmentId}
+              existing={opinion ?? null}
+              onDone={() => refetchOpinion()}
+            />
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function NewRoundForm({ tenderId, onDone }: { tenderId: string; onDone: () => void }) {
+  const [form, setForm] = useState({
+    title: '', summary: '', documentUrl: '',
+    whatItMeans: '', pros: '', cons: '', risks: '',
+    recommendation: '' as '' | 'accept' | 'reject' | 'negotiate' | 'neutral',
+    status: 'open' as 'open' | 'improved' | 'pending' | 'closed',
+  })
+  const add = trpc.tenders.addNegotiationRound.useMutation({
+    onSuccess: () => { toast.success('סבב נוסף'); onDone() },
+    onError: (e) => toast.error(e.message),
+  })
+  const submit = () => {
+    if (form.title.trim().length < 3) { toast.error('כותרת חובה (3+ תווים)'); return }
+    add.mutate({
+      tenderId,
+      title: form.title.trim(),
+      summary: form.summary || undefined,
+      documentUrl: form.documentUrl || undefined,
+      whatItMeans: form.whatItMeans || undefined,
+      pros: form.pros || undefined,
+      cons: form.cons || undefined,
+      risks: form.risks || undefined,
+      recommendation: form.recommendation || undefined,
+      status: form.status,
+    })
+  }
+  return (
+    <div className="space-y-2 border border-[#e5e5ea] rounded-[8px] p-3">
+      <input className="sc-input w-full" placeholder="כותרת הסבב (למשל: הצעת יזם ראשונה)"
+        value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
+      <textarea className="sc-input w-full min-h-[60px]" placeholder="סיכום מה הוצע"
+        value={form.summary} onChange={e => setForm({ ...form, summary: e.target.value })} />
+      <div className="text-[11px] text-[#5a5a6e] font-semibold pt-2">תרגום לדייר:</div>
+      <textarea className="sc-input w-full min-h-[50px]" placeholder="מה זה אומר לדייר"
+        value={form.whatItMeans} onChange={e => setForm({ ...form, whatItMeans: e.target.value })} />
+      <textarea className="sc-input w-full min-h-[50px]" placeholder="יתרונות"
+        value={form.pros} onChange={e => setForm({ ...form, pros: e.target.value })} />
+      <textarea className="sc-input w-full min-h-[50px]" placeholder="חסרונות"
+        value={form.cons} onChange={e => setForm({ ...form, cons: e.target.value })} />
+      <textarea className="sc-input w-full min-h-[50px]" placeholder="סיכונים"
+        value={form.risks} onChange={e => setForm({ ...form, risks: e.target.value })} />
+      <div className="grid grid-cols-2 gap-2">
+        <select className="sc-input" value={form.recommendation}
+          onChange={e => setForm({ ...form, recommendation: e.target.value as typeof form.recommendation })}>
+          <option value="">המלצה (אופציונלי)</option>
+          <option value="accept">מומלץ לקבל</option>
+          <option value="reject">מומלץ לדחות</option>
+          <option value="negotiate">המשך מו״מ</option>
+          <option value="neutral">ניטרלי</option>
+        </select>
+        <select className="sc-input" value={form.status}
+          onChange={e => setForm({ ...form, status: e.target.value as typeof form.status })}>
+          <option value="open">פתוח</option>
+          <option value="improved">שופר</option>
+          <option value="pending">ממתין</option>
+          <option value="closed">סגור</option>
+        </select>
+      </div>
+      <input className="sc-input w-full" placeholder="קישור למסמך (אופציונלי)"
+        value={form.documentUrl} onChange={e => setForm({ ...form, documentUrl: e.target.value })} />
+      <button className="sc-btn-primary w-full" onClick={submit} disabled={add.isPending}>
+        {add.isPending ? 'שומר...' : 'הוסף סבב'}
+      </button>
+    </div>
+  )
+}
+
+function LegalOpinionForm({ assignmentId, existing, onDone }: {
+  assignmentId: string
+  existing: {
+    is_worthwhile?: boolean | null
+    feasibility_level?: string | null
+    complexity_level?: string | null
+    risks?: string | null
+    would_join?: boolean | null
+    summary?: string | null
+    document_url?: string | null
+  } | null
+  onDone: () => void
+}) {
+  const [form, setForm] = useState({
+    isWorthwhile: existing?.is_worthwhile == null ? '' : (existing.is_worthwhile ? 'yes' : 'no'),
+    feasibilityLevel: (existing?.feasibility_level ?? '') as '' | 'low' | 'medium' | 'high',
+    complexityLevel: (existing?.complexity_level ?? '') as '' | 'low' | 'medium' | 'high',
+    risks: existing?.risks ?? '',
+    wouldJoin: existing?.would_join == null ? '' : (existing.would_join ? 'yes' : 'no'),
+    summary: existing?.summary ?? '',
+    documentUrl: existing?.document_url ?? '',
+  })
+  const save = trpc.tenders.submitLegalOpinion.useMutation({
+    onSuccess: () => { toast.success('חוות הדעת נשמרה'); onDone() },
+    onError: (e) => toast.error(e.message),
+  })
+  const submit = () => {
+    save.mutate({
+      assignmentId,
+      isWorthwhile: form.isWorthwhile === '' ? undefined : form.isWorthwhile === 'yes',
+      feasibilityLevel: form.feasibilityLevel || undefined,
+      complexityLevel: form.complexityLevel || undefined,
+      risks: form.risks || undefined,
+      wouldJoin: form.wouldJoin === '' ? undefined : form.wouldJoin === 'yes',
+      summary: form.summary || undefined,
+      documentUrl: form.documentUrl || undefined,
+    })
+  }
+  return (
+    <div className="space-y-2 border border-[#e5e5ea] rounded-[8px] p-3">
+      <div className="text-[11px] text-[#5a5a6e] font-semibold">חוות דעת משפטית</div>
+      <div className="grid grid-cols-3 gap-2">
+        <select className="sc-input" value={form.isWorthwhile}
+          onChange={e => setForm({ ...form, isWorthwhile: e.target.value })}>
+          <option value="">כדאיות משפטית?</option>
+          <option value="yes">כן</option>
+          <option value="no">לא</option>
+        </select>
+        <select className="sc-input" value={form.feasibilityLevel}
+          onChange={e => setForm({ ...form, feasibilityLevel: e.target.value as typeof form.feasibilityLevel })}>
+          <option value="">רמת כדאיות</option>
+          <option value="low">נמוכה</option>
+          <option value="medium">בינונית</option>
+          <option value="high">גבוהה</option>
+        </select>
+        <select className="sc-input" value={form.complexityLevel}
+          onChange={e => setForm({ ...form, complexityLevel: e.target.value as typeof form.complexityLevel })}>
+          <option value="">רמת מורכבות</option>
+          <option value="low">נמוכה</option>
+          <option value="medium">בינונית</option>
+          <option value="high">גבוהה</option>
+        </select>
+      </div>
+      <textarea className="sc-input w-full min-h-[60px]" placeholder="סיכונים משפטיים"
+        value={form.risks} onChange={e => setForm({ ...form, risks: e.target.value })} />
+      <select className="sc-input w-full" value={form.wouldJoin}
+        onChange={e => setForm({ ...form, wouldJoin: e.target.value })}>
+        <option value="">האם היית נכנס לפרויקט?</option>
+        <option value="yes">כן</option>
+        <option value="no">לא</option>
+      </select>
+      <textarea className="sc-input w-full min-h-[60px]" placeholder="סיכום / חוות דעת מלאה"
+        value={form.summary} onChange={e => setForm({ ...form, summary: e.target.value })} />
+      <input className="sc-input w-full" placeholder="קישור למסמך חוות דעת (אופציונלי)"
+        value={form.documentUrl} onChange={e => setForm({ ...form, documentUrl: e.target.value })} />
+      <button className="sc-btn-primary w-full" onClick={submit} disabled={save.isPending}>
+        {save.isPending ? 'שומר...' : 'שמור חוות דעת'}
+      </button>
     </div>
   )
 }

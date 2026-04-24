@@ -260,6 +260,12 @@ export const tendersRouter = router({
       summary: z.string().optional(),
       documentUrl: z.string().optional(),
       changesDescription: z.string().optional(),
+      whatItMeans: z.string().optional(),
+      pros: z.string().optional(),
+      cons: z.string().optional(),
+      risks: z.string().optional(),
+      recommendation: z.enum(['accept','reject','negotiate','neutral']).optional(),
+      status: z.enum(['open','improved','pending','closed']).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       // Get current max round number
@@ -280,10 +286,51 @@ export const tendersRouter = router({
           summary: input.summary,
           document_url: input.documentUrl,
           changes_description: input.changesDescription,
+          what_it_means: input.whatItMeans,
+          pros: input.pros,
+          cons: input.cons,
+          risks: input.risks,
+          recommendation: input.recommendation,
+          status: input.status ?? 'open',
           created_by: ctx.user.id,
         })
         .select().single()
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return data
+    }),
+
+  updateNegotiationRound: protectedProcedure
+    .input(z.object({
+      roundId: z.string().uuid(),
+      summary: z.string().optional(),
+      documentUrl: z.string().optional(),
+      changesDescription: z.string().optional(),
+      whatItMeans: z.string().optional(),
+      pros: z.string().optional(),
+      cons: z.string().optional(),
+      risks: z.string().optional(),
+      recommendation: z.enum(['accept','reject','negotiate','neutral']).optional(),
+      status: z.enum(['open','improved','pending','closed']).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const patch: Record<string, unknown> = {}
+      if (input.summary !== undefined) patch.summary = input.summary
+      if (input.documentUrl !== undefined) patch.document_url = input.documentUrl
+      if (input.changesDescription !== undefined) patch.changes_description = input.changesDescription
+      if (input.whatItMeans !== undefined) patch.what_it_means = input.whatItMeans
+      if (input.pros !== undefined) patch.pros = input.pros
+      if (input.cons !== undefined) patch.cons = input.cons
+      if (input.risks !== undefined) patch.risks = input.risks
+      if (input.recommendation !== undefined) patch.recommendation = input.recommendation
+      if (input.status !== undefined) patch.status = input.status
+      const { data, error } = await ctx.supabase
+        .from('negotiation_rounds')
+        .update(patch)
+        .eq('id', input.roundId)
+        .eq('created_by', ctx.user.id)
+        .select().single()
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      if (!data) throw new TRPCError({ code: 'FORBIDDEN', message: 'אין הרשאה לעדכן סבב זה' })
       return data
     }),
 
@@ -296,6 +343,61 @@ export const tendersRouter = router({
         .eq('tender_id', input.tenderId)
         .order('round_number', { ascending: true })
       return data ?? []
+    }),
+
+  // ===== C3b: Legal Opinions (lawyer-only) =====
+
+  submitLegalOpinion: protectedProcedure
+    .input(z.object({
+      assignmentId: z.string().uuid(),
+      isWorthwhile: z.boolean().optional(),
+      feasibilityLevel: z.enum(['low','medium','high']).optional(),
+      complexityLevel: z.enum(['low','medium','high']).optional(),
+      risks: z.string().optional(),
+      wouldJoin: z.boolean().optional(),
+      summary: z.string().optional(),
+      documentUrl: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      // Verify caller is the assigned lawyer
+      const { data: assignment } = await ctx.supabase
+        .from('contract_assignments')
+        .select('id, provider_id')
+        .eq('id', input.assignmentId)
+        .single()
+      if (!assignment || assignment.provider_id !== ctx.user.id) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'רק עו״ד המשויך יכול להגיש חוות דעת' })
+      }
+
+      const payload = {
+        assignment_id: input.assignmentId,
+        lawyer_id: ctx.user.id,
+        is_worthwhile: input.isWorthwhile ?? null,
+        feasibility_level: input.feasibilityLevel ?? null,
+        complexity_level: input.complexityLevel ?? null,
+        risks: input.risks ?? null,
+        would_join: input.wouldJoin ?? null,
+        summary: input.summary ?? null,
+        document_url: input.documentUrl ?? null,
+        updated_at: new Date().toISOString(),
+      }
+      const { data, error } = await ctx.supabase
+        .from('legal_opinions')
+        .upsert(payload, { onConflict: 'assignment_id' })
+        .select().single()
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return data
+    }),
+
+  getLegalOpinion: protectedProcedure
+    .input(z.object({ assignmentId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data } = await ctx.supabase
+        .from('legal_opinions')
+        .select('*')
+        .eq('assignment_id', input.assignmentId)
+        .maybeSingle()
+      return data
     }),
 
   // ===== C4: Contract Assignments =====
