@@ -15,14 +15,21 @@ export const tendersRouter = router({
       deadline: z.string().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
-      // Check user is organizer or committee rep for this project
+      // Allow organizer / manager / committee_rep roles OR a tenant with
+      // is_building_representative=true (ועד). Representatives aren't a
+      // separate role — they're tenants with a flag on profiles.
       const { data: profile } = await ctx.supabase
         .from('profiles')
-        .select('role')
+        .select('role, is_building_representative')
         .eq('id', ctx.user.id)
         .single()
-      if (!profile || !['organizer','committee_rep','manager'].includes(profile.role)) {
-        throw new TRPCError({ code: 'FORBIDDEN', message: 'רק נציג או מארגן יכולים לפתוח מכרז' })
+      const p = profile as { role?: string; is_building_representative?: boolean } | null
+      const isPrivileged = p && (
+        ['organizer', 'committee_rep', 'manager'].includes(p.role ?? '')
+        || (p.role === 'tenant' && p.is_building_representative === true)
+      )
+      if (!isPrivileged) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'רק נציג ועד, מארגן או מנהל יכולים לפתוח מכרז' })
       }
       const { data, error } = await ctx.supabase
         .from('tenders')

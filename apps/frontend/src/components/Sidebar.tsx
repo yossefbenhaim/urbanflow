@@ -91,6 +91,8 @@ function getSidebarItems(role: string, isRepresentative: boolean): NavItem[] {
         { to: '/documents', icon: '📄', label: 'מסמכים' },
         { to: '/chat', icon: '💬', label: 'צ\'אט' },
         { to: '/directory', icon: '📋', label: 'ספריית מומחים' },
+        // Committee representatives (ועד) can open tenders.
+        ...(isRepresentative ? [{ to: '/tenders', icon: '📋', label: 'מכרזים' }] : []),
         { to: '/join-project', icon: '🔗', label: 'שיוך לפרויקט' },
         { to: '/profile', icon: '👤', label: 'פרופיל' },
       ]
@@ -117,6 +119,7 @@ function getSidebarItems(role: string, isRepresentative: boolean): NavItem[] {
         { to: '/organizer', icon: '🏠', label: 'ראשי' },
         { to: '/organizer', icon: '📊', label: 'פרויקט' },
         { to: '/organizer', icon: '👥', label: 'דיירים' },
+        { to: '/tenders', icon: '📋', label: 'מכרזים' },
         { to: '/chat', icon: '💬', label: 'קבוצה' },
         { to: '/organizer', icon: '📄', label: 'חוזה' },
       ]

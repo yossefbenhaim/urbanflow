@@ -347,7 +347,14 @@ export default function TendersPage() {
     { enabled: !!projectId }
   )
 
-  const isRep = profile?.role && ['organizer', 'committee_rep', 'manager'].includes(profile.role)
+  // Committee representatives are tenants with is_building_representative=true
+  const { data: myRole } = trpc.tenant.getMyRole.useQuery(undefined, {
+    enabled: profile?.role === 'tenant',
+  })
+  const isCommitteeRep = (myRole as { isRepresentative?: boolean } | undefined)?.isRepresentative === true
+
+  const isRep = (profile?.role && ['organizer', 'committee_rep', 'manager'].includes(profile.role))
+    || (profile?.role === 'tenant' && isCommitteeRep)
   const isProvider = profile?.role === 'provider'
 
   const displayTenders = isProvider
