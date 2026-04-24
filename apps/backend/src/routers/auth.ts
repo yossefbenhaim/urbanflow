@@ -318,15 +318,16 @@ export const authRouter = router({
       const userId = ctx.user.id
       const email = ctx.user.email!
 
-      // Detect first-time OAuth completion: no profiles row yet means
-      // this is a brand-new user who just picked their role, so we send
-      // the welcome email. Returning users re-completing a profile skip it.
+      // Detect first-time OAuth completion. A profiles row is auto-created
+      // by Supabase's on_auth_user_created trigger, so row existence is not
+      // a reliable signal. Instead, check if role was set — the role column
+      // is only populated here in completeOAuthProfile.
       const { data: existingProfile } = await ctx.supabase
         .from('profiles')
-        .select('id')
+        .select('role')
         .eq('id', userId)
         .maybeSingle()
-      const isFirstCompletion = !existingProfile
+      const isFirstCompletion = !existingProfile?.role
 
       const { error } = await ctx.supabase.from('profiles').upsert({
         id: userId,
