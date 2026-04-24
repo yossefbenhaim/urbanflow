@@ -108,6 +108,7 @@ function getSidebarItems(role: string, isRepresentative: boolean): NavItem[] {
         { to: '/provider', icon: '🏠', label: 'ראשי' },
         { to: '/quotes', icon: '📋', label: 'הגשות שלי' },
         { to: '/inspections', icon: '🔍', label: 'בדיקות' },
+        { to: '/chat', icon: '💬', label: 'צ\'אט' },
         { to: '/provider/preferences', icon: '⚙️', label: 'העדפות' },
         { to: '/provider/profile', icon: '👤', label: 'פרופיל' },
       ]

@@ -45,7 +45,15 @@ export default function ChatPage() {
   }
 
   const roleLabel: Record<string, string> = {
-    tenant: 'דייר', manager: 'מנהל', provider: 'ספק', organizer: 'מארגן', developer: 'יזם'
+    tenant: 'דייר',
+    manager: 'מנהל',
+    provider: 'נותן שירות',
+    organizer: 'מארגן',
+    developer: 'יזם',
+    architect: 'אדריכל',
+    appraiser: 'שמאי',
+    lawyer: 'עו״ד',
+    committee: 'ועד דיירים',
   }
 
   const ConvList = () => (
