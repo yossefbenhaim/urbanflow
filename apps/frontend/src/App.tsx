@@ -48,6 +48,7 @@ import DocumentViewPage from './pages/DocumentViewPage'
 import DeveloperForms from './pages/DeveloperForms'
 import MatchPreferences from './pages/MatchPreferences'
 import ProviderOnboarding from './pages/ProviderOnboarding'
+import ProviderPublicProfile from './pages/ProviderPublicProfile'
 import TendersPage from './pages/TendersPage'
 import TenderDetailPage from './pages/TenderDetailPage'
 
@@ -156,6 +157,7 @@ export default function App() {
         <Route path="/developer/forms" element={<DeveloperForms />} />
         <Route path="/provider/preferences" element={<MatchPreferences />} />
         <Route path="/provider/onboarding" element={<ProviderOnboarding />} />
+        <Route path="/providers/:userId" element={<ProviderPublicProfile />} />
         <Route path="/tenders" element={<TendersPage />} />
         <Route path="/tenders/:tenderId" element={<TenderDetailPage />} />
         <Route path="/oauth-role" element={<OAuthRoleSelect />} />

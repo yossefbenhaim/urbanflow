@@ -71,6 +71,9 @@ export default function ProviderOnboarding() {
   const [portfolioInput, setPortfolioInput] = useState('')
   const [portfolio, setPortfolio] = useState<string[]>([])
   const [ratingUrl, setRatingUrl] = useState('')
+  const [photoUrl, setPhotoUrl] = useState<string>('')
+  const [about, setAbout] = useState('')
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [c1, setC1] = useState(false)
   const [c2, setC2] = useState(false)
   const [c3, setC3] = useState(false)
@@ -110,6 +113,9 @@ export default function ProviderOnboarding() {
     setSpecs(existing.specializations ?? [])
     setPortfolio(existing.portfolioUrls ?? [])
     setRatingUrl(existing.ratingUrl ?? '')
+    const e = existing as Record<string, unknown>
+    if (typeof e.photoUrl === 'string') setPhotoUrl(e.photoUrl)
+    if (typeof e.about === 'string') setAbout(e.about)
     if (existing.providerType === 'lawyer') {
       const e = existing as Record<string, unknown>
       setLawyerSpecs(existing.specializations ?? [])
@@ -222,7 +228,35 @@ export default function ProviderOnboarding() {
       feePercent: isLawyer && feePercent ? +feePercent : undefined,
       feeFixedAmount: isLawyer && feeFixedAmount ? +feeFixedAmount : undefined,
       feeSpecialTerms: isLawyer ? (feeSpecialTerms.trim() || undefined) : undefined,
+      photoUrl: photoUrl || undefined,
+      about: about.trim() || undefined,
     })
+  }
+
+  const handlePhotoFile = async (file: File) => {
+    setError('')
+    if (file.size > 5 * 1024 * 1024) { setError('התמונה גדולה מ-5MB'); return }
+    const ext = (file.name.split('.').pop() ?? 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '')
+    const path = `avatars/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext || 'jpg'}`
+    setUploadingPhoto(true)
+    try {
+      const token = localStorage.getItem('sb-token')
+      if (!token) throw new Error('אינך מחובר')
+      const res = await fetch(`/api/upload?path=${encodeURIComponent(path)}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': file.type || 'image/jpeg' },
+        body: file,
+      })
+      if (!res.ok) {
+        const msg = await res.json().catch(() => ({ error: `שגיאה ${res.status}` }))
+        throw new Error(msg.error || `שגיאה ${res.status}`)
+      }
+      setPhotoUrl(`https://supabase.byclick.co.il/storage/v1/object/public/documents/${path}`)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'שגיאה בהעלאה')
+    } finally {
+      setUploadingPhoto(false)
+    }
   }
 
   if (loadingExisting || justSaved) {
@@ -269,6 +303,53 @@ export default function ProviderOnboarding() {
 
         {type && (
           <>
+            {/* Photo + About (business card) */}
+            <div className="sc-card p-4 mb-4 space-y-3">
+              <h3 className="font-bold text-[#1e3a5f]">כרטיס ביקור</h3>
+              <div className="flex items-center gap-4">
+                <div className="w-20 h-20 rounded-full bg-[#ebf1f7] flex items-center justify-center overflow-hidden border-2 border-[#eeeeee] flex-shrink-0">
+                  {photoUrl ? (
+                    <img src={photoUrl} alt="avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-3xl text-[#8e8e9e]">📷</span>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <label className={`inline-block px-3 py-2 rounded-xl text-sm font-semibold cursor-pointer transition-colors ${uploadingPhoto ? 'bg-[#f8f9fa] text-[#8e8e9e]' : 'bg-[#1e3a5f] text-white hover:bg-[#3b6b9c]'}`}>
+                    {uploadingPhoto ? 'מעלה...' : (photoUrl ? 'החלף תמונה' : 'העלה תמונה')}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingPhoto}
+                      onChange={e => e.target.files?.[0] && handlePhotoFile(e.target.files[0])}
+                    />
+                  </label>
+                  {photoUrl && (
+                    <button
+                      onClick={() => setPhotoUrl('')}
+                      className="mr-2 px-3 py-2 rounded-xl text-sm text-[#5a5a6e] bg-white border border-[#eeeeee]"
+                    >
+                      הסר
+                    </button>
+                  )}
+                  <p className="text-xs text-[#8e8e9e] mt-2">JPG / PNG עד 5MB</p>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-[#5a5a6e] mb-1">ספר על עצמך (יופיע בכרטיס הציבורי)</label>
+                <textarea
+                  value={about}
+                  onChange={e => setAbout(e.target.value)}
+                  rows={4}
+                  maxLength={2000}
+                  placeholder="ניסיון, גישה מקצועית, מה אתה מציע לדיירים..."
+                  className="sc-input resize-none"
+                />
+                <p className="text-xs text-[#8e8e9e] text-left mt-0.5">{about.length}/2000</p>
+              </div>
+            </div>
+
             {/* Personal info */}
             <div className="sc-card p-4 mb-4 space-y-3">
               <h3 className="font-bold text-[#1e3a5f]">פרטים אישיים</h3>

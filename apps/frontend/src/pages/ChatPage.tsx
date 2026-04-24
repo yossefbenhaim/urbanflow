@@ -44,6 +44,9 @@ export default function ChatPage() {
     sendMessage.mutate({ conversationId, content: message.trim() })
   }
 
+  const isProviderRole = (role?: string): boolean =>
+    role === 'provider' || role === 'developer'
+
   const roleLabel: Record<string, string> = {
     tenant: 'דייר',
     manager: 'מנהל',
@@ -144,15 +147,25 @@ export default function ChatPage() {
           >
             ›
           </button>
-          <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center text-[#1e3a5f] text-sm font-bold flex-shrink-0">
-            {activeOther?.full_name?.[0]?.toUpperCase() ?? '?'}
-          </div>
-          <div>
-            <p className="font-semibold text-white text-sm">{activeOther?.full_name || 'משתמש'}</p>
-            {activeOther?.role && (
-              <p className="text-xs text-white/70">{roleLabel[activeOther.role] || activeOther.role}</p>
-            )}
-          </div>
+          <button
+            onClick={() => activeOther?.id && isProviderRole(activeOther.role) && navigate(`/providers/${activeOther.id}`)}
+            disabled={!activeOther?.id || !isProviderRole(activeOther.role)}
+            className="flex items-center gap-2.5 bg-transparent border-none text-right p-0 cursor-pointer disabled:cursor-default"
+            title={isProviderRole(activeOther?.role) ? 'צפה בפרופיל' : undefined}
+          >
+            <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center text-[#1e3a5f] text-sm font-bold flex-shrink-0 overflow-hidden">
+              {activeOther?.full_name?.[0]?.toUpperCase() ?? '?'}
+            </div>
+            <div>
+              <p className="font-semibold text-white text-sm">
+                {activeOther?.full_name || 'משתמש'}
+                {isProviderRole(activeOther?.role) && <span className="text-white/70 text-xs mr-1">›</span>}
+              </p>
+              {activeOther?.role && (
+                <p className="text-xs text-white/70">{roleLabel[activeOther.role] || activeOther.role}</p>
+              )}
+            </div>
+          </button>
         </div>
 
         {/* Messages */}

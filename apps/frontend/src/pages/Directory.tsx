@@ -179,21 +179,28 @@ export default function Directory() {
             const isDev = p.role === 'developer'
             const profile_data = isDev ? p.developer_profiles : p.provider_profiles
             const pd = Array.isArray(profile_data) ? profile_data[0] : profile_data
-            const bio = pd?.bio as string | undefined
+            const bio = (pd?.about as string | undefined) || (pd?.bio as string | undefined)
             const company = pd?.company as string | undefined
             const regions = pd?.operating_regions as string[] | undefined
             const serviceTypes = pd?.service_types as string[] | undefined
+            const photoUrl = pd?.photo_url as string | undefined
 
             return (
-              <div key={p.id} className={`sc-card p-5 border-2 transition-shadow active:scale-[0.99] ${
-                isDev ? 'border-[#8b6f47]' : 'border-[#eeeeee]'
-              }`}>
+              <div
+                key={p.id}
+                onClick={() => navigate(`/providers/${p.id}`)}
+                className={`sc-card p-5 border-2 transition-shadow active:scale-[0.99] cursor-pointer ${
+                  isDev ? 'border-[#8b6f47]' : 'border-[#eeeeee]'
+                }`}
+              >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2.5">
-                    <div className={`w-11 h-11 rounded-full flex items-center justify-center text-xl flex-shrink-0 ${
+                    <div className={`w-12 h-12 rounded-full overflow-hidden flex items-center justify-center text-xl flex-shrink-0 ${
                       isDev ? 'bg-[#8b6f47]/10' : 'bg-[#ebf1f7]'
                     }`}>
-                      {isDev ? '🏗️' : '🔧'}
+                      {photoUrl
+                        ? <img src={photoUrl} alt={p.full_name} className="w-full h-full object-cover" />
+                        : (isDev ? '🏗️' : '🔧')}
                     </div>
                     <div>
                       <p className="font-semibold text-[#212121] text-sm">{p.full_name}</p>
@@ -225,12 +232,12 @@ export default function Directory() {
 
                 <div className="flex gap-2 mt-3">
                   <button
-                    onClick={() => startConversation.mutate({ recipientId: p.id })}
+                    onClick={e => { e.stopPropagation(); startConversation.mutate({ recipientId: p.id }) }}
                     className="flex-1 flex items-center justify-center gap-1.5 bg-[#ebf1f7] text-[#3b6b9c] rounded-xl py-2.5 text-sm font-medium hover:bg-[#ebf1f7]/70 active:scale-95 transition-all">
                     💬 הודעה
                   </button>
                   <button
-                    onClick={() => setQuoteModal({ id: p.id, name: p.full_name ?? '' })}
+                    onClick={e => { e.stopPropagation(); setQuoteModal({ id: p.id, name: p.full_name ?? '' }) }}
                     className="flex-1 flex items-center justify-center gap-1.5 bg-[#4a8c5c]/10 text-[#4a8c5c] rounded-xl py-2.5 text-sm font-medium hover:bg-[#4a8c5c]/20 active:scale-95 transition-all">
                     📋 הצעה
                   </button>

@@ -153,6 +153,9 @@ export const providerRouter = router({
       feePercent: pickNum(typeRowObj.fee_percent),
       feeFixedAmount: pickNum(typeRowObj.fee_fixed_amount),
       feeSpecialTerms: pickStr(typeRowObj.fee_special_terms),
+      // ── Business-card fields (Phase A: photo + about) ──
+      photoUrl: pickStr(ppObj.photo_url),
+      about: pickStr(ppObj.about, typeRowObj.bio, typeRowObj.why_choose_me),
     }
   }),
 
@@ -189,6 +192,9 @@ export const providerRouter = router({
       feePercent: z.number().min(0).max(100).optional(),
       feeFixedAmount: z.number().min(0).optional(),
       feeSpecialTerms: z.string().optional(),
+      // ── Business-card fields ──
+      photoUrl: z.string().url().optional().nullable(),
+      about: z.string().max(2000).optional().nullable(),
       acceptTerms: z.boolean(),
       acceptDataUse: z.boolean(),
       acceptProjectSharing: z.boolean(),
@@ -203,13 +209,16 @@ export const providerRouter = router({
         .eq('id', ctx.user.id)
       if (profErr) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: profErr.message })
 
-      // Ensure a provider_profiles row exists and save phone + main city there
-      const { error: ppErr } = await ctx.supabase.from('provider_profiles').upsert({
+      // Ensure a provider_profiles row exists and save phone + main city + business-card fields
+      const ppRow: Record<string, unknown> = {
         id: ctx.user.id,
         phone: input.phone,
         full_name: input.fullName,
         operating_regions: [input.mainCity],
-      }, { onConflict: 'id' })
+      }
+      if (input.photoUrl !== undefined) ppRow.photo_url = input.photoUrl
+      if (input.about !== undefined) ppRow.about = input.about
+      const { error: ppErr } = await ctx.supabase.from('provider_profiles').upsert(ppRow, { onConflict: 'id' })
       if (ppErr) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: ppErr.message })
 
       const commonRow = {
@@ -319,6 +328,9 @@ export const providerRouter = router({
       feePercent: z.number().min(0).max(100).optional(),
       feeFixedAmount: z.number().min(0).optional(),
       feeSpecialTerms: z.string().optional(),
+      // ── Business-card fields ──
+      photoUrl: z.string().url().optional().nullable(),
+      about: z.string().max(2000).optional().nullable(),
     }))
     .mutation(async ({ ctx, input }) => {
       const { error: profErr } = await ctx.supabase.from('profiles')
@@ -326,12 +338,15 @@ export const providerRouter = router({
         .eq('id', ctx.user.id)
       if (profErr) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: profErr.message })
 
-      const { error: ppErr } = await ctx.supabase.from('provider_profiles').upsert({
+      const ppRow: Record<string, unknown> = {
         id: ctx.user.id,
         phone: input.phone,
         full_name: input.fullName,
         operating_regions: [input.mainCity],
-      }, { onConflict: 'id' })
+      }
+      if (input.photoUrl !== undefined) ppRow.photo_url = input.photoUrl
+      if (input.about !== undefined) ppRow.about = input.about
+      const { error: ppErr } = await ctx.supabase.from('provider_profiles').upsert(ppRow, { onConflict: 'id' })
       if (ppErr) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: ppErr.message })
 
       const commonRow = {
