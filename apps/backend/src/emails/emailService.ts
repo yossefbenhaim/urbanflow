@@ -1,11 +1,18 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import emailjs from '@emailjs/nodejs';
+import { logger } from '../logger';
 
 const TEMPLATES_DIR = join(__dirname, 'templates');
 const SITE_URL = process.env.SITE_URL || 'https://urbanflow.byclick.co.il';
 const LOGO_URL = `${SITE_URL}/castle-icon.svg`;
 
 type TemplateVars = Record<string, string>;
+
+const EMAILJS_SERVICE_ID = process.env.EMAILJS_SERVICE_ID || '';
+const EMAILJS_TEMPLATE_ID = process.env.EMAILJS_TEMPLATE_ID || '';
+const EMAILJS_PUBLIC_KEY = process.env.EMAILJS_PUBLIC_KEY || '';
+const EMAILJS_PRIVATE_KEY = process.env.EMAILJS_PRIVATE_KEY || '';
 
 function loadTemplate(templateName: string, vars: TemplateVars): string {
   const filePath = join(TEMPLATES_DIR, `${templateName}.html`);
@@ -144,3 +151,43 @@ export const emailTemplates = {
   tenderUpdate: renderTenderUpdate,
   inspectionSummary: renderInspectionSummary,
 };
+
+export type EmailTemplateKey = keyof typeof emailTemplates;
+
+const SUBJECTS: Record<EmailTemplateKey, string> = {
+  welcome: 'ברוכים הבאים ל-Silver Castle',
+  emailVerification: 'אימות כתובת אימייל - Silver Castle',
+  passwordReset: 'איפוס סיסמה - Silver Castle',
+  projectInvitation: 'הזמנה לפרויקט - Silver Castle',
+  documentSignature: 'מסמך ממתין לחתימה - Silver Castle',
+  voteReminder: 'תזכורת הצבעה - Silver Castle',
+  tenderUpdate: 'עדכון מכרז - Silver Castle',
+  inspectionSummary: 'סיכום בדיקת נכס - Silver Castle',
+};
+
+export async function sendEmail<K extends EmailTemplateKey>(
+  templateKey: K,
+  to: string,
+  vars: Parameters<typeof emailTemplates[K]>[0]
+): Promise<void> {
+  if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY || !EMAILJS_PRIVATE_KEY) {
+    logger.warn({ templateKey, to }, 'EmailJS env vars missing — skipping email send');
+    return;
+  }
+
+  const render = emailTemplates[templateKey] as (v: unknown) => string;
+  const html = render(vars);
+  const subject = SUBJECTS[templateKey];
+
+  try {
+    const response = await emailjs.send(
+      EMAILJS_SERVICE_ID,
+      EMAILJS_TEMPLATE_ID,
+      { subject, to_email: to, html_content: html },
+      { publicKey: EMAILJS_PUBLIC_KEY, privateKey: EMAILJS_PRIVATE_KEY }
+    );
+    logger.info({ templateKey, to, status: response.status }, 'email sent');
+  } catch (err) {
+    logger.error({ err, templateKey, to }, 'email send failed');
+  }
+}

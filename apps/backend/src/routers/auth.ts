@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { router, publicProcedure, protectedProcedure } from '../middleware/auth'
+import { sendEmail } from '../emails/emailService'
 
 const deviceInfoSchema = z.object({
   user_agent: z.string(),
@@ -130,11 +131,31 @@ export const authRouter = router({
   }),
 
   // ── Reset Password ─────────────────────────────────────────────────────────
+  // Generate recovery link via admin API and send it using our HTML template
+  // instead of Supabase's default email. Silently returns success for unknown
+  // emails to avoid leaking which addresses are registered.
   resetPassword: publicProcedure
     .input(z.object({ email: z.string().email() }))
     .mutation(async ({ ctx, input }) => {
-      const { error } = await ctx.supabase.auth.resetPasswordForEmail(input.email)
-      if (error) throw new TRPCError({ code: 'BAD_REQUEST', message: error.message })
+      const siteUrl = process.env.SITE_URL || 'https://urbanflow.byclick.co.il'
+      const { data, error } = await ctx.supabase.auth.admin.generateLink({
+        type: 'recovery',
+        email: input.email,
+        options: { redirectTo: `${siteUrl}/reset-password` },
+      })
+      if (error || !data?.properties?.action_link) {
+        return { sent: true }
+      }
+      const { data: profile } = await ctx.supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('email', input.email)
+        .maybeSingle()
+      void sendEmail('passwordReset', input.email, {
+        userName: profile?.full_name || input.email,
+        userEmail: input.email,
+        resetUrl: data.properties.action_link,
+      })
       return { sent: true }
     }),
 
@@ -168,6 +189,7 @@ export const authRouter = router({
         move_in_year: input.moveInYear ? parseInt(input.moveInYear) : null,
         invite_code: input.inviteCode || null, is_onboarded: true,
       }, { onConflict: 'user_id' })
+      void sendEmail('welcome', input.email, { userName: input.fullName, userEmail: input.email })
       return { accessToken: data.session?.access_token ?? null,
         refreshToken: data.session?.refresh_token ?? null, userId }
     }),
@@ -196,6 +218,7 @@ export const authRouter = router({
         years_experience: input.yearsExperience,
         specializations: input.specializations,
       }, { onConflict: 'id' })
+      void sendEmail('welcome', input.email, { userName: input.fullName, userEmail: input.email })
       return { accessToken: data.session?.access_token ?? null,
         refreshToken: data.session?.refresh_token ?? null, userId }
     }),
@@ -226,6 +249,7 @@ export const authRouter = router({
         license_number: input.licenseNumber, website: input.website,
         years_experience: input.yearsExperience, portfolio_urls: input.portfolioUrls,
       }, { onConflict: 'id' })
+      void sendEmail('welcome', input.email, { userName: input.fullName, userEmail: input.email })
       return { accessToken: data.session?.access_token ?? null,
         refreshToken: data.session?.refresh_token ?? null, userId }
     }),
