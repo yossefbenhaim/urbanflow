@@ -141,7 +141,21 @@ function getCommitteeSidebarItems(): NavItem[] {
 export default function Sidebar({ overrideItems }: { overrideItems?: NavItem[] } = {}) {
   const { profile, loading, signOut } = useUser()
   const location = useLocation()
+  const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [confirmEmail, setConfirmEmail] = useState('')
+  const [deleteError, setDeleteError] = useState('')
+
+  const deleteAccount = trpc.auth.deleteMyAccount.useMutation({
+    onSuccess: () => {
+      clearTokens()
+      navigate('/', { replace: true })
+      window.location.reload()
+    },
+    onError: (e) => setDeleteError(e.message || 'שגיאה במחיקה'),
+  })
+
   const token = typeof localStorage !== 'undefined' ? localStorage.getItem('sb-token') : null
 
   const { data: myRole } = trpc.tenant.getMyRole.useQuery(undefined, {
@@ -219,14 +233,22 @@ export default function Sidebar({ overrideItems }: { overrideItems?: NavItem[] }
       </nav>
 
       {/* Bottom actions */}
-      <div className="border-t border-[#eeeeee] pt-3 mt-2">
+      <div className="border-t border-[#eeeeee] pt-3 mt-2 space-y-1">
         <button
           onClick={() => { signOut(); setMobileOpen(false) }}
-          className="w-full flex items-center gap-3 px-3 py-[9px] rounded-[10px] border-none bg-transparent cursor-pointer text-red-500 text-[13px] font-medium transition-colors hover:bg-red-50"
+          className="w-full flex items-center gap-3 px-3 py-[9px] rounded-[10px] border-none bg-transparent cursor-pointer text-[#5a5a6e] text-[13px] font-medium transition-colors hover:bg-[#f8f9fa]"
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           <span className="text-lg w-[22px] text-center">🚪</span>
           <span>התנתק</span>
+        </button>
+        <button
+          onClick={() => { setShowDeleteDialog(true); setMobileOpen(false) }}
+          className="w-full flex items-center gap-3 px-3 py-[9px] rounded-[10px] border-none bg-transparent cursor-pointer text-red-500 text-[13px] font-medium transition-colors hover:bg-red-50"
+          style={{ WebkitTapHighlightColor: 'transparent' }}
+        >
+          <span className="text-lg w-[22px] text-center">🗑️</span>
+          <span>מחיקת חשבון</span>
         </button>
       </div>
     </div>
@@ -244,6 +266,70 @@ export default function Sidebar({ overrideItems }: { overrideItems?: NavItem[] }
           .sidebar-desktop { display: none !important; }
         }
       `}</style>
+
+      {/* Delete account confirmation */}
+      {showDeleteDialog && (
+        <div
+          className="fixed inset-0 bg-black/50 z-[10000] flex items-center justify-center px-4"
+          onClick={() => !deleteAccount.isPending && setShowDeleteDialog(false)}
+        >
+          <div
+            dir="rtl"
+            className="bg-white rounded-[14px] max-w-md w-full p-6 shadow-lg"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3 mb-4">
+              <div className="text-3xl">⚠️</div>
+              <div>
+                <h2 className="font-extrabold text-[#212121] text-[17px] mb-1">מחיקת חשבון</h2>
+                <p className="text-[13px] text-[#5a5a6e]">
+                  הפעולה תמחק את החשבון שלך לצמיתות, כולל כל הפרופיל, המסמכים, הבדיקות,
+                  ההצעות וכל הנתונים הקשורים. לא ניתן לשחזר.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-red-50 border border-red-200 rounded-[10px] px-4 py-3 mb-4 text-[12px] text-red-700">
+              לאישור, הקלד את כתובת האימייל שלך:
+              <div className="font-semibold mt-1">{profile?.email}</div>
+            </div>
+
+            <input
+              type="email"
+              value={confirmEmail}
+              onChange={e => { setConfirmEmail(e.target.value); setDeleteError('') }}
+              placeholder="הקלד אימייל לאישור"
+              className="sc-input w-full mb-3"
+              disabled={deleteAccount.isPending}
+              autoComplete="off"
+            />
+
+            {deleteError && (
+              <p className="text-red-500 text-[12px] mb-3">{deleteError}</p>
+            )}
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setShowDeleteDialog(false); setConfirmEmail(''); setDeleteError('') }}
+                disabled={deleteAccount.isPending}
+                className="flex-1 py-3 rounded-[10px] bg-[#f8f9fa] text-[#212121] font-semibold text-[13px] disabled:opacity-50"
+              >
+                ביטול
+              </button>
+              <button
+                onClick={() => {
+                  setDeleteError('')
+                  deleteAccount.mutate({ confirmEmail: confirmEmail.trim() })
+                }}
+                disabled={deleteAccount.isPending || !confirmEmail.trim()}
+                className="flex-1 py-3 rounded-[10px] bg-red-500 text-white font-semibold text-[13px] disabled:opacity-50 hover:bg-red-600"
+              >
+                {deleteAccount.isPending ? 'מוחק...' : 'מחק חשבון לצמיתות'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
