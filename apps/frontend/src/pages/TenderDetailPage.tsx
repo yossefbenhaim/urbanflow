@@ -594,8 +594,104 @@ export default function TenderDetailPage() {
               isRep={!!isRep}
             />
           )}
+
+          {/* C3b: Legal Opinions (read-only, visible to all project members) */}
+          {tender.tender_type === 'lawyer' && (
+            <LegalOpinionsList tenderId={tender.id} />
+          )}
         </div>
       </div>
     </PageLayout>
+  )
+}
+
+// ── Legal Opinions (read-only) ──────────────────────────
+const FEASIBILITY_HE: Record<string, string> = { low: 'נמוכה', medium: 'בינונית', high: 'גבוהה' }
+
+function LegalOpinionsList({ tenderId }: { tenderId: string }) {
+  const { data } = trpc.tenders.listLegalOpinionsForTender.useQuery({ tenderId })
+  if (!data || data.length === 0) return null
+  return (
+    <div>
+      <h3 className="text-lg font-bold text-[#212121] mb-3">⚖️ חוות דעת משפטית</h3>
+      <div className="space-y-3">
+        {data.map((row: {
+          assignmentId: string
+          lawyerName: string
+          opinion: null | {
+            is_worthwhile?: boolean | null
+            feasibility_level?: string | null
+            complexity_level?: string | null
+            risks?: string | null
+            would_join?: boolean | null
+            summary?: string | null
+            document_url?: string | null
+            updated_at?: string | null
+          }
+        }) => (
+          <div key={row.assignmentId} className="sc-card p-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="font-semibold text-[#212121]">{row.lawyerName}</p>
+              {row.opinion?.updated_at && (
+                <span className="text-xs text-[#5a5a6e]">
+                  עודכן: {new Date(row.opinion.updated_at).toLocaleDateString('he-IL')}
+                </span>
+              )}
+            </div>
+            {!row.opinion && (
+              <p className="text-sm text-[#8e8e9e]">טרם הוגשה חוות דעת.</p>
+            )}
+            {row.opinion && (
+              <div className="space-y-2 text-sm">
+                <div className="flex flex-wrap gap-2">
+                  {row.opinion.is_worthwhile != null && (
+                    <span className={`text-xs rounded-full px-2 py-1 font-semibold ${row.opinion.is_worthwhile ? 'bg-[#edf5ef] text-[#4a8c5c]' : 'bg-red-50 text-red-600'}`}>
+                      כדאיות משפטית: {row.opinion.is_worthwhile ? 'כן' : 'לא'}
+                    </span>
+                  )}
+                  {row.opinion.feasibility_level && (
+                    <span className="text-xs rounded-full px-2 py-1 font-semibold bg-[#ebf1f7] text-[#3b6b9c]">
+                      רמת כדאיות: {FEASIBILITY_HE[row.opinion.feasibility_level] ?? row.opinion.feasibility_level}
+                    </span>
+                  )}
+                  {row.opinion.complexity_level && (
+                    <span className="text-xs rounded-full px-2 py-1 font-semibold bg-[#fcf4e7] text-[#c4841d]">
+                      מורכבות: {FEASIBILITY_HE[row.opinion.complexity_level] ?? row.opinion.complexity_level}
+                    </span>
+                  )}
+                  {row.opinion.would_join != null && (
+                    <span className={`text-xs rounded-full px-2 py-1 font-semibold ${row.opinion.would_join ? 'bg-[#edf5ef] text-[#4a8c5c]' : 'bg-red-50 text-red-600'}`}>
+                      {row.opinion.would_join ? 'היה נכנס לפרויקט' : 'לא היה נכנס'}
+                    </span>
+                  )}
+                </div>
+                {row.opinion.summary && (
+                  <div>
+                    <p className="text-xs text-[#5a5a6e] font-semibold">סיכום:</p>
+                    <p className="text-sm text-[#212121] whitespace-pre-wrap">{row.opinion.summary}</p>
+                  </div>
+                )}
+                {row.opinion.risks && (
+                  <div className="bg-[#fcf4e7] border border-[#f5c97e]/40 rounded p-2">
+                    <p className="text-xs text-[#c4841d] font-semibold">סיכונים:</p>
+                    <p className="text-sm text-[#212121] whitespace-pre-wrap">{row.opinion.risks}</p>
+                  </div>
+                )}
+                {row.opinion.document_url && (
+                  <a
+                    href={row.opinion.document_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-[#3b6b9c] hover:underline inline-block"
+                  >
+                    📄 צפה במסמך מצורף
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }

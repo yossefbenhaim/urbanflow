@@ -384,6 +384,7 @@ export default function ProviderDashboard() {
                 key={a.id}
                 assignmentId={a.id}
                 tenderId={a.tender?.id ?? null}
+                projectId={a.project?.id ?? null}
                 projectName={a.project?.name ?? '—'}
                 projectAddress={a.project?.address}
                 tenderTitle={a.tender?.title}
@@ -826,15 +827,16 @@ function ScoreBadge({ score }: { score: number }) {
   )
 }
 
-function NegotiationsCard({ assignmentId, tenderId, projectName, projectAddress, tenderTitle }: {
+function NegotiationsCard({ assignmentId, tenderId, projectId, projectName, projectAddress, tenderTitle }: {
   assignmentId: string
   tenderId: string | null
+  projectId: string | null
   projectName: string
   projectAddress?: string
   tenderTitle?: string
 }) {
   const [expanded, setExpanded] = useState(false)
-  const [mode, setMode] = useState<'rounds' | 'opinion' | 'newRound' | null>(null)
+  const [mode, setMode] = useState<'rounds' | 'opinion' | 'newRound' | 'meetings' | null>(null)
 
   const { data: rounds, refetch: refetchRounds } = trpc.tenders.getNegotiationHistory.useQuery(
     { tenderId: tenderId ?? '' },
@@ -870,6 +872,10 @@ function NegotiationsCard({ assignmentId, tenderId, projectName, projectAddress,
             <button onClick={() => setMode('opinion')}
               className={`text-[12px] px-3 py-1.5 rounded-[8px] font-semibold ${mode === 'opinion' ? 'bg-[#3b6b9c] text-white' : 'bg-[#f8f9fa] text-[#5a5a6e]'}`}>
               ⚖️ חוות דעת {opinion ? '✓' : ''}
+            </button>
+            <button onClick={() => setMode('meetings')} disabled={!projectId}
+              className={`text-[12px] px-3 py-1.5 rounded-[8px] font-semibold ${mode === 'meetings' ? 'bg-[#3b6b9c] text-white' : 'bg-[#f8f9fa] text-[#5a5a6e]'} ${!projectId ? 'opacity-50 cursor-not-allowed' : ''}`}>
+              📅 פגישות
             </button>
           </div>
 
@@ -925,6 +931,10 @@ function NegotiationsCard({ assignmentId, tenderId, projectName, projectAddress,
               existing={opinion ?? null}
               onDone={() => refetchOpinion()}
             />
+          )}
+
+          {mode === 'meetings' && projectId && (
+            <MeetingsPanel projectId={projectId} tenderId={tenderId} />
           )}
         </div>
       )}
@@ -1077,6 +1087,164 @@ function LegalOpinionForm({ assignmentId, existing, onDone }: {
       <button className="sc-btn-primary w-full" onClick={submit} disabled={save.isPending}>
         {save.isPending ? 'שומר...' : 'שמור חוות דעת'}
       </button>
+    </div>
+  )
+}
+
+function MeetingsPanel({ projectId, tenderId }: { projectId: string; tenderId: string | null }) {
+  const utils = trpc.useUtils()
+  const [creating, setCreating] = useState(false)
+  const { data: polls, refetch } = trpc.meetings.listPolls.useQuery({ projectId })
+
+  const onCreated = () => { refetch(); setCreating(false) }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="text-[12px] text-[#5a5a6e] font-semibold">סקרי פגישה ({polls?.length ?? 0})</div>
+        <button
+          onClick={() => setCreating(c => !c)}
+          className="text-[12px] bg-[#3b6b9c] text-white font-semibold rounded-[8px] px-3 py-1.5"
+        >{creating ? 'בטל' : '➕ סקר חדש'}</button>
+      </div>
+
+      {creating && (
+        <NewPollForm projectId={projectId} tenderId={tenderId} onDone={onCreated} />
+      )}
+
+      {(!polls || polls.length === 0) && !creating && (
+        <p className="text-center text-[#8e8e9e] text-[12px] py-4">אין סקרי פגישה עדיין</p>
+      )}
+
+      {(polls ?? []).map((p: { id: string }) => (
+        <PollCard
+          key={p.id}
+          pollId={p.id}
+          onChange={() => utils.meetings.listPolls.invalidate({ projectId })}
+        />
+      ))}
+    </div>
+  )
+}
+
+function NewPollForm({ projectId, tenderId, onDone }: { projectId: string; tenderId: string | null; onDone: () => void }) {
+  const [topic, setTopic] = useState('')
+  const [description, setDescription] = useState('')
+  const [options, setOptions] = useState<Array<{ at: string; loc: string }>>([{ at: '', loc: '' }])
+  const create = trpc.meetings.createPoll.useMutation({
+    onSuccess: () => { toast.success('סקר נוצר'); onDone() },
+    onError: (e) => toast.error(e.message),
+  })
+  const addOption = () => setOptions(o => o.length < 10 ? [...o, { at: '', loc: '' }] : o)
+  const setOption = (i: number, patch: Partial<{ at: string; loc: string }>) =>
+    setOptions(o => o.map((x, j) => j === i ? { ...x, ...patch } : x))
+  const removeOption = (i: number) => setOptions(o => o.filter((_, j) => j !== i))
+  const submit = () => {
+    if (topic.trim().length < 2) { toast.error('נושא חייב להיות לפחות 2 תווים'); return }
+    const filled = options.filter(o => o.at.trim())
+    if (filled.length === 0) { toast.error('הוסף לפחות תאריך אחד'); return }
+    create.mutate({
+      projectId,
+      tenderId: tenderId ?? undefined,
+      topic: topic.trim(),
+      description: description.trim() || undefined,
+      options: filled.map(o => ({
+        optionAt: new Date(o.at).toISOString(),
+        location: o.loc.trim() || undefined,
+      })),
+    })
+  }
+  return (
+    <div className="space-y-2 border border-[#e5e5ea] rounded-[8px] p-3">
+      <input className="sc-input w-full" placeholder="נושא הפגישה (למשל: פגישה עם יזם)"
+        value={topic} onChange={e => setTopic(e.target.value)} />
+      <textarea className="sc-input w-full min-h-[50px]" placeholder="תיאור (אופציונלי)"
+        value={description} onChange={e => setDescription(e.target.value)} />
+      <div className="text-[11px] text-[#5a5a6e] font-semibold pt-1">תאריכים מוצעים:</div>
+      {options.map((o, i) => (
+        <div key={i} className="flex gap-2 items-center">
+          <input type="datetime-local" className="sc-input flex-1"
+            value={o.at} onChange={e => setOption(i, { at: e.target.value })} />
+          <input type="text" className="sc-input flex-1" placeholder="מיקום"
+            value={o.loc} onChange={e => setOption(i, { loc: e.target.value })} />
+          {options.length > 1 && (
+            <button onClick={() => removeOption(i)} className="text-red-500 text-lg font-bold px-2">×</button>
+          )}
+        </div>
+      ))}
+      {options.length < 10 && (
+        <button onClick={addOption} className="text-[12px] text-[#3b6b9c] font-semibold">+ הוסף תאריך</button>
+      )}
+      <button className="sc-btn-primary w-full" onClick={submit} disabled={create.isPending}>
+        {create.isPending ? 'שומר...' : 'צור סקר'}
+      </button>
+    </div>
+  )
+}
+
+function PollCard({ pollId, onChange }: { pollId: string; onChange: () => void }) {
+  const { data, refetch } = trpc.meetings.getPoll.useQuery(pollId)
+  const vote = trpc.meetings.vote.useMutation({
+    onSuccess: () => { toast.success('ההצבעה נשמרה'); refetch(); onChange() },
+    onError: (e) => toast.error(e.message),
+  })
+  const finalize = trpc.meetings.finalizePoll.useMutation({
+    onSuccess: () => { toast.success('הסקר נסגר'); refetch(); onChange() },
+    onError: (e) => toast.error(e.message),
+  })
+
+  if (!data) return null
+  const { poll, options, votes } = data as {
+    poll: { id: string; topic: string; description?: string | null; status: string; proposer_id: string; finalized_option_id?: string | null }
+    options: Array<{ id: string; option_at: string; location?: string | null; notes?: string | null }>
+    votes: Array<{ option_id: string; voter_id: string }>
+  }
+  const isFinalized = poll.status === 'finalized'
+  const voteCounts = new Map<string, number>()
+  votes.forEach(v => voteCounts.set(v.option_id, (voteCounts.get(v.option_id) ?? 0) + 1))
+
+  return (
+    <div className="border border-[#e5e5ea] rounded-[8px] p-3">
+      <div className="flex items-center justify-between mb-1">
+        <div className="font-semibold text-[13px] text-[#212121]">{poll.topic}</div>
+        {isFinalized ? (
+          <span className="text-[10px] bg-[#edf5ef] text-[#4a8c5c] rounded-full px-2 py-0.5 font-semibold">נסגר</span>
+        ) : (
+          <span className="text-[10px] bg-[#fcf4e7] text-[#c4841d] rounded-full px-2 py-0.5 font-semibold">פתוח</span>
+        )}
+      </div>
+      {poll.description && <p className="text-[12px] text-[#5a5a6e] mb-2">{poll.description}</p>}
+      <div className="space-y-1.5 mt-2">
+        {options.map(o => {
+          const isWinner = isFinalized && poll.finalized_option_id === o.id
+          const count = voteCounts.get(o.id) ?? 0
+          return (
+            <div key={o.id}
+              className={`flex items-center gap-2 rounded-[6px] p-2 ${isWinner ? 'bg-[#edf5ef] border border-[#4a8c5c]' : 'bg-[#fafbfc]'}`}>
+              <div className="flex-1 min-w-0">
+                <div className="text-[12px] text-[#212121]">
+                  {new Date(o.option_at).toLocaleString('he-IL', { dateStyle: 'short', timeStyle: 'short' })}
+                  {o.location && <span className="text-[#5a5a6e]"> · {o.location}</span>}
+                </div>
+              </div>
+              <span className="text-[11px] text-[#5a5a6e]">{count} הצבעות</span>
+              {!isFinalized && (
+                <button onClick={() => vote.mutate({ optionId: o.id })} disabled={vote.isPending}
+                  className="text-[11px] bg-[#3b6b9c] text-white rounded-[6px] px-2 py-1 font-semibold disabled:opacity-50">
+                  הצבע
+                </button>
+              )}
+              {!isFinalized && (
+                <button onClick={() => finalize.mutate({ pollId: poll.id, optionId: o.id })} disabled={finalize.isPending}
+                  className="text-[11px] bg-[#8b6f47] text-white rounded-[6px] px-2 py-1 font-semibold disabled:opacity-50"
+                  title="סגור סקר על האפשרות הזו (רק היוצר)">
+                  ✓ בחר
+                </button>
+              )}
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

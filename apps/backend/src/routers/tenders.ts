@@ -400,6 +400,43 @@ export const tendersRouter = router({
       return data
     }),
 
+  /** Lists legal opinions by lawyer for all assignments of a tender (visible to any authenticated user). */
+  listLegalOpinionsForTender: protectedProcedure
+    .input(z.object({ tenderId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data: assignments } = await ctx.supabase
+        .from('contract_assignments')
+        .select('id, provider_id, provider:profiles!contract_assignments_provider_id_fkey(id,full_name)')
+        .eq('tender_id', input.tenderId)
+      const ids = (assignments ?? []).map((a: { id: string }) => a.id)
+      if (ids.length === 0) return []
+      const { data: opinionsRaw } = await ctx.supabase
+        .from('legal_opinions')
+        .select('*')
+        .in('assignment_id', ids)
+      type Opinion = {
+        assignment_id: string
+        is_worthwhile: boolean | null
+        feasibility_level: string | null
+        complexity_level: string | null
+        risks: string | null
+        would_join: boolean | null
+        summary: string | null
+        document_url: string | null
+        updated_at: string | null
+      }
+      const opinions = (opinionsRaw ?? []) as Opinion[]
+      const byAssignment = new Map<string, Opinion>(opinions.map(o => [o.assignment_id, o]))
+      return (assignments ?? []).map((a: { id: string; provider?: { full_name?: string } | { full_name?: string }[] | null }) => {
+        const prov = Array.isArray(a.provider) ? a.provider[0] : a.provider
+        return {
+          assignmentId: a.id,
+          lawyerName: prov?.full_name ?? 'עו״ד',
+          opinion: byAssignment.get(a.id) ?? null,
+        }
+      })
+    }),
+
   // ===== C4: Contract Assignments =====
 
   scheduleMeeting: protectedProcedure
