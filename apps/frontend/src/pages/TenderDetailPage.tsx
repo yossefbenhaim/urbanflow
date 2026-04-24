@@ -33,9 +33,22 @@ function ProposalComparison({
   isRep: boolean
   onAward: (winnerId: string) => void
 }) {
+  const navigate = useNavigate()
+  const utils = trpc.useUtils()
   const { data: proposals } = trpc.tenders.getTenderProposals.useQuery({ tenderId })
   const [sortKey, setSortKey] = useState<string>('price')
   const [sortAsc, setSortAsc] = useState(true)
+  const [confirmReject, setConfirmReject] = useState<{ id: string; name: string } | null>(null)
+
+  const startChat = trpc.chat.startConversation.useMutation({
+    onSuccess: ({ conversationId }: { conversationId: string }) => navigate(`/chat/${conversationId}`),
+  })
+  const reject = trpc.tenders.rejectProposal.useMutation({
+    onSuccess: () => {
+      utils.tenders.getTenderProposals.invalidate({ tenderId })
+      setConfirmReject(null)
+    },
+  })
 
   const handleSort = (key: string) => {
     if (sortKey === key) setSortAsc(!sortAsc)
@@ -119,12 +132,30 @@ function ProposalComparison({
               {isRep && (
                 <td className="px-3 py-3">
                   {p.status === 'submitted' && (
-                    <button
-                      onClick={() => onAward(p.provider_id)}
-                      className="text-xs sc-btn-primary py-1 px-2"
-                    >
-                      🏆 בחר זוכה
-                    </button>
+                    <div className="flex gap-1.5 flex-wrap">
+                      <button
+                        onClick={() => onAward(p.provider_id)}
+                        className="text-xs sc-btn-primary py-1 px-2 whitespace-nowrap"
+                        title="בחר את ההצעה הזו כזוכה"
+                      >
+                        🏆 בחר זוכה
+                      </button>
+                      <button
+                        onClick={() => startChat.mutate({ recipientId: p.provider_id })}
+                        disabled={startChat.isPending}
+                        className="text-xs py-1 px-2 rounded-lg bg-[#ebf1f7] text-[#3b6b9c] font-semibold whitespace-nowrap disabled:opacity-50"
+                        title="פתח צ'אט למשא ומתן"
+                      >
+                        💬 מו״מ
+                      </button>
+                      <button
+                        onClick={() => setConfirmReject({ id: p.id, name: p.provider?.full_name ?? 'ההצעה' })}
+                        className="text-xs py-1 px-2 rounded-lg bg-red-50 text-red-600 font-semibold whitespace-nowrap"
+                        title="דחה את ההצעה"
+                      >
+                        ✖ דחה
+                      </button>
+                    </div>
                   )}
                 </td>
               )}
@@ -132,6 +163,29 @@ function ProposalComparison({
           ))}
         </tbody>
       </table>
+
+      {/* Reject confirmation */}
+      {confirmReject && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => !reject.isPending && setConfirmReject(null)}>
+          <div dir="rtl" className="sc-card p-6 w-full max-w-md shadow-xl" onClick={e => e.stopPropagation()}>
+            <h3 className="font-bold text-[#212121] text-lg mb-2">דחיית הצעה</h3>
+            <p className="text-sm text-[#5a5a6e] mb-4">
+              האם לדחות את ההצעה של <strong>{confirmReject.name}</strong>? הפעולה לא חוסמת את המכרז — ניתן להמשיך לקבל הצעות מספקים אחרים.
+            </p>
+            {reject.error && <p className="text-red-500 text-sm mb-3">{reject.error.message}</p>}
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmReject(null)} disabled={reject.isPending}
+                className="flex-1 py-2.5 rounded-xl bg-[#f8f9fa] text-[#212121] font-semibold disabled:opacity-50">
+                ביטול
+              </button>
+              <button onClick={() => reject.mutate({ proposalId: confirmReject.id })} disabled={reject.isPending}
+                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white font-semibold disabled:opacity-50 hover:bg-red-600">
+                {reject.isPending ? 'דוחה...' : '✖ דחה הצעה'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

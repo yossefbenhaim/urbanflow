@@ -132,6 +132,47 @@ export const tendersRouter = router({
       return { tender, assignment }
     }),
 
+  /** Reject a single proposal without awarding the tender to anyone else.
+   * Only the tender creator (ועד rep / organizer / manager) can call this.
+   * Keeps the tender open so other providers can still submit or win. */
+  rejectProposal: protectedProcedure
+    .input(z.object({ proposalId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { data: proposal } = await ctx.supabase
+        .from('tender_proposals')
+        .select('id, tender_id, provider_id, status')
+        .eq('id', input.proposalId)
+        .maybeSingle()
+      if (!proposal) throw new TRPCError({ code: 'NOT_FOUND', message: 'ההצעה לא נמצאה' })
+      const pr = proposal as { id: string; tender_id: string; provider_id: string; status: string }
+      if (pr.status === 'winner') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'לא ניתן לדחות הצעה זוכה' })
+      }
+
+      const { data: tender } = await ctx.supabase
+        .from('tenders').select('created_by').eq('id', pr.tender_id).single()
+      const t = tender as { created_by?: string } | null
+      if (!t || t.created_by !== ctx.user.id) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'רק יוצר המכרז יכול לדחות הצעות' })
+      }
+
+      const { error } = await ctx.supabase
+        .from('tender_proposals')
+        .update({ status: 'rejected' })
+        .eq('id', input.proposalId)
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+
+      // Notify the provider
+      await ctx.supabase.from('notifications').insert({
+        user_id: pr.provider_id,
+        type: 'proposal_rejected',
+        title: 'ההצעה שלך נדחתה',
+        body: 'ההצעה שהגשת למכרז נדחתה על ידי יוצר המכרז.',
+        is_read: false,
+      })
+      return { success: true }
+    }),
+
   // ===== C1: Proposals =====
 
   submitProposal: protectedProcedure
