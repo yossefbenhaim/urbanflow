@@ -268,6 +268,16 @@ export const tendersRouter = router({
       status: z.enum(['open','improved','pending','closed']).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
+      // Authorize: only tender creator or winning provider may add rounds
+      const { data: tender } = await ctx.supabase
+        .from('tenders')
+        .select('created_by, winner_id')
+        .eq('id', input.tenderId)
+        .single()
+      const t = tender as { created_by: string; winner_id: string | null } | null
+      if (!t || (t.created_by !== ctx.user.id && t.winner_id !== ctx.user.id)) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'רק יוצר המכרז או הספק הזוכה יכולים להוסיף סבב' })
+      }
       // Get current max round number
       const { data: rounds } = await ctx.supabase
         .from('negotiation_rounds')
@@ -445,6 +455,17 @@ export const tendersRouter = router({
       date: z.string(),
     }))
     .mutation(async ({ ctx, input }) => {
+      const { data: a } = await ctx.supabase
+        .from('contract_assignments')
+        .select('provider_id, tender:tenders!contract_assignments_tender_id_fkey(created_by)')
+        .eq('id', input.assignmentId)
+        .single()
+      type AssignCreator = { provider_id: string; tender: { created_by: string } | { created_by: string }[] | null }
+      const aa = a as AssignCreator | null
+      const createdBy = Array.isArray(aa?.tender) ? aa?.tender[0]?.created_by : aa?.tender?.created_by
+      if (!aa || (aa.provider_id !== ctx.user.id && createdBy !== ctx.user.id)) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'אין הרשאה לתזמן פגישה' })
+      }
       const { data, error } = await ctx.supabase
         .from('contract_assignments')
         .update({
@@ -460,6 +481,17 @@ export const tendersRouter = router({
   completeMeeting: protectedProcedure
     .input(z.object({ assignmentId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
+      const { data: a } = await ctx.supabase
+        .from('contract_assignments')
+        .select('provider_id, tender:tenders!contract_assignments_tender_id_fkey(created_by)')
+        .eq('id', input.assignmentId)
+        .single()
+      type AssignCreator = { provider_id: string; tender: { created_by: string } | { created_by: string }[] | null }
+      const aa = a as AssignCreator | null
+      const createdBy = Array.isArray(aa?.tender) ? aa?.tender[0]?.created_by : aa?.tender?.created_by
+      if (!aa || (aa.provider_id !== ctx.user.id && createdBy !== ctx.user.id)) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'אין הרשאה לסמן פגישה כבוצעה' })
+      }
       const { data, error } = await ctx.supabase
         .from('contract_assignments')
         .update({ meeting_completed: true, status: 'meeting_done' })
@@ -475,13 +507,19 @@ export const tendersRouter = router({
       fileUrl: z.string().url(),
     }))
     .mutation(async ({ ctx, input }) => {
-      // Look up assignment to get project_id (needed for threshold calc)
+      // Look up assignment to get project_id (needed for threshold calc) + authorize caller
       const { data: existing, error: eErr } = await ctx.supabase
         .from('contract_assignments')
-        .select('project_id, approval_required_count')
+        .select('project_id, provider_id, approval_required_count, tender:tenders!contract_assignments_tender_id_fkey(created_by)')
         .eq('id', input.assignmentId)
         .single()
       if (eErr || !existing) throw new TRPCError({ code: 'NOT_FOUND', message: 'שיוך חוזה לא נמצא' })
+      type ExistingRow = { project_id: string; provider_id: string; approval_required_count: number | null; tender: { created_by: string } | { created_by: string }[] | null }
+      const row = existing as ExistingRow
+      const createdBy = Array.isArray(row.tender) ? row.tender[0]?.created_by : row.tender?.created_by
+      if (row.provider_id !== ctx.user.id && createdBy !== ctx.user.id) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'אין הרשאה להעלות חוזה לשיוך זה' })
+      }
 
       // Auto-calculate 2/3 majority threshold from total apartments in project
       // (sum of total_units across all buildings in the project)
@@ -535,6 +573,17 @@ export const tendersRouter = router({
       requiredCount: z.number().int().min(1),
     }))
     .mutation(async ({ ctx, input }) => {
+      const { data: a } = await ctx.supabase
+        .from('contract_assignments')
+        .select('provider_id, tender:tenders!contract_assignments_tender_id_fkey(created_by)')
+        .eq('id', input.assignmentId)
+        .single()
+      type AssignCreator = { provider_id: string; tender: { created_by: string } | { created_by: string }[] | null }
+      const aa = a as AssignCreator | null
+      const createdBy = Array.isArray(aa?.tender) ? aa?.tender[0]?.created_by : aa?.tender?.created_by
+      if (!aa || (aa.provider_id !== ctx.user.id && createdBy !== ctx.user.id)) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'אין הרשאה להפעיל אישור' })
+      }
       const { data, error } = await ctx.supabase
         .from('contract_assignments')
         .update({
@@ -553,16 +602,19 @@ export const tendersRouter = router({
       apartmentId: z.string().uuid().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
-      // Resolve apartment_id — prefer explicit input (organizer view), else look up caller's unit
+      // Resolve apartment_id — prefer explicit input (organizer view), else look up caller's unit.
+      // Fallback: if tenant has no unit_id yet (many in prod don't), use tenant_profiles.id as a
+      // stable per-tenant identifier — contract_approvals.apartment_id has no FK so any UUID works,
+      // and the (assignment_id, apartment_id) unique constraint still prevents double-voting.
       let apartmentId = input.apartmentId
       if (!apartmentId) {
         const { data: tp } = await ctx.supabase
           .from('tenant_profiles')
-          .select('unit_id')
+          .select('id, unit_id')
           .eq('user_id', ctx.user.id)
           .single()
-        if (!tp?.unit_id) throw new TRPCError({ code: 'FORBIDDEN', message: 'לא נמצאה דירה משויכת למשתמש' })
-        apartmentId = tp.unit_id as string
+        if (!tp) throw new TRPCError({ code: 'FORBIDDEN', message: 'לא נמצא פרופיל דייר למשתמש' })
+        apartmentId = (tp.unit_id ?? tp.id) as string
       }
 
       // Verify assignment is in pending_approval

@@ -531,12 +531,16 @@ export default function ProviderOnboarding() {
                 </div>
                 {portfolio.length > 0 && (
                   <div className="flex gap-2 flex-wrap mt-2">
-                    {portfolio.map((u, i) => (
-                      <span key={i} className="bg-[#ebf1f7] text-[#3b6b9c] px-2 py-0.5 rounded-full text-xs flex items-center gap-1">
-                        {new URL(u).hostname}
-                        <button onClick={() => setPortfolio(portfolio.filter((_, j) => j !== i))} className="text-[#3b6b9c]">x</button>
-                      </span>
-                    ))}
+                    {portfolio.map((u, i) => {
+                      let host = u
+                      try { host = new URL(u).hostname } catch { /* keep raw */ }
+                      return (
+                        <span key={i} className="bg-[#ebf1f7] text-[#3b6b9c] px-2 py-0.5 rounded-full text-xs flex items-center gap-1">
+                          {host}
+                          <button onClick={() => setPortfolio(portfolio.filter((_, j) => j !== i))} className="text-[#3b6b9c]">x</button>
+                        </span>
+                      )
+                    })}
                   </div>
                 )}
               </div>
