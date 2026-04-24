@@ -27,7 +27,7 @@ const PROPOSAL_STATUS_HE: Record<string, { label: string; fg: string; bg: string
   rejected:  { label: 'נדחה',  fg: 'text-red-600',   bg: 'bg-red-50' },
 }
 
-type Tab = 'matches' | 'jobs' | 'applications' | 'assignments' | 'negotiations' | 'profile'
+type Tab = 'jobs' | 'applications' | 'assignments' | 'negotiations' | 'profile'
 type DashboardTab = Exclude<Tab, 'profile'>
 
 const RECOMMENDATION_HE: Record<string, { label: string; fg: string; bg: string }> = {
@@ -57,7 +57,7 @@ export default function ProviderDashboard() {
   const navigate = useNavigate()
   const location = useLocation()
   // /provider/profile → open Profile tab directly (sidebar entry point).
-  const initialTab: Tab = location.pathname.endsWith('/profile') ? 'profile' : 'matches'
+  const initialTab: Tab = location.pathname.endsWith('/profile') ? 'profile' : 'jobs'
   const [tab, setTab] = useState<Tab>(initialTab)
   useEffect(() => {
     if (location.pathname.endsWith('/profile')) setTab('profile')
@@ -77,11 +77,6 @@ export default function ProviderDashboard() {
       navigate('/provider/onboarding', { replace: true })
     }
   }, [loadingOnboarding, fetchingOnboarding, onboarding, navigate])
-
-  const { data: recommendations, isLoading: loadingRec } = trpc.match.getRecommendedProjects.useQuery(
-    { limit: 10 },
-    { enabled: tab === 'matches' && onboarding?.completed === true }
-  )
 
   const { data: openTenders, isLoading: loadingTenders, refetch: refetchTenders } =
     trpc.tenders.listOpenTendersForProvider.useQuery(undefined, {
@@ -113,7 +108,6 @@ export default function ProviderDashboard() {
       {tab !== 'profile' && (
         <div className="flex gap-2 mb-5 overflow-x-auto">
           {(([
-            ['matches','המלצות'],
             ['jobs','משרות פתוחות'],
             ['assignments','הפרויקטים שלי'],
             ['applications','המועמדויות שלי'],
@@ -130,62 +124,6 @@ export default function ProviderDashboard() {
       )}
 
       <div className="space-y-4">
-        {tab === 'matches' && (
-          <>
-            {loadingRec && <p className="text-center text-[#5a5a6e] py-8">טוען המלצות...</p>}
-            {!loadingRec && recommendations && !recommendations.hasPreferences && (
-              <div className="sc-card p-6 text-center">
-                <div className="text-4xl mb-3">⚙️</div>
-                <h3 className="font-bold text-[#1e3a5f] mb-2">הגדר העדפות התאמה</h3>
-                <p className="text-sm text-[#5a5a6e] mb-4">
-                  כדי שמנוע ההתאמה יציג פרויקטים מתאימים עבורך, הגדר העדפות: ערים, סוגי פרויקטים,
-                  רמת סיכון ורווחיות רצויה.
-                </p>
-                <Link to="/provider/preferences" className="inline-block sc-btn-primary">הגדר העדפות</Link>
-              </div>
-            )}
-            {!loadingRec && recommendations && recommendations.hasPreferences && recommendations.recommendations.length === 0 && (
-              <div className="text-center py-16 text-[#8e8e9e]">
-                <div className="text-5xl mb-3">🔍</div>
-                <p className="text-[13px]">אין כרגע פרויקטים מתאימים. ננסה שוב בקרוב.</p>
-              </div>
-            )}
-            {!loadingRec && recommendations && recommendations.recommendations.length > 0 && (
-              <>
-                <p className="text-xs text-[#5a5a6e] text-center">
-                  {recommendations.recommendations.length} פרויקטים מותאמים, ממוין לפי ציון התאמה
-                </p>
-                {recommendations.recommendations.map(r => (
-                  <div key={r.project.id} className="sc-card p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="font-bold text-[#212121] text-[15px]">{r.project.name}</h3>
-                        {r.project.address && (
-                          <p className="text-[12px] text-[#5a5a6e] mt-0.5">📍 {r.project.address}</p>
-                        )}
-                      </div>
-                      <ScoreBadge score={r.score} />
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {r.project.project_type && (
-                        <span className="bg-[#ebf1f7] text-[#3b6b9c] text-[10px] rounded-full px-3 py-1 font-semibold">
-                          {PROJECT_TYPE_HE[r.project.project_type] ?? r.project.project_type}
-                        </span>
-                      )}
-                      <span className="bg-[#f8f9fa] text-[#5a5a6e] text-[10px] rounded-full px-3 py-1 font-semibold">
-                        {r.project.status}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-                <Link to="/provider/preferences" className="block text-center text-[13px] text-[#3b6b9c] font-semibold pt-4">
-                  ⚙️ עדכן העדפות
-                </Link>
-              </>
-            )}
-          </>
-        )}
-
         {tab === 'jobs' && (
           <>
             {loadingTenders && <p className="text-center text-[#5a5a6e] py-8">טוען מכרזים פתוחים...</p>}
