@@ -249,19 +249,32 @@ export const authRouter = router({
 
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
 
-      // Create role-specific sub-profile
+      // Create role-specific sub-profile only if one doesn't already exist,
+      // so returning OAuth users don't wipe data saved in their onboarding.
       if (input.role === 'tenant') {
-        await ctx.supabase.from('tenant_profiles').upsert({
-          user_id: userId, phone: '', id_number: '',
-        }, { onConflict: 'user_id' })
+        const { data: exists } = await ctx.supabase.from('tenant_profiles')
+          .select('user_id').eq('user_id', userId).maybeSingle()
+        if (!exists) {
+          await ctx.supabase.from('tenant_profiles').insert({
+            user_id: userId, phone: '', id_number: '',
+          })
+        }
       } else if (input.role === 'manager' || input.role === 'organizer') {
-        await ctx.supabase.from('manager_profiles').upsert({
-          id: userId, company_name: '',
-        }, { onConflict: 'id' })
+        const { data: exists } = await ctx.supabase.from('manager_profiles')
+          .select('id').eq('id', userId).maybeSingle()
+        if (!exists) {
+          await ctx.supabase.from('manager_profiles').insert({
+            id: userId, company_name: '',
+          })
+        }
       } else if (input.role === 'provider') {
-        await ctx.supabase.from('provider_profiles').upsert({
-          id: userId, bio: '', service_types: [], operating_regions: [],
-        }, { onConflict: 'id' })
+        const { data: exists } = await ctx.supabase.from('provider_profiles')
+          .select('id').eq('id', userId).maybeSingle()
+        if (!exists) {
+          await ctx.supabase.from('provider_profiles').insert({
+            id: userId, bio: '', service_types: [], operating_regions: [],
+          })
+        }
       }
 
       return { success: true, role: input.role }

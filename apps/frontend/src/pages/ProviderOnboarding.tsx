@@ -20,10 +20,13 @@ const SPECIALIZATIONS: Record<ProviderType, string[]> = {
 export default function ProviderOnboarding() {
   const navigate = useNavigate()
   const utils = trpc.useUtils()
+  const [justSaved, setJustSaved] = useState(false)
   const { data: existing, isLoading: loadingExisting } = trpc.provider.getMyDetails.useQuery(undefined, {
     // Always fetch fresh on mount so we don't re-show consents after a save
     refetchOnMount: 'always',
     staleTime: 0,
+    // Don't auto-refetch once the user has just saved — we'll navigate away.
+    enabled: !justSaved,
   })
   const isEdit = !!existing?.providerType
 
@@ -45,7 +48,7 @@ export default function ProviderOnboarding() {
 
   // Pre-fill form in edit mode
   useEffect(() => {
-    if (!existing) return
+    if (!existing || justSaved) return
     if (existing.providerType) setType(existing.providerType as ProviderType)
     setFullName(existing.fullName ?? '')
     setPhone(existing.phone ?? '')
@@ -58,18 +61,21 @@ export default function ProviderOnboarding() {
     setRatingUrl(existing.ratingUrl ?? '')
     // In edit mode: consents were already captured on first run, default to true
     if (existing.providerType) { setC1(true); setC2(true); setC3(true) }
-  }, [existing])
+  }, [existing, justSaved])
 
   const submit = trpc.provider.completeOnboarding.useMutation({
-    onSuccess: async () => {
-      // Invalidate everything that reads profile state so dashboard guard
-      // and profile tab see fresh data immediately (no post-submit loop).
-      await Promise.all([
-        utils.provider.getMyDetails.invalidate(),
-        utils.provider.getOnboardingStatus.invalidate(),
-        utils.provider.getProfile.invalidate(),
-      ])
+    onSuccess: (result) => {
+      // Prime the onboarding-status cache so the dashboard guard doesn't
+      // briefly see stale "not completed" state and bounce back here.
+      utils.provider.getOnboardingStatus.setData(undefined, {
+        completed: true,
+        role: result?.providerType ?? null,
+      })
+      setJustSaved(true)
       navigate('/provider', { replace: true })
+      // Refresh data in the background for the profile tab.
+      utils.provider.getMyDetails.invalidate()
+      utils.provider.getProfile.invalidate()
     },
     onError: (e) => setError(e.message || 'שגיאה'),
   })
@@ -108,10 +114,10 @@ export default function ProviderOnboarding() {
     })
   }
 
-  if (loadingExisting) {
+  if (loadingExisting || justSaved) {
     return (
       <div dir="rtl" className="min-h-screen bg-[#f8f9fa] flex items-center justify-center">
-        <p className="text-[#5a5a6e]">טוען...</p>
+        <p className="text-[#5a5a6e]">{justSaved ? 'נשמר! מעביר ללוח הבקרה...' : 'טוען...'}</p>
       </div>
     )
   }

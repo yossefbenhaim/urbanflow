@@ -60,8 +60,8 @@ export const providerRouter = router({
    * Used by the Profile tab and by the onboarding form in edit mode. */
   getMyDetails: protectedProcedure.query(async ({ ctx }) => {
     const [p, pp, arch, apr, dev, ratings] = await Promise.all([
-      ctx.supabase.from('profiles').select('full_name, email, role').eq('id', ctx.user.id).maybeSingle(),
-      ctx.supabase.from('provider_profiles').select('phone, full_name, operating_regions').eq('id', ctx.user.id).maybeSingle(),
+      ctx.supabase.from('profiles').select('full_name, email, role, phone').eq('id', ctx.user.id).maybeSingle(),
+      ctx.supabase.from('provider_profiles').select('*').eq('id', ctx.user.id).maybeSingle(),
       ctx.supabase.from('architect_profiles').select('*').eq('id', ctx.user.id).maybeSingle(),
       ctx.supabase.from('appraiser_profiles').select('*').eq('id', ctx.user.id).maybeSingle(),
       ctx.supabase.from('developer_profiles').select('*').eq('id', ctx.user.id).maybeSingle(),
@@ -72,28 +72,43 @@ export const providerRouter = router({
     const typeRowObj = (typeRow ?? {}) as Record<string, unknown>
     const ppObj = (pp.data ?? {}) as Record<string, unknown>
     const pObj = (p.data ?? {}) as Record<string, unknown>
-    const specializations = Array.isArray(typeRowObj.specializations)
+    const pickStr = (...vals: unknown[]) =>
+      (vals.find(v => typeof v === 'string' && v.trim().length > 0) as string | undefined) ?? null
+    const pickNum = (...vals: unknown[]) =>
+      (vals.find(v => typeof v === 'number') as number | undefined) ?? null
+    const specializations = Array.isArray(typeRowObj.specializations) && (typeRowObj.specializations as unknown[]).length > 0
       ? typeRowObj.specializations as string[]
-      : Array.isArray(typeRowObj.specialization_types)
+      : Array.isArray(typeRowObj.specialization_types) && (typeRowObj.specialization_types as unknown[]).length > 0
         ? typeRowObj.specialization_types as string[]
         : []
-    const ops = Array.isArray(ppObj.operating_regions) && (ppObj.operating_regions as string[]).length > 0
-      ? (ppObj.operating_regions as string[])
-      : Array.isArray(typeRowObj.operating_regions)
-        ? typeRowObj.operating_regions as string[]
+    const ops = Array.isArray(typeRowObj.operating_regions) && (typeRowObj.operating_regions as string[]).length > 0
+      ? (typeRowObj.operating_regions as string[])
+      : Array.isArray(ppObj.operating_regions)
+        ? ppObj.operating_regions as string[]
         : []
+    const portfolioUrls = Array.isArray(typeRowObj.portfolio_urls) && (typeRowObj.portfolio_urls as unknown[]).length > 0
+      ? typeRowObj.portfolio_urls as string[]
+      : Array.isArray(ppObj.portfolio_url) ? ppObj.portfolio_url as string[]
+      : ppObj.portfolio_url ? [ppObj.portfolio_url as string] : []
     const ratingRow = (ratings.data ?? [])[0] as { external_url?: string | null } | undefined
     return {
       providerType,
-      fullName: (pObj.full_name as string | null) ?? (ppObj.full_name as string | null) ?? null,
-      email: (pObj.email as string | null) ?? null,
-      phone: (ppObj.phone as string | null) ?? null,
+      fullName: pickStr(pObj.full_name, ppObj.full_name),
+      email: pickStr(pObj.email),
+      phone: pickStr(ppObj.phone, pObj.phone),
       mainCity: ops[0] ?? null,
-      licenseNumber: (typeRowObj.license_number as string | null) ?? null,
-      experienceYears: (typeRowObj.experience_years as number | null) ?? null,
-      completedProjects: (typeRowObj.completed_projects as number | null) ?? null,
+      operatingRegions: ops,
+      licenseNumber: pickStr(typeRowObj.license_number, ppObj.license_number),
+      licenseAuthority: pickStr(typeRowObj.license_authority, ppObj.license_authority),
+      licenseExpiry: pickStr(typeRowObj.license_expiry, ppObj.license_expiry),
+      experienceYears: pickNum(typeRowObj.experience_years, ppObj.experience_years),
+      completedProjects: pickNum(typeRowObj.completed_projects),
       specializations,
-      portfolioUrls: Array.isArray(typeRowObj.portfolio_urls) ? typeRowObj.portfolio_urls as string[] : [],
+      portfolioUrls,
+      company: pickStr(typeRowObj.company, ppObj.company),
+      bio: pickStr(typeRowObj.bio, ppObj.bio),
+      website: pickStr(typeRowObj.website, ppObj.website),
+      linkedinUrl: pickStr(typeRowObj.linkedin_url, ppObj.linkedin_url),
       ratingUrl: ratingRow?.external_url ?? null,
     }
   }),
@@ -120,15 +135,19 @@ export const providerRouter = router({
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'יש לאשר את כל ההצהרות החובה' })
       }
 
-      await ctx.supabase.from('profiles').update({ full_name: input.fullName }).eq('id', ctx.user.id)
+      const { error: profErr } = await ctx.supabase.from('profiles')
+        .update({ full_name: input.fullName, phone: input.phone })
+        .eq('id', ctx.user.id)
+      if (profErr) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: profErr.message })
 
       // Ensure a provider_profiles row exists and save phone + main city there
-      await ctx.supabase.from('provider_profiles').upsert({
+      const { error: ppErr } = await ctx.supabase.from('provider_profiles').upsert({
         id: ctx.user.id,
         phone: input.phone,
         full_name: input.fullName,
         operating_regions: [input.mainCity],
       }, { onConflict: 'id' })
+      if (ppErr) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: ppErr.message })
 
       const commonRow = {
         id: ctx.user.id,
@@ -169,6 +188,78 @@ export const providerRouter = router({
       }
 
       return { success: true, providerType: input.providerType }
+    }),
+
+  /** Inline edit from the Profile tab. Same shape as completeOnboarding
+   * minus the one-time consent flags (already captured). */
+  updateMyDetails: protectedProcedure
+    .input(z.object({
+      providerType: z.enum(['architect', 'appraiser', 'developer']),
+      fullName: z.string().min(2),
+      phone: z.string().min(6),
+      mainCity: z.string().min(1),
+      licenseNumber: z.string().optional(),
+      experienceYears: z.number().int().min(0).optional(),
+      completedProjects: z.number().int().min(0).optional(),
+      specializations: z.array(z.string()).default([]),
+      portfolioUrls: z.array(z.string().url()).default([]),
+      ratingUrl: z.string().url().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { error: profErr } = await ctx.supabase.from('profiles')
+        .update({ full_name: input.fullName, phone: input.phone })
+        .eq('id', ctx.user.id)
+      if (profErr) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: profErr.message })
+
+      const { error: ppErr } = await ctx.supabase.from('provider_profiles').upsert({
+        id: ctx.user.id,
+        phone: input.phone,
+        full_name: input.fullName,
+        operating_regions: [input.mainCity],
+      }, { onConflict: 'id' })
+      if (ppErr) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: ppErr.message })
+
+      const commonRow = {
+        id: ctx.user.id,
+        license_number: input.licenseNumber ?? null,
+        operating_regions: [input.mainCity],
+        experience_years: input.experienceYears ?? null,
+        completed_projects: input.completedProjects ?? 0,
+        portfolio_urls: input.portfolioUrls,
+      }
+
+      let upsertErr: string | undefined
+      if (input.providerType === 'architect') {
+        const { error } = await ctx.supabase
+          .from('architect_profiles')
+          .upsert({ ...commonRow, specializations: input.specializations }, { onConflict: 'id' })
+        upsertErr = error?.message
+      } else if (input.providerType === 'appraiser') {
+        const { error } = await ctx.supabase
+          .from('appraiser_profiles')
+          .upsert({ ...commonRow, specialization_types: input.specializations }, { onConflict: 'id' })
+        upsertErr = error?.message
+      } else {
+        const { error } = await ctx.supabase
+          .from('developer_profiles')
+          .upsert(commonRow, { onConflict: 'id' })
+        upsertErr = error?.message
+      }
+      if (upsertErr) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: upsertErr })
+
+      if (input.ratingUrl) {
+        // Replace: remove prior custom rating row(s) and insert the new URL.
+        await ctx.supabase.from('provider_ratings')
+          .delete().eq('user_id', ctx.user.id).eq('source', 'custom')
+        await ctx.supabase.from('provider_ratings').insert({
+          user_id: ctx.user.id,
+          source: 'custom',
+          external_url: input.ratingUrl,
+          review_count: 0,
+        })
+      }
+
+      return { success: true }
     }),
 
   getJobListings: protectedProcedure

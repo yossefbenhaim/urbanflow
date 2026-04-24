@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import PageLayout, { PageTitle } from '../components/PageLayout'
+import CityAutocomplete from '../components/CityAutocomplete'
 import { trpc } from '../lib/trpc'
 
 const PROJECT_TYPE_HE: Record<string, string> = {
@@ -20,7 +22,13 @@ type Tab = 'matches' | 'jobs' | 'applications' | 'profile'
 
 export default function ProviderDashboard() {
   const navigate = useNavigate()
-  const [tab, setTab] = useState<Tab>('matches')
+  const location = useLocation()
+  // /provider/profile → open Profile tab directly (sidebar entry point).
+  const initialTab: Tab = location.pathname.endsWith('/profile') ? 'profile' : 'matches'
+  const [tab, setTab] = useState<Tab>(initialTab)
+  useEffect(() => {
+    if (location.pathname.endsWith('/profile')) setTab('profile')
+  }, [location.pathname])
   const [applying, setApplying] = useState<string | null>(null)
   const [coverLetter, setCoverLetter] = useState('')
   const [applied, setApplied] = useState<Set<string>>(new Set())
@@ -28,15 +36,15 @@ export default function ProviderDashboard() {
   // Redirect to onboarding if the provider hasn't chosen a type yet.
   // Always fetch fresh to avoid redirecting based on a stale cache right
   // after the user has just completed onboarding.
-  const { data: onboarding, isLoading: loadingOnboarding } = trpc.provider.getOnboardingStatus.useQuery(
-    undefined,
-    { refetchOnMount: 'always', staleTime: 0 }
-  )
+  const { data: onboarding, isLoading: loadingOnboarding, isFetching: fetchingOnboarding } =
+    trpc.provider.getOnboardingStatus.useQuery(undefined, { refetchOnMount: 'always', staleTime: 0 })
   useEffect(() => {
-    if (!loadingOnboarding && onboarding && !onboarding.completed) {
+    // Wait for a fresh response (not just cached stale data) before redirecting.
+    if (loadingOnboarding || fetchingOnboarding) return
+    if (onboarding && !onboarding.completed) {
       navigate('/provider/onboarding', { replace: true })
     }
-  }, [loadingOnboarding, onboarding, navigate])
+  }, [loadingOnboarding, fetchingOnboarding, onboarding, navigate])
 
   const { data: recommendations, isLoading: loadingRec } = trpc.match.getRecommendedProjects.useQuery(
     { limit: 10 },
@@ -191,7 +199,7 @@ export default function ProviderDashboard() {
           </div>
         )}
 
-        {tab === 'profile' && <ProfileTab navigate={navigate} />}
+        {tab === 'profile' && <ProfileTab />}
       </div>
     </PageLayout>
   )
@@ -203,25 +211,199 @@ const PROVIDER_TYPE_LABELS: Record<string, string> = {
   developer: '🏢 יזם',
 }
 
-function ProfileTab({ navigate }: { navigate: (to: string) => void }) {
+type ProviderType = 'architect' | 'appraiser' | 'developer'
+
+const SPECIALIZATIONS: Record<ProviderType, string[]> = {
+  architect: ['פינוי בינוי', `תמ"א 38/2`, 'חלופת שקד', 'בינוי פינוי', 'שימור', 'מגורים', 'מסחר'],
+  appraiser: ['מגורים', 'מסחר', 'תעשייה', 'קרקעות', 'שימוש מעורב'],
+  developer: ['פינוי בינוי', `תמ"א 38/2`, 'חלופת שקד', 'בינוי פינוי'],
+}
+
+function ProfileTab() {
+  const utils = trpc.useUtils()
   const { data, isLoading, refetch, isFetching } = trpc.provider.getMyDetails.useQuery(undefined, {
     refetchOnMount: 'always',
     staleTime: 0,
   })
+
+  const [editing, setEditing] = useState(false)
+  const [fullName, setFullName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [mainCity, setMainCity] = useState('')
+  const [license, setLicense] = useState('')
+  const [years, setYears] = useState('')
+  const [projects, setProjects] = useState('')
+  const [specs, setSpecs] = useState<string[]>([])
+  const [portfolioInput, setPortfolioInput] = useState('')
+  const [portfolio, setPortfolio] = useState<string[]>([])
+  const [ratingUrl, setRatingUrl] = useState('')
+
+  const hydrate = () => {
+    if (!data) return
+    setFullName(data.fullName ?? '')
+    setPhone(data.phone ?? '')
+    setMainCity(data.mainCity ?? '')
+    setLicense(data.licenseNumber ?? '')
+    setYears(data.experienceYears != null ? String(data.experienceYears) : '')
+    setProjects(data.completedProjects != null ? String(data.completedProjects) : '')
+    setSpecs(data.specializations ?? [])
+    setPortfolio(data.portfolioUrls ?? [])
+    setRatingUrl(data.ratingUrl ?? '')
+  }
+
+  const save = trpc.provider.updateMyDetails.useMutation({
+    onSuccess: () => {
+      toast.success('הפרופיל עודכן בהצלחה')
+      setEditing(false)
+      utils.provider.getMyDetails.invalidate()
+      utils.provider.getProfile.invalidate()
+    },
+    onError: (e) => toast.error(e.message || 'שגיאה בשמירת הפרופיל'),
+  })
+
   if (isLoading) return <p className="text-center text-[#5a5a6e] py-8">טוען פרופיל...</p>
   if (!data) return <p className="text-center text-[#5a5a6e] py-8">לא נמצאו פרטי פרופיל</p>
 
   const initial = (data.fullName || data.email || '?')[0].toUpperCase()
+
+  const onStartEdit = () => { hydrate(); setEditing(true) }
+  const onCancel = () => { setEditing(false) }
+  const onSave = () => {
+    if (!data.providerType) { toast.error('סוג נותן שירות חסר'); return }
+    if (!fullName.trim()) { toast.error('שם מלא נדרש'); return }
+    if (!phone.trim()) { toast.error('טלפון נדרש'); return }
+    if (!mainCity.trim()) { toast.error('עיר פעילות ראשית נדרשת'); return }
+    save.mutate({
+      providerType: data.providerType as ProviderType,
+      fullName: fullName.trim(),
+      phone: phone.trim(),
+      mainCity: mainCity.trim(),
+      licenseNumber: license.trim() || undefined,
+      experienceYears: years ? +years : undefined,
+      completedProjects: projects ? +projects : undefined,
+      specializations: specs,
+      portfolioUrls: portfolio,
+      ratingUrl: ratingUrl.trim() || undefined,
+    })
+  }
+
+  const toggleSpec = (s: string) =>
+    setSpecs(p => p.includes(s) ? p.filter(x => x !== s) : [...p, s])
+
+  const addPortfolio = () => {
+    const v = portfolioInput.trim()
+    if (v && !portfolio.includes(v)) setPortfolio([...portfolio, v])
+    setPortfolioInput('')
+  }
+
+  if (editing) {
+    const type = data.providerType as ProviderType | null
+    return (
+      <div className="sc-card p-6 space-y-4">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 bg-[#1e3a5f] rounded-full flex items-center justify-center text-white text-[18px] font-bold">{initial}</div>
+          <div className="min-w-0">
+            <p className="font-bold text-[#212121] text-[15px] truncate">עריכת פרופיל</p>
+            {data.providerType && (
+              <p className="text-[13px] text-[#3b6b9c] font-semibold">{PROVIDER_TYPE_LABELS[data.providerType]}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <EditField label="שם מלא *" value={fullName} onChange={setFullName} />
+          <EditField label="טלפון *" value={phone} onChange={setPhone} placeholder="050-1234567" />
+          <CityAutocomplete
+            label="עיר פעילות ראשית"
+            required
+            value={mainCity}
+            onChange={setMainCity}
+            placeholder="הקלד שם עיר ובחר מהרשימה"
+          />
+          <EditField label="מספר רישיון מקצועי" value={license} onChange={setLicense} placeholder="אם קיים" />
+          <div className="grid grid-cols-2 gap-3">
+            <EditField label="שנות ניסיון" value={years} onChange={setYears} type="number" />
+            <EditField label="פרויקטים שבוצעו" value={projects} onChange={setProjects} type="number" />
+          </div>
+
+          {type && (
+            <div>
+              <label className="block text-xs text-[#5a5a6e] mb-1">אזורי התמחות / סוגי פרויקטים</label>
+              <div className="flex flex-wrap gap-2">
+                {SPECIALIZATIONS[type].map(s => (
+                  <button key={s} onClick={() => toggleSpec(s)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-semibold transition-colors
+                      ${specs.includes(s) ? 'bg-[#1e3a5f] text-white' : 'bg-white border border-[#eeeeee] text-[#5a5a6e]'}`}>
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs text-[#5a5a6e] mb-1">תיק עבודות / אתר</label>
+            <div className="flex gap-2">
+              <input type="url" value={portfolioInput}
+                onChange={e => setPortfolioInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addPortfolio())}
+                placeholder="https://..." className="sc-input flex-1" />
+              <button onClick={addPortfolio} className="px-4 rounded-xl bg-[#1e3a5f] text-white font-semibold">+</button>
+            </div>
+            {portfolio.length > 0 && (
+              <div className="flex gap-2 flex-wrap mt-2">
+                {portfolio.map((u, i) => (
+                  <span key={i} className="bg-[#ebf1f7] text-[#3b6b9c] px-2 py-0.5 rounded-full text-xs flex items-center gap-1">
+                    {safeHost(u)}
+                    <button onClick={() => setPortfolio(portfolio.filter((_, j) => j !== i))} className="text-[#3b6b9c]">x</button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <EditField label="קישור לדירוג" value={ratingUrl} onChange={setRatingUrl} placeholder="https://..." type="url" />
+        </div>
+
+        <div className="flex gap-3 pt-2">
+          <button onClick={onCancel} disabled={save.isPending}
+            className="flex-1 py-3 rounded-2xl bg-white border border-[#eeeeee] text-[#5a5a6e] font-semibold disabled:opacity-50">
+            ביטול
+          </button>
+          <button onClick={onSave} disabled={save.isPending}
+            className="sc-btn-primary flex-1 disabled:opacity-60">
+            {save.isPending ? 'שומר...' : 'שמור'}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // View mode
+  const d = data as Record<string, unknown>
+  const str = (k: string): string | null => (typeof d[k] === 'string' && (d[k] as string).trim().length > 0 ? d[k] as string : null)
+  const num = (k: string): number | null => (typeof d[k] === 'number' ? d[k] as number : null)
+  const arr = (k: string): string[] => Array.isArray(d[k]) ? d[k] as string[] : []
+  const regions = arr('operatingRegions')
+  const extraRegions = regions.slice(1)
   const rows: { label: string; value: string | null }[] = [
     { label: 'סוג שירות', value: data.providerType ? PROVIDER_TYPE_LABELS[data.providerType] : null },
+    { label: 'שם מלא', value: data.fullName },
     { label: 'טלפון', value: data.phone },
     { label: 'אימייל', value: data.email },
     { label: 'עיר פעילות ראשית', value: data.mainCity },
+    ...(extraRegions.length > 0 ? [{ label: 'אזורי פעילות נוספים', value: extraRegions.join(', ') }] : []),
+    { label: 'חברה / משרד', value: str('company') },
     { label: 'מספר רישיון', value: data.licenseNumber },
-    { label: 'שנות ניסיון', value: data.experienceYears != null ? `${data.experienceYears} שנים` : null },
-    { label: 'פרויקטים שבוצעו', value: data.completedProjects != null ? String(data.completedProjects) : null },
-    { label: 'התמחויות', value: (data.specializations ?? []).length > 0 ? (data.specializations as string[]).join(', ') : null },
+    { label: 'רשות רישוי', value: str('licenseAuthority') },
+    { label: 'תוקף רישיון', value: str('licenseExpiry') },
+    { label: 'שנות ניסיון', value: num('experienceYears') != null ? `${num('experienceYears')} שנים` : null },
+    { label: 'פרויקטים שבוצעו', value: num('completedProjects') != null ? String(num('completedProjects')) : null },
+    { label: 'התמחויות', value: arr('specializations').length > 0 ? arr('specializations').join(', ') : null },
+    { label: 'אתר / אתר אישי', value: str('website') },
+    { label: 'LinkedIn', value: str('linkedinUrl') },
     { label: 'קישור לדירוג', value: data.ratingUrl },
+    { label: 'תיאור מקצועי', value: str('bio') },
   ]
 
   return (
@@ -258,10 +440,7 @@ function ProfileTab({ navigate }: { navigate: (to: string) => void }) {
         )}
       </div>
 
-      <button
-        onClick={() => navigate('/provider/onboarding')}
-        className="sc-btn-primary w-full"
-      >
+      <button onClick={onStartEdit} className="sc-btn-primary w-full">
         ערוך פרופיל
       </button>
       <button
@@ -271,6 +450,17 @@ function ProfileTab({ navigate }: { navigate: (to: string) => void }) {
       >
         {isFetching ? 'מרענן...' : '🔄 רענן נתונים'}
       </button>
+    </div>
+  )
+}
+
+function EditField({ label, value, onChange, type = 'text', placeholder }: {
+  label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string
+}) {
+  return (
+    <div>
+      <label className="block text-xs text-[#5a5a6e] mb-1">{label}</label>
+      <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} className="sc-input" />
     </div>
   )
 }
