@@ -28,6 +28,7 @@ const PROPOSAL_STATUS_HE: Record<string, { label: string; fg: string; bg: string
 }
 
 type Tab = 'matches' | 'jobs' | 'applications' | 'assignments' | 'negotiations' | 'profile'
+type DashboardTab = Exclude<Tab, 'profile'>
 
 const RECOMMENDATION_HE: Record<string, { label: string; fg: string; bg: string }> = {
   accept:    { label: 'מומלץ לקבל',    fg: 'text-[#4a8c5c]', bg: 'bg-[#edf5ef]' },
@@ -107,24 +108,26 @@ export default function ProviderDashboard() {
     <PageLayout>
       <PageTitle>לוח הבקרה — נותן שירות</PageTitle>
 
-      {/* Tabs */}
-      <div className="flex gap-2 mb-5 overflow-x-auto">
-        {(([
-          ['matches','המלצות'],
-          ['jobs','משרות פתוחות'],
-          ['applications','המועמדויות שלי'],
-          ['assignments','הפרויקטים שלי'],
-          ...(isLawyer ? [['negotiations','מו״מ'] as [Tab,string]] : []),
-          ['profile','הפרופיל שלי'],
-        ]) as [Tab,string][]).map(([v,l]) => (
-          <button key={v} onClick={() => setTab(v)}
-            className={`px-4 py-2 rounded-[8px] text-[13px] font-semibold transition-colors whitespace-nowrap ${
-              tab === v ? 'bg-[#3b6b9c] text-white' : 'bg-[#f8f9fa] text-[#8e8e9e]'
-            }`}>
-            {l}
-          </button>
-        ))}
-      </div>
+      {/* Tabs — hidden on /provider/profile (profile is a standalone page
+          reachable via the sidebar, not a tab here, to avoid duplication). */}
+      {tab !== 'profile' && (
+        <div className="flex gap-2 mb-5 overflow-x-auto">
+          {(([
+            ['matches','המלצות'],
+            ['jobs','משרות פתוחות'],
+            ['assignments','הפרויקטים שלי'],
+            ['applications','המועמדויות שלי'],
+            ...(isLawyer ? [['negotiations','מו״מ'] as [DashboardTab,string]] : []),
+          ]) as [DashboardTab,string][]).map(([v,l]) => (
+            <button key={v} onClick={() => setTab(v)}
+              className={`px-4 py-2 rounded-[8px] text-[13px] font-semibold transition-colors whitespace-nowrap ${
+                tab === v ? 'bg-[#3b6b9c] text-white' : 'bg-[#f8f9fa] text-[#8e8e9e]'
+              }`}>
+              {l}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="space-y-4">
         {tab === 'matches' && (
