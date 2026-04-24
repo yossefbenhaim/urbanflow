@@ -11,8 +11,9 @@ RUN npm install --legacy-peer-deps
 
 COPY apps/backend ./apps/backend
 
-# Compile TypeScript
-RUN cd apps/backend && ../../node_modules/.bin/tsc
+# Compile TypeScript, then copy static HTML templates that tsc ignores
+RUN cd apps/backend && ../../node_modules/.bin/tsc \
+ && cp -r src/emails/templates dist/emails/templates
 
 FROM node:20-alpine
 ENV NODE_ENV=production
