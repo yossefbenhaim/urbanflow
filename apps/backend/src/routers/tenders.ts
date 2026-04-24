@@ -172,12 +172,44 @@ export const tendersRouter = router({
   getProjectTenders: protectedProcedure
     .input(z.object({ projectId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      const { data } = await ctx.supabase
+      // Tenders FKs point to auth.users, not public.profiles, so the
+      // PostgREST embedded join via profiles!tenders_created_by_fkey
+      // silently fails (PGRST200). Fetch tenders + profiles + proposal
+      // counts separately and stitch manually.
+      const { data: tenders } = await ctx.supabase
         .from('tenders')
-        .select('*, creator:profiles!tenders_created_by_fkey(id,full_name), winner:profiles!tenders_winner_id_fkey(id,full_name), tender_proposals(count)')
+        .select('*')
         .eq('project_id', input.projectId)
         .order('created_at', { ascending: false })
-      return data ?? []
+      const rows = (tenders ?? []) as Array<Record<string, unknown>>
+      if (rows.length === 0) return []
+
+      const userIds = Array.from(new Set(
+        rows.flatMap(t => [t.created_by as string | null, t.winner_id as string | null])
+            .filter((x): x is string => !!x)
+      ))
+      const tenderIds = rows.map(t => t.id as string)
+
+      const [profilesRes, proposalsRes] = await Promise.all([
+        userIds.length > 0
+          ? ctx.supabase.from('profiles').select('id, full_name').in('id', userIds)
+          : Promise.resolve({ data: [] as Array<{ id: string; full_name: string | null }> }),
+        ctx.supabase.from('tender_proposals').select('tender_id').in('tender_id', tenderIds),
+      ])
+      const profMap = new Map<string, { id: string; full_name: string | null }>(
+        (profilesRes.data ?? []).map((p: { id: string; full_name: string | null }) => [p.id, p])
+      )
+      const proposalCount: Record<string, number> = {}
+      for (const p of (proposalsRes.data ?? []) as Array<{ tender_id: string }>) {
+        proposalCount[p.tender_id] = (proposalCount[p.tender_id] ?? 0) + 1
+      }
+
+      return rows.map(t => ({
+        ...t,
+        creator: t.created_by ? profMap.get(t.created_by as string) ?? null : null,
+        winner: t.winner_id ? profMap.get(t.winner_id as string) ?? null : null,
+        tender_proposals: [{ count: proposalCount[t.id as string] ?? 0 }],
+      }))
     }),
 
   // Open tenders matching the caller's provider type. Infers type from which
@@ -249,13 +281,24 @@ export const tendersRouter = router({
   getTenderById: protectedProcedure
     .input(z.object({ tenderId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      const { data, error } = await ctx.supabase
-        .from('tenders')
-        .select('*, creator:profiles!tenders_created_by_fkey(id,full_name), winner:profiles!tenders_winner_id_fkey(id,full_name)')
-        .eq('id', input.tenderId)
-        .single()
-      if (error) throw new TRPCError({ code: 'NOT_FOUND', message: 'מכרז לא נמצא' })
-      return data
+      // FKs point to auth.users so the embedded profile join fails —
+      // fetch the tender and then the profile rows separately.
+      const { data: tender, error } = await ctx.supabase
+        .from('tenders').select('*').eq('id', input.tenderId).single()
+      if (error || !tender) throw new TRPCError({ code: 'NOT_FOUND', message: 'מכרז לא נמצא' })
+      const t = tender as Record<string, unknown>
+      const userIds = [t.created_by, t.winner_id].filter((x): x is string => typeof x === 'string' && !!x)
+      const { data: profs } = userIds.length > 0
+        ? await ctx.supabase.from('profiles').select('id, full_name').in('id', userIds)
+        : { data: [] as Array<{ id: string; full_name: string | null }> }
+      const profMap = new Map<string, { id: string; full_name: string | null }>(
+        (profs ?? []).map((p: { id: string; full_name: string | null }) => [p.id, p])
+      )
+      return {
+        ...tender,
+        creator: t.created_by ? profMap.get(t.created_by as string) ?? null : null,
+        winner: t.winner_id ? profMap.get(t.winner_id as string) ?? null : null,
+      }
     }),
 
   // ===== C3: Negotiation Rounds =====
