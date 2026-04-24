@@ -552,7 +552,15 @@ export default function TenderDetailPage() {
     onSuccess: () => refetch(),
   })
 
-  const isRep = profile?.role && ['organizer', 'committee_rep', 'manager'].includes(profile.role)
+  // ועד reps are tenants with is_building_representative=true, not a
+  // separate role. Match what TendersPage does so the actions column
+  // renders for them too.
+  const { data: myRole } = trpc.tenant.getMyRole.useQuery(undefined, {
+    enabled: profile?.role === 'tenant',
+  })
+  const isCommitteeRep = (myRole as { isRepresentative?: boolean } | undefined)?.isRepresentative === true
+  const isRep = (profile?.role && ['organizer', 'committee_rep', 'manager'].includes(profile.role))
+    || (profile?.role === 'tenant' && isCommitteeRep)
 
   if (!tender) {
     return (
