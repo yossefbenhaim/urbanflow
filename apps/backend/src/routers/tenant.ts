@@ -89,17 +89,20 @@ export async function autoProvisionProjectForBuilding(
   return { projectId, created: true }
 }
 
-async function findOrCreateBuilding(supabase: SupabaseClient, city: string, street: string, buildingNumber: string) {
-  const { data: existing } = await supabase
+export async function findOrCreateBuilding(supabase: SupabaseClient, city: string, street: string, buildingNumber: string) {
+  // Match any existing building at this address (prefer project-linked so new
+  // tenants join the active project's building, falling back to any match).
+  const { data: candidates } = await supabase
     .from('buildings')
-    .select('id')
+    .select('id, project_id')
     .eq('city', city)
     .eq('street', street)
     .eq('number', buildingNumber)
-    .is('project_id', null)
-    .maybeSingle()
 
-  if (existing) return existing.id
+  if (candidates && candidates.length > 0) {
+    const withProject = candidates.find(b => b.project_id)
+    return (withProject ?? candidates[0]).id
+  }
 
   const { data: newBuilding, error } = await supabase
     .from('buildings')
@@ -111,7 +114,7 @@ async function findOrCreateBuilding(supabase: SupabaseClient, city: string, stre
   return newBuilding.id
 }
 
-async function handleBuildingGroup(supabase: SupabaseClient, buildingId: string, userId: string) {
+export async function handleBuildingGroup(supabase: SupabaseClient, buildingId: string, userId: string) {
   const { data: tenants } = await supabase.from('tenant_profiles').select('user_id').eq('building_id', buildingId)
   const tenantIds: string[] = ((tenants ?? []) as TenantUser[]).map((t) => t.user_id)
   if (tenantIds.length < 2) return

@@ -88,6 +88,7 @@ export default function RegisterTenant() {
       email: form.email, password: form.password,
       fullName: form.fullName, phone: form.phone, idNumber: form.idNumber,
       city: address.city, street: address.street, buildingNumber: address.buildingNumber,
+      apartmentNumber: form.apartmentNumber,
       floor: form.floor, apartmentSqm: form.apartmentSqm,
       isOwner: form.isOwner,
       moveInYear: form.moveInYear || undefined,

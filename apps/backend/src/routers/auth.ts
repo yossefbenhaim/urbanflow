@@ -2,6 +2,8 @@ import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { router, publicProcedure, protectedProcedure } from '../middleware/auth'
 import { sendEmail } from '../emails/emailService'
+import { findOrCreateBuilding, handleBuildingGroup } from './tenant'
+import { logger } from '../logger'
 
 const deviceInfoSchema = z.object({
   user_agent: z.string(),
@@ -165,6 +167,7 @@ export const authRouter = router({
       email: z.string().email(), password: z.string().min(6),
       fullName: z.string(), phone: z.string(), idNumber: z.string(),
       city: z.string(), street: z.string(), buildingNumber: z.string(),
+      apartmentNumber: z.string(),
       floor: z.string().optional(), apartmentSqm: z.string().optional(),
       isOwner: z.boolean(), moveInYear: z.string().optional(),
       inviteCode: z.string().optional(),
@@ -179,16 +182,34 @@ export const authRouter = router({
         phone: input.phone, id_number: input.idNumber, role: 'tenant',
         ...(input.deviceInfo ? { original_device: input.deviceInfo } : {}),
       }, { onConflict: 'id' })
+
+      const buildingId = await findOrCreateBuilding(ctx.supabase, input.city, input.street, input.buildingNumber)
+
       await ctx.supabase.from('tenant_profiles').upsert({
         user_id: userId, phone: input.phone, id_number: input.idNumber,
         address: `${input.street} ${input.buildingNumber}, ${input.city}`,
         building_number: input.buildingNumber,
+        apartment_number: input.apartmentNumber,
         floor: input.floor ? parseInt(input.floor) : null,
         apartment_sqm: input.apartmentSqm ? parseFloat(input.apartmentSqm) : null,
         is_owner: input.isOwner,
         move_in_year: input.moveInYear ? parseInt(input.moveInYear) : null,
         invite_code: input.inviteCode || null, is_onboarded: true,
+        building_id: buildingId,
       }, { onConflict: 'user_id' })
+
+      // If building already belongs to an active project, auto-join the tenant.
+      const { data: buildingRow } = await ctx.supabase
+        .from('buildings').select('project_id').eq('id', buildingId).maybeSingle()
+      const projectId = (buildingRow as { project_id?: string | null } | null)?.project_id ?? null
+      if (projectId) {
+        await ctx.supabase.from('project_tenants')
+          .upsert({ project_id: projectId, tenant_id: userId, status: 'active' }, { onConflict: 'project_id,tenant_id' })
+      }
+
+      try { await handleBuildingGroup(ctx.supabase, buildingId, userId) }
+      catch (e) { logger.error({ err: e }, '[registerTenant] handleBuildingGroup failed') }
+
       void sendEmail('welcome', input.email, { userName: input.fullName, userEmail: input.email })
       return { accessToken: data.session?.access_token ?? null,
         refreshToken: data.session?.refresh_token ?? null, userId }
