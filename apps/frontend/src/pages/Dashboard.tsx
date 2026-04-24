@@ -66,6 +66,8 @@ export default function Dashboard() {
   const { data: nextStep } = trpc.tenant.getNextStep.useQuery()
   const { data: tenantSteps } = trpc.tenant.getTenantSteps.useQuery()
   const signDoc = trpc.tenant.signDocument.useMutation()
+  const { data: pendingContracts, refetch: refetchContracts } = trpc.tenders.listMyPendingApprovals.useQuery()
+  const approveContract = trpc.tenders.approveContract.useMutation({ onSuccess: () => refetchContracts() })
 
   // Auto-redirect to onboarding if profile not completed
   useEffect(() => {
@@ -151,6 +153,66 @@ export default function Dashboard() {
             <span className="text-white/90 text-xl">←</span>
           </div>
         </a>
+
+        {/* Contracts Pending Approval */}
+        {pendingContracts && pendingContracts.length > 0 && (
+          <div className="bg-white rounded-2xl border border-[#8b6f47]/30 p-4 sm:p-5 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-lg">🗳️</span>
+              <h3 className="text-[15px] sm:text-[17px] font-bold text-[#212121] m-0">חוזים ממתינים לאישורך</h3>
+              <span className="bg-[#8b6f47] text-white text-[11px] font-bold px-2.5 py-1 rounded-full mr-auto">
+                {pendingContracts.length}
+              </span>
+            </div>
+            <div className="space-y-3">
+              {(pendingContracts as Array<{
+                id: string; contract_file_url?: string; approval_required_count?: number; approvals_received: number;
+                hasApproved: boolean; provider?: { full_name?: string }; tender?: { title?: string; tender_type?: string }
+              }>).map((c) => {
+                const pct = c.approval_required_count ? Math.round((c.approvals_received / c.approval_required_count) * 100) : 0
+                return (
+                  <div key={c.id} className="border border-[#eeeeee] rounded-xl p-3 bg-[#f8f9fa]">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-bold text-[#212121] truncate">{c.tender?.title ?? 'חוזה'}</p>
+                        <p className="text-[11px] text-[#5a5a6e]">{c.provider?.full_name ?? 'ספק'}</p>
+                      </div>
+                      {c.contract_file_url && (
+                        <a
+                          href={c.contract_file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] text-[#3b6b9c] font-bold whitespace-nowrap no-underline"
+                        >
+                          📄 צפה בחוזה
+                        </a>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 mb-2">
+                      <div className="flex-1 bg-[#e8edf2] rounded-full h-2 overflow-hidden">
+                        <div className="bg-[#8b6f47] h-2" style={{ width: `${Math.min(100, pct)}%` }} />
+                      </div>
+                      <span className="text-[11px] text-[#5a5a6e] whitespace-nowrap">
+                        {c.approvals_received}/{c.approval_required_count ?? 0}
+                      </span>
+                    </div>
+                    {c.hasApproved ? (
+                      <div className="text-[12px] text-[#4a8c5c] font-bold">✓ אישרת</div>
+                    ) : (
+                      <button
+                        onClick={() => approveContract.mutate({ assignmentId: c.id })}
+                        disabled={approveContract.isPending}
+                        className="sc-btn-primary w-full text-xs py-2 disabled:opacity-50"
+                      >
+                        {approveContract.isPending ? 'שולח...' : '✅ אשר חוזה'}
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* E3: Next Step Banner */}
         {nextStep && (nextStep as NextStepData).action !== 'all_done' && (

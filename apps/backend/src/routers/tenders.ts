@@ -475,16 +475,57 @@ export const tendersRouter = router({
       fileUrl: z.string().url(),
     }))
     .mutation(async ({ ctx, input }) => {
+      // Look up assignment to get project_id (needed for threshold calc)
+      const { data: existing, error: eErr } = await ctx.supabase
+        .from('contract_assignments')
+        .select('project_id, approval_required_count')
+        .eq('id', input.assignmentId)
+        .single()
+      if (eErr || !existing) throw new TRPCError({ code: 'NOT_FOUND', message: 'שיוך חוזה לא נמצא' })
+
+      // Auto-calculate 2/3 majority threshold from total apartments in project
+      // (sum of total_units across all buildings in the project)
+      let requiredCount = existing.approval_required_count
+      if (!requiredCount) {
+        const { data: buildings } = await ctx.supabase
+          .from('buildings')
+          .select('total_units')
+          .eq('project_id', existing.project_id)
+        const totalUnits = (buildings ?? []).reduce((sum: number, b: { total_units?: number | null }) => sum + (b.total_units ?? 0), 0)
+        requiredCount = totalUnits > 0 ? Math.ceil((totalUnits * 2) / 3) : 1
+      }
+
       const { data, error } = await ctx.supabase
         .from('contract_assignments')
         .update({
           contract_file_url: input.fileUrl,
           contract_uploaded_at: new Date().toISOString(),
-          status: 'contract_uploaded',
+          status: 'pending_approval',
+          approval_required_count: requiredCount,
         })
         .eq('id', input.assignmentId)
-        .select().single()
+        .select('*, provider:profiles!contract_assignments_provider_id_fkey(full_name), tender:tenders!contract_assignments_tender_id_fkey(title)')
+        .single()
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+
+      // Notify all tenants in project so they can vote
+      const { data: projectTenants } = await ctx.supabase
+        .from('project_tenants')
+        .select('tenant_id')
+        .eq('project_id', existing.project_id)
+      if (projectTenants && projectTenants.length > 0) {
+        const providerName = (data as { provider?: { full_name?: string } }).provider?.full_name ?? 'ספק'
+        await ctx.supabase.from('notifications').insert(
+          projectTenants.map((t: { tenant_id: string }) => ({
+            user_id: t.tenant_id,
+            type: 'contract_pending_approval',
+            title: '🗳️ חוזה חדש ממתין לאישור',
+            body: `נדרש אישורך לחוזה של ${providerName}`,
+            is_read: false,
+          }))
+        )
+      }
+
       return data
     }),
 
@@ -509,14 +550,37 @@ export const tendersRouter = router({
   approveContract: protectedProcedure
     .input(z.object({
       assignmentId: z.string().uuid(),
-      apartmentId: z.string().uuid(),
+      apartmentId: z.string().uuid().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
+      // Resolve apartment_id — prefer explicit input (organizer view), else look up caller's unit
+      let apartmentId = input.apartmentId
+      if (!apartmentId) {
+        const { data: tp } = await ctx.supabase
+          .from('tenant_profiles')
+          .select('unit_id')
+          .eq('user_id', ctx.user.id)
+          .single()
+        if (!tp?.unit_id) throw new TRPCError({ code: 'FORBIDDEN', message: 'לא נמצאה דירה משויכת למשתמש' })
+        apartmentId = tp.unit_id as string
+      }
+
+      // Verify assignment is in pending_approval
+      const { data: assignment, error: aErr } = await ctx.supabase
+        .from('contract_assignments')
+        .select('id, project_id, provider_id, status, approval_required_count')
+        .eq('id', input.assignmentId)
+        .single()
+      if (aErr || !assignment) throw new TRPCError({ code: 'NOT_FOUND', message: 'שיוך חוזה לא נמצא' })
+      if (assignment.status !== 'pending_approval') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'החוזה אינו פתוח להצבעה' })
+      }
+
       const { error } = await ctx.supabase
         .from('contract_approvals')
         .insert({
           assignment_id: input.assignmentId,
-          apartment_id: input.apartmentId,
+          apartment_id: apartmentId,
           approved_by: ctx.user.id,
           approved: true,
         })
@@ -532,22 +596,78 @@ export const tendersRouter = router({
         .eq('assignment_id', input.assignmentId)
         .eq('approved', true)
 
-      const { data: assignment } = await ctx.supabase
-        .from('contract_assignments')
-        .update({ approvals_received: count ?? 0 })
-        .eq('id', input.assignmentId)
-        .select().single()
+      const thresholdMet = assignment.approval_required_count
+        && (count ?? 0) >= assignment.approval_required_count
 
-      // Auto-approve if threshold met
-      if (assignment && assignment.approval_required_count && (count ?? 0) >= assignment.approval_required_count) {
-        await ctx.supabase
-          .from('contract_assignments')
-          .update({ status: 'approved' })
-          .eq('id', input.assignmentId)
+      await ctx.supabase
+        .from('contract_assignments')
+        .update({
+          approvals_received: count ?? 0,
+          ...(thresholdMet ? { status: 'approved' } : {}),
+        })
+        .eq('id', input.assignmentId)
+
+      // Notify provider + tenants when threshold reached
+      if (thresholdMet) {
+        await ctx.supabase.from('notifications').insert({
+          user_id: assignment.provider_id,
+          type: 'contract_approved',
+          title: '🎉 החוזה אושר!',
+          body: 'רוב הדיירים אישרו את החוזה — אתה שויכת לפרויקט',
+          is_read: false,
+        })
+        const { data: projectTenants } = await ctx.supabase
+          .from('project_tenants')
+          .select('tenant_id')
+          .eq('project_id', assignment.project_id)
+        if (projectTenants && projectTenants.length > 0) {
+          await ctx.supabase.from('notifications').insert(
+            projectTenants.map((t: { tenant_id: string }) => ({
+              user_id: t.tenant_id,
+              type: 'contract_approved',
+              title: '✅ חוזה אושר',
+              body: 'רוב הדיירים אישרו את החוזה',
+              is_read: false,
+            }))
+          )
+        }
       }
 
-      return { approved: true, totalApprovals: count }
+      return { approved: true, totalApprovals: count, thresholdMet }
     }),
+
+  listMyPendingApprovals: protectedProcedure.query(async ({ ctx }) => {
+    // Find user's project (via project_tenants)
+    const { data: pt } = await ctx.supabase
+      .from('project_tenants')
+      .select('project_id')
+      .eq('tenant_id', ctx.user.id)
+      .single()
+    if (!pt?.project_id) return []
+
+    // All pending assignments in project
+    const { data: assignments } = await ctx.supabase
+      .from('contract_assignments')
+      .select('*, provider:profiles!contract_assignments_provider_id_fkey(id,full_name), tender:tenders!contract_assignments_tender_id_fkey(id,title,tender_type)')
+      .eq('project_id', pt.project_id)
+      .eq('status', 'pending_approval')
+
+    if (!assignments || assignments.length === 0) return []
+
+    // Which ones has this user already approved?
+    const assignmentIds = assignments.map((a: { id: string }) => a.id)
+    const { data: myApprovals } = await ctx.supabase
+      .from('contract_approvals')
+      .select('assignment_id')
+      .eq('approved_by', ctx.user.id)
+      .in('assignment_id', assignmentIds)
+    const approvedSet = new Set((myApprovals ?? []).map((r: { assignment_id: string }) => r.assignment_id))
+
+    return assignments.map((a: { id: string }) => ({
+      ...a,
+      hasApproved: approvedSet.has(a.id),
+    }))
+  }),
 
   getAssignmentStatus: protectedProcedure
     .input(z.object({ assignmentId: z.string().uuid() }))

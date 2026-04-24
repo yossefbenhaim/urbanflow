@@ -294,20 +294,17 @@ function ContractFlow({
   const completeMeeting = trpc.tenders.completeMeeting.useMutation({ onSuccess: () => refetch() })
   const uploadContract = trpc.tenders.uploadContract.useMutation({ onSuccess: () => refetch() })
   const startApproval = trpc.tenders.startApproval.useMutation({ onSuccess: () => refetch() })
-  const approveContract = trpc.tenders.approveContract.useMutation({ onSuccess: () => refetch() })
 
   const [meetingDate, setMeetingDate] = useState('')
   const [contractUrl, setContractUrl] = useState('')
   const [requiredCount, setRequiredCount] = useState('')
-  const [apartmentId, setApartmentId] = useState('')
 
   if (tenderAssignments.length === 0) return null
 
   const STEPS = [
     { key: 'pending_meeting', label: 'קביעת פגישה', icon: '📅' },
     { key: 'meeting_done', label: 'פגישה הושלמה', icon: '✅' },
-    { key: 'contract_uploaded', label: 'חוזה הועלה', icon: '📄' },
-    { key: 'pending_approval', label: 'ממתין לאישורים', icon: '🗳️' },
+    { key: 'pending_approval', label: 'אישור דיירים', icon: '🗳️' },
     { key: 'approved', label: 'אושר', icon: '🎉' },
   ]
 
@@ -421,7 +418,7 @@ function ContractFlow({
             {isRep && a.status === 'contract_uploaded' && (
               <div className="flex gap-2 items-end">
                 <div className="flex-1">
-                  <label className="text-xs text-[#5a5a6e]">מספר אישורים נדרש</label>
+                  <label className="text-xs text-[#5a5a6e]">מספר אישורים נדרש (ברירת מחדל: 2/3 רוב)</label>
                   <input
                     type="number"
                     value={requiredCount}
@@ -441,23 +438,20 @@ function ContractFlow({
             )}
 
             {a.status === 'pending_approval' && (
-              <div className="flex gap-2 items-end mt-3">
-                <div className="flex-1">
-                  <label className="text-xs text-[#5a5a6e]">מספר דירה</label>
-                  <input
-                    value={apartmentId}
-                    onChange={e => setApartmentId(e.target.value)}
-                    placeholder="UUID של הדירה"
-                    className="sc-input mt-1"
-                  />
-                </div>
-                <button
-                  onClick={() => approveContract.mutate({ assignmentId: a.id, apartmentId })}
-                  disabled={!apartmentId}
-                  className="sc-btn-primary text-sm disabled:opacity-50"
-                >
-                  ✅ אישור
-                </button>
+              <div className="mt-3 bg-[#ebf1f7] border border-[#3b6b9c]/20 rounded-xl p-3 text-center">
+                <p className="text-[12px] text-[#1e3a5f] font-medium">
+                  🗳️ הדיירים יכולים לאשר מהדאשבורד האישי שלהם
+                </p>
+                {a.contract_file_url && (
+                  <a
+                    href={a.contract_file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block mt-2 text-[12px] text-[#3b6b9c] font-bold no-underline"
+                  >
+                    📄 צפה בחוזה
+                  </a>
+                )}
               </div>
             )}
 
