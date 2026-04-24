@@ -198,7 +198,7 @@ describe('Inspections Router', () => {
 
       const caller = createTestCaller(ctx)
       await expect(caller.submit({ inspectionId: '11111111-1111-1111-1111-111111111111' }))
-        .rejects.toMatchObject({ code: 'BAD_REQUEST' })
+        .rejects.toMatchObject({ code: 'NOT_FOUND' })
     })
   })
 
