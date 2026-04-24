@@ -114,6 +114,7 @@ export const providerRouter = router({
       : Array.isArray(ppObj.portfolio_url) ? ppObj.portfolio_url as string[]
       : ppObj.portfolio_url ? [ppObj.portfolio_url as string] : []
     const ratingRow = (ratings.data ?? [])[0] as { external_url?: string | null } | undefined
+    const strArr = (v: unknown): string[] => Array.isArray(v) ? (v as unknown[]).filter(x => typeof x === 'string') as string[] : []
     return {
       providerType,
       fullName: pickStr(pObj.full_name, ppObj.full_name),
@@ -136,6 +137,22 @@ export const providerRouter = router({
       website: pickStr(typeRowObj.website, ppObj.website),
       linkedinUrl: pickStr(typeRowObj.linkedin_url, ppObj.linkedin_url),
       ratingUrl: ratingRow?.external_url ?? null,
+      // ── Lawyer-specific fields (null for other provider types) ──
+      officeName: pickStr(typeRowObj.office_name),
+      neighborhoods: strArr(typeRowObj.neighborhoods),
+      preferredProjectSizes: strArr(typeRowObj.preferred_project_sizes),
+      preferredComplexity: strArr(typeRowObj.preferred_complexity),
+      acceptsLowFeasibility: typeof typeRowObj.accepts_low_feasibility === 'boolean' ? typeRowObj.accepts_low_feasibility : false,
+      acceptsDifficultProjects: typeof typeRowObj.accepts_difficult_projects === 'boolean' ? typeRowObj.accepts_difficult_projects : false,
+      inProgressProjectsCount: pickNum(typeRowObj.in_progress_projects_count),
+      completedProjectTypes: strArr(typeRowObj.completed_project_types),
+      sampleDocumentsUrls: strArr(typeRowObj.sample_documents_urls),
+      lawyerReferences: Array.isArray(typeRowObj.references) ? typeRowObj.references as Array<{name:string;phone:string;project_name:string}> : [],
+      whyChooseMe: pickStr(typeRowObj.why_choose_me),
+      feeStructure: pickStr(typeRowObj.fee_structure),
+      feePercent: pickNum(typeRowObj.fee_percent),
+      feeFixedAmount: pickNum(typeRowObj.fee_fixed_amount),
+      feeSpecialTerms: pickStr(typeRowObj.fee_special_terms),
     }
   }),
 

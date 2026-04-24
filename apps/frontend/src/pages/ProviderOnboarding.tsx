@@ -3,19 +3,49 @@ import { useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import CityAutocomplete from '../components/CityAutocomplete'
 
-type ProviderType = 'architect' | 'appraiser' | 'developer'
+type ProviderType = 'architect' | 'appraiser' | 'developer' | 'lawyer'
 
 const TYPE_OPTIONS: { value: ProviderType; title: string; icon: string; desc: string }[] = [
   { value: 'architect', title: 'אדריכל', icon: '🏛️', desc: 'תכנון, תב"ע, היתכנות, המלצות תכנוניות' },
   { value: 'appraiser', title: 'שמאי', icon: '📊', desc: 'הערכות שווי, כדאיות כלכלית, בדיקות שטח' },
   { value: 'developer', title: 'יזם', icon: '🏢', desc: 'פתיחת פרויקט, ליווי, תכנון כלכלי, הצעות' },
+  { value: 'lawyer', title: 'עו״ד מייצג דיירים', icon: '⚖️', desc: 'ייצוג משפטי לדיירים, חוזים, ליטיגציה, ליווי הליך' },
 ]
 
-const SPECIALIZATIONS: Record<ProviderType, string[]> = {
+const LAWYER_SPECIALIZATIONS: { value: string; label: string }[] = [
+  { value: 'pinui_binui', label: 'פינוי בינוי' },
+  { value: 'tama38', label: 'תמ״א 38' },
+  { value: 'complex_compounds', label: 'מתחמים מורכבים' },
+  { value: 'small_projects', label: 'פרויקטים קטנים' },
+  { value: 'difficult_tenant', label: 'טיפול בדייר סרבן' },
+  { value: 'litigation_realestate', label: 'ליטיגציה מקרקעין' },
+]
+
+const PROJECT_SIZES: { value: 'small' | 'medium' | 'large'; label: string }[] = [
+  { value: 'small', label: 'קטן' },
+  { value: 'medium', label: 'בינוני' },
+  { value: 'large', label: 'גדול' },
+]
+
+const COMPLEXITY_LEVELS: { value: 'low' | 'medium' | 'high'; label: string }[] = [
+  { value: 'low', label: 'נמוכה' },
+  { value: 'medium', label: 'בינונית' },
+  { value: 'high', label: 'גבוהה' },
+]
+
+const FEE_STRUCTURES: { value: 'from_developer' | 'from_tenants' | 'mixed'; label: string }[] = [
+  { value: 'from_developer', label: 'מהיזם' },
+  { value: 'from_tenants', label: 'מהדיירים' },
+  { value: 'mixed', label: 'משולב' },
+]
+
+const SPECIALIZATIONS: Record<Exclude<ProviderType, 'lawyer'>, string[]> = {
   architect: ['פינוי בינוי', `תמ"א 38/2`, 'חלופת שקד', 'בינוי פינוי', 'שימור', 'מגורים', 'מסחר'],
   appraiser: ['מגורים', 'מסחר', 'תעשייה', 'קרקעות', 'שימוש מעורב'],
   developer: ['פינוי בינוי', `תמ"א 38/2`, 'חלופת שקד', 'בינוי פינוי'],
 }
+
+type LawyerReference = { name: string; phone: string; project_name: string }
 
 export default function ProviderOnboarding() {
   const navigate = useNavigate()
@@ -46,6 +76,27 @@ export default function ProviderOnboarding() {
   const [c3, setC3] = useState(false)
   const [error, setError] = useState('')
 
+  // ── Lawyer-specific state ──
+  const [officeName, setOfficeName] = useState('')
+  const [neighborhoodInput, setNeighborhoodInput] = useState('')
+  const [neighborhoods, setNeighborhoods] = useState<string[]>([])
+  const [lawyerSpecs, setLawyerSpecs] = useState<string[]>([])
+  const [preferredSizes, setPreferredSizes] = useState<('small' | 'medium' | 'large')[]>([])
+  const [preferredComplexity, setPreferredComplexity] = useState<('low' | 'medium' | 'high')[]>([])
+  const [acceptsLowFeasibility, setAcceptsLowFeasibility] = useState(false)
+  const [acceptsDifficultProjects, setAcceptsDifficultProjects] = useState(false)
+  const [inProgressCount, setInProgressCount] = useState('')
+  const [completedTypeInput, setCompletedTypeInput] = useState('')
+  const [completedTypes, setCompletedTypes] = useState<string[]>([])
+  const [sampleDocInput, setSampleDocInput] = useState('')
+  const [sampleDocs, setSampleDocs] = useState<string[]>([])
+  const [lawyerRefs, setLawyerRefs] = useState<LawyerReference[]>([])
+  const [whyChooseMe, setWhyChooseMe] = useState('')
+  const [feeStructure, setFeeStructure] = useState<'from_developer' | 'from_tenants' | 'mixed' | ''>('')
+  const [feePercent, setFeePercent] = useState('')
+  const [feeFixedAmount, setFeeFixedAmount] = useState('')
+  const [feeSpecialTerms, setFeeSpecialTerms] = useState('')
+
   // Pre-fill form in edit mode
   useEffect(() => {
     if (!existing || justSaved) return
@@ -59,6 +110,25 @@ export default function ProviderOnboarding() {
     setSpecs(existing.specializations ?? [])
     setPortfolio(existing.portfolioUrls ?? [])
     setRatingUrl(existing.ratingUrl ?? '')
+    if (existing.providerType === 'lawyer') {
+      const e = existing as Record<string, unknown>
+      setLawyerSpecs(existing.specializations ?? [])
+      setOfficeName(typeof e.officeName === 'string' ? e.officeName : (typeof e.company === 'string' ? e.company : ''))
+      setNeighborhoods(Array.isArray(e.neighborhoods) ? e.neighborhoods as string[] : [])
+      setPreferredSizes((Array.isArray(e.preferredProjectSizes) ? e.preferredProjectSizes : []) as ('small'|'medium'|'large')[])
+      setPreferredComplexity((Array.isArray(e.preferredComplexity) ? e.preferredComplexity : []) as ('low'|'medium'|'high')[])
+      setAcceptsLowFeasibility(e.acceptsLowFeasibility === true)
+      setAcceptsDifficultProjects(e.acceptsDifficultProjects === true)
+      setInProgressCount(typeof e.inProgressProjectsCount === 'number' ? String(e.inProgressProjectsCount) : '')
+      setCompletedTypes(Array.isArray(e.completedProjectTypes) ? e.completedProjectTypes as string[] : [])
+      setSampleDocs(Array.isArray(e.sampleDocumentsUrls) ? e.sampleDocumentsUrls as string[] : [])
+      setLawyerRefs(Array.isArray(e.lawyerReferences) ? e.lawyerReferences as LawyerReference[] : [])
+      setWhyChooseMe(typeof e.whyChooseMe === 'string' ? e.whyChooseMe : (typeof e.bio === 'string' ? e.bio : ''))
+      setFeeStructure((typeof e.feeStructure === 'string' ? e.feeStructure : '') as 'from_developer'|'from_tenants'|'mixed'|'')
+      setFeePercent(typeof e.feePercent === 'number' ? String(e.feePercent) : '')
+      setFeeFixedAmount(typeof e.feeFixedAmount === 'number' ? String(e.feeFixedAmount) : '')
+      setFeeSpecialTerms(typeof e.feeSpecialTerms === 'string' ? e.feeSpecialTerms : '')
+    }
     // In edit mode: consents were already captured on first run, default to true
     if (existing.providerType) { setC1(true); setC2(true); setC3(true) }
   }, [existing, justSaved])
@@ -90,6 +160,29 @@ export default function ProviderOnboarding() {
     setSpecs(p => p.includes(s) ? p.filter(x => x !== s) : [...p, s])
   }
 
+  const addNeighborhood = () => {
+    const v = neighborhoodInput.trim()
+    if (v && !neighborhoods.includes(v)) setNeighborhoods([...neighborhoods, v])
+    setNeighborhoodInput('')
+  }
+  const addCompletedType = () => {
+    const v = completedTypeInput.trim()
+    if (v && !completedTypes.includes(v)) setCompletedTypes([...completedTypes, v])
+    setCompletedTypeInput('')
+  }
+  const addSampleDoc = () => {
+    const v = sampleDocInput.trim()
+    if (v && !sampleDocs.includes(v)) setSampleDocs([...sampleDocs, v])
+    setSampleDocInput('')
+  }
+  const toggleLawyerSpec = (s: string) => setLawyerSpecs(p => p.includes(s) ? p.filter(x => x !== s) : [...p, s])
+  const toggleSize = (s: 'small'|'medium'|'large') => setPreferredSizes(p => p.includes(s) ? p.filter(x => x !== s) : [...p, s])
+  const toggleComplexity = (c: 'low'|'medium'|'high') => setPreferredComplexity(p => p.includes(c) ? p.filter(x => x !== c) : [...p, c])
+  const addRef = () => setLawyerRefs([...lawyerRefs, { name: '', phone: '', project_name: '' }])
+  const updateRef = (i: number, field: keyof LawyerReference, v: string) =>
+    setLawyerRefs(lawyerRefs.map((r, j) => j === i ? { ...r, [field]: v } : r))
+  const removeRef = (i: number) => setLawyerRefs(lawyerRefs.filter((_, j) => j !== i))
+
   const handleSubmit = async () => {
     setError('')
     if (!type) { setError('בחר סוג נותן שירות'); return }
@@ -97,6 +190,8 @@ export default function ProviderOnboarding() {
     if (!phone.trim()) { setError('טלפון נדרש'); return }
     if (!mainCity.trim()) { setError('עיר פעילות ראשית נדרשת'); return }
     if (!c1 || !c2 || !c3) { setError('יש לאשר את כל ההצהרות'); return }
+
+    const isLawyer = type === 'lawyer'
     submit.mutate({
       providerType: type,
       fullName: fullName.trim(),
@@ -105,12 +200,28 @@ export default function ProviderOnboarding() {
       licenseNumber: license.trim() || undefined,
       experienceYears: years ? +years : undefined,
       completedProjects: projects ? +projects : undefined,
-      specializations: specs,
+      specializations: isLawyer ? lawyerSpecs : specs,
       portfolioUrls: portfolio,
       ratingUrl: ratingUrl.trim() || undefined,
       acceptTerms: c1,
       acceptDataUse: c2,
       acceptProjectSharing: c3,
+      // Lawyer-specific
+      officeName: isLawyer ? (officeName.trim() || undefined) : undefined,
+      neighborhoods: isLawyer ? neighborhoods : [],
+      preferredProjectSizes: isLawyer ? preferredSizes : [],
+      preferredComplexity: isLawyer ? preferredComplexity : [],
+      acceptsLowFeasibility: isLawyer ? acceptsLowFeasibility : undefined,
+      acceptsDifficultProjects: isLawyer ? acceptsDifficultProjects : undefined,
+      inProgressProjectsCount: isLawyer && inProgressCount ? +inProgressCount : undefined,
+      completedProjectTypes: isLawyer ? completedTypes : [],
+      sampleDocumentsUrls: isLawyer ? sampleDocs : [],
+      lawyerReferences: isLawyer ? lawyerRefs.filter(r => r.name.trim() && r.phone.trim()) : [],
+      whyChooseMe: isLawyer ? (whyChooseMe.trim() || undefined) : undefined,
+      feeStructure: isLawyer && feeStructure ? feeStructure : undefined,
+      feePercent: isLawyer && feePercent ? +feePercent : undefined,
+      feeFixedAmount: isLawyer && feeFixedAmount ? +feeFixedAmount : undefined,
+      feeSpecialTerms: isLawyer ? (feeSpecialTerms.trim() || undefined) : undefined,
     })
   }
 
@@ -139,7 +250,7 @@ export default function ProviderOnboarding() {
         {/* Type selector */}
         <div className="mb-6">
           <label className="block text-xs text-[#5a5a6e] mb-2 font-semibold">סוג נותן שירות *</label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {TYPE_OPTIONS.map(o => (
               <button
                 key={o.value}
@@ -180,22 +291,227 @@ export default function ProviderOnboarding() {
                 <LabeledInput label="שנות ניסיון" value={years} onChange={setYears} type="number" />
                 <LabeledInput label="מספר פרויקטים שבוצעו" value={projects} onChange={setProjects} type="number" />
               </div>
-              <div>
-                <label className="block text-xs text-[#5a5a6e] mb-1">אזורי התמחות / סוגי פרויקטים</label>
-                <div className="flex flex-wrap gap-2">
-                  {SPECIALIZATIONS[type].map(s => (
-                    <button
-                      key={s}
-                      onClick={() => toggleSpec(s)}
-                      className={`px-3 py-1.5 rounded-full text-sm font-semibold transition-colors
-                        ${specs.includes(s) ? 'bg-[#1e3a5f] text-white' : 'bg-white border border-[#eeeeee] text-[#5a5a6e]'}`}
-                    >
-                      {s}
-                    </button>
-                  ))}
+              {type !== 'lawyer' && (
+                <div>
+                  <label className="block text-xs text-[#5a5a6e] mb-1">אזורי התמחות / סוגי פרויקטים</label>
+                  <div className="flex flex-wrap gap-2">
+                    {SPECIALIZATIONS[type].map(s => (
+                      <button
+                        key={s}
+                        onClick={() => toggleSpec(s)}
+                        className={`px-3 py-1.5 rounded-full text-sm font-semibold transition-colors
+                          ${specs.includes(s) ? 'bg-[#1e3a5f] text-white' : 'bg-white border border-[#eeeeee] text-[#5a5a6e]'}`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
+
+            {/* ── Lawyer-specific sections ─────────────────────── */}
+            {type === 'lawyer' && (
+              <>
+                <div className="sc-card p-4 mb-4 space-y-3">
+                  <h3 className="font-bold text-[#1e3a5f]">משרד ואזור פעילות</h3>
+                  <LabeledInput label="שם משרד" value={officeName} onChange={setOfficeName} />
+                  <div>
+                    <label className="block text-xs text-[#5a5a6e] mb-1">שכונות (בחירה מרובה)</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={neighborhoodInput}
+                        onChange={e => setNeighborhoodInput(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addNeighborhood())}
+                        placeholder="הקלד שם שכונה ולחץ +"
+                        className="sc-input flex-1"
+                      />
+                      <button onClick={addNeighborhood} className="px-4 rounded-xl bg-[#1e3a5f] text-white font-semibold">+</button>
+                    </div>
+                    {neighborhoods.length > 0 && (
+                      <div className="flex gap-2 flex-wrap mt-2">
+                        {neighborhoods.map((n, i) => (
+                          <span key={i} className="bg-[#ebf1f7] text-[#3b6b9c] px-2 py-0.5 rounded-full text-xs flex items-center gap-1">
+                            {n}
+                            <button onClick={() => setNeighborhoods(neighborhoods.filter((_, j) => j !== i))} className="text-[#3b6b9c]">x</button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="sc-card p-4 mb-4 space-y-3">
+                  <h3 className="font-bold text-[#1e3a5f]">תחומי התמחות</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {LAWYER_SPECIALIZATIONS.map(s => (
+                      <button
+                        key={s.value}
+                        onClick={() => toggleLawyerSpec(s.value)}
+                        className={`px-3 py-1.5 rounded-full text-sm font-semibold transition-colors
+                          ${lawyerSpecs.includes(s.value) ? 'bg-[#1e3a5f] text-white' : 'bg-white border border-[#eeeeee] text-[#5a5a6e]'}`}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="sc-card p-4 mb-4 space-y-3">
+                  <h3 className="font-bold text-[#1e3a5f]">סוגי פרויקטים מועדפים</h3>
+                  <div>
+                    <label className="block text-xs text-[#5a5a6e] mb-1">מספר דיירים</label>
+                    <div className="flex gap-2">
+                      {PROJECT_SIZES.map(s => (
+                        <button
+                          key={s.value}
+                          onClick={() => toggleSize(s.value)}
+                          className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold transition-colors
+                            ${preferredSizes.includes(s.value) ? 'bg-[#1e3a5f] text-white' : 'bg-white border border-[#eeeeee] text-[#5a5a6e]'}`}
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-[#5a5a6e] mb-1">רמת מורכבות</label>
+                    <div className="flex gap-2">
+                      {COMPLEXITY_LEVELS.map(c => (
+                        <button
+                          key={c.value}
+                          onClick={() => toggleComplexity(c.value)}
+                          className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold transition-colors
+                            ${preferredComplexity.includes(c.value) ? 'bg-[#1e3a5f] text-white' : 'bg-white border border-[#eeeeee] text-[#5a5a6e]'}`}
+                        >
+                          {c.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <Checkbox checked={acceptsLowFeasibility} onChange={setAcceptsLowFeasibility} label="מוכן/ה לקבל פרויקטים עם כדאיות נמוכה" />
+                  <Checkbox checked={acceptsDifficultProjects} onChange={setAcceptsDifficultProjects} label="מוכן/ה לפרויקטים קשים / דיירים סרבנים" />
+                </div>
+
+                <div className="sc-card p-4 mb-4 space-y-3">
+                  <h3 className="font-bold text-[#1e3a5f]">ניסיון בפועל</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <LabeledInput label="פרויקטים בתהליך" value={inProgressCount} onChange={setInProgressCount} type="number" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-[#5a5a6e] mb-1">סוגי פרויקטים שבוצעו</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={completedTypeInput}
+                        onChange={e => setCompletedTypeInput(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addCompletedType())}
+                        placeholder="למשל: פינוי בינוי בתל אביב"
+                        className="sc-input flex-1"
+                      />
+                      <button onClick={addCompletedType} className="px-4 rounded-xl bg-[#1e3a5f] text-white font-semibold">+</button>
+                    </div>
+                    {completedTypes.length > 0 && (
+                      <div className="flex gap-2 flex-wrap mt-2">
+                        {completedTypes.map((t, i) => (
+                          <span key={i} className="bg-[#ebf1f7] text-[#3b6b9c] px-2 py-0.5 rounded-full text-xs flex items-center gap-1">
+                            {t}
+                            <button onClick={() => setCompletedTypes(completedTypes.filter((_, j) => j !== i))} className="text-[#3b6b9c]">x</button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-xs text-[#5a5a6e] mb-1">קישורי דוגמאות (PDF אופציונלי)</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={sampleDocInput}
+                        onChange={e => setSampleDocInput(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSampleDoc())}
+                        placeholder="https://..."
+                        className="sc-input flex-1"
+                      />
+                      <button onClick={addSampleDoc} className="px-4 rounded-xl bg-[#1e3a5f] text-white font-semibold">+</button>
+                    </div>
+                    {sampleDocs.length > 0 && (
+                      <div className="flex gap-2 flex-wrap mt-2">
+                        {sampleDocs.map((u, i) => {
+                          let host = u
+                          try { host = new URL(u).hostname } catch { /* keep url */ }
+                          return (
+                            <span key={i} className="bg-[#ebf1f7] text-[#3b6b9c] px-2 py-0.5 rounded-full text-xs flex items-center gap-1">
+                              {host}
+                              <button onClick={() => setSampleDocs(sampleDocs.filter((_, j) => j !== i))} className="text-[#3b6b9c]">x</button>
+                            </span>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="sc-card p-4 mb-4 space-y-3">
+                  <h3 className="font-bold text-[#1e3a5f]">אמינות והמלצות</h3>
+                  {lawyerRefs.map((r, i) => (
+                    <div key={i} className="border border-[#eeeeee] rounded-xl p-3 space-y-2 relative">
+                      <button onClick={() => removeRef(i)} className="absolute top-2 left-2 text-red-500 text-xs">הסר</button>
+                      <LabeledInput label="שם ממליץ" value={r.name} onChange={v => updateRef(i, 'name', v)} />
+                      <LabeledInput label="טלפון" value={r.phone} onChange={v => updateRef(i, 'phone', v)} placeholder="050-1234567" />
+                      <LabeledInput label="שם פרויקט" value={r.project_name} onChange={v => updateRef(i, 'project_name', v)} />
+                    </div>
+                  ))}
+                  <button onClick={addRef} className="w-full py-2 rounded-xl border border-dashed border-[#3b6b9c] text-[#3b6b9c] text-sm font-semibold">
+                    + הוסף ממליץ
+                  </button>
+                  <div>
+                    <label className="block text-xs text-[#5a5a6e] mb-1">למה לבחור בי?</label>
+                    <textarea
+                      value={whyChooseMe}
+                      onChange={e => setWhyChooseMe(e.target.value)}
+                      rows={4}
+                      placeholder="ספר/י על הגישה שלך, על ההבדל בשירות, על הניסיון הייחודי..."
+                      className="sc-input resize-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="sc-card p-4 mb-4 space-y-3">
+                  <h3 className="font-bold text-[#1e3a5f]">שכר טרחה</h3>
+                  <div>
+                    <label className="block text-xs text-[#5a5a6e] mb-1">איך נגבה?</label>
+                    <div className="flex gap-2">
+                      {FEE_STRUCTURES.map(f => (
+                        <button
+                          key={f.value}
+                          onClick={() => setFeeStructure(f.value)}
+                          className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold transition-colors
+                            ${feeStructure === f.value ? 'bg-[#1e3a5f] text-white' : 'bg-white border border-[#eeeeee] text-[#5a5a6e]'}`}
+                        >
+                          {f.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <LabeledInput label="אחוז (%)" value={feePercent} onChange={setFeePercent} type="number" placeholder="למשל: 2.5" />
+                    <LabeledInput label="סכום קבוע (₪)" value={feeFixedAmount} onChange={setFeeFixedAmount} type="number" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-[#5a5a6e] mb-1">תנאים מיוחדים</label>
+                    <textarea
+                      value={feeSpecialTerms}
+                      onChange={e => setFeeSpecialTerms(e.target.value)}
+                      rows={3}
+                      placeholder="למשל: תשלום בשלבים, הצלחה..."
+                      className="sc-input resize-none"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Portfolio */}
             <div className="sc-card p-4 mb-4 space-y-3">

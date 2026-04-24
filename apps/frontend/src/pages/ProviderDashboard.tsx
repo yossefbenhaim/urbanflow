@@ -209,17 +209,35 @@ const PROVIDER_TYPE_LABELS: Record<string, string> = {
   architect: '🏛️ אדריכל',
   appraiser: '📊 שמאי',
   developer: '🏢 יזם',
+  lawyer: '⚖️ עו״ד מייצג דיירים',
 }
 
-type ProviderType = 'architect' | 'appraiser' | 'developer'
+const LAWYER_SPEC_LABELS: Record<string, string> = {
+  pinui_binui: 'פינוי בינוי',
+  tama38: 'תמ״א 38',
+  complex_compounds: 'מתחמים מורכבים',
+  small_projects: 'פרויקטים קטנים',
+  difficult_tenant: 'טיפול בדייר סרבן',
+  litigation_realestate: 'ליטיגציה מקרקעין',
+}
+const FEE_STRUCTURE_LABELS: Record<string, string> = {
+  from_developer: 'מהיזם',
+  from_tenants: 'מהדיירים',
+  mixed: 'משולב',
+}
+const SIZE_LABELS: Record<string, string> = { small: 'קטן', medium: 'בינוני', large: 'גדול' }
+const COMPLEXITY_LABELS: Record<string, string> = { low: 'נמוכה', medium: 'בינונית', high: 'גבוהה' }
 
-const SPECIALIZATIONS: Record<ProviderType, string[]> = {
+type ProviderType = 'architect' | 'appraiser' | 'developer' | 'lawyer'
+
+const SPECIALIZATIONS: Record<Exclude<ProviderType, 'lawyer'>, string[]> = {
   architect: ['פינוי בינוי', `תמ"א 38/2`, 'חלופת שקד', 'בינוי פינוי', 'שימור', 'מגורים', 'מסחר'],
   appraiser: ['מגורים', 'מסחר', 'תעשייה', 'קרקעות', 'שימוש מעורב'],
   developer: ['פינוי בינוי', `תמ"א 38/2`, 'חלופת שקד', 'בינוי פינוי'],
 }
 
 function ProfileTab() {
+  const navigate = useNavigate()
   const utils = trpc.useUtils()
   const { data, isLoading, refetch, isFetching } = trpc.provider.getMyDetails.useQuery(undefined, {
     refetchOnMount: 'always',
@@ -266,7 +284,15 @@ function ProfileTab() {
 
   const initial = (data.fullName || data.email || '?')[0].toUpperCase()
 
-  const onStartEdit = () => { hydrate(); setEditing(true) }
+  const onStartEdit = () => {
+    // Lawyer has many type-specific fields — route to onboarding in edit mode
+    // instead of trying to reproduce the whole form inline.
+    if (data?.providerType === 'lawyer') {
+      navigate('/provider/onboarding')
+      return
+    }
+    hydrate(); setEditing(true)
+  }
   const onCancel = () => { setEditing(false) }
   const onSave = () => {
     if (!data.providerType) { toast.error('סוג נותן שירות חסר'); return }
@@ -326,7 +352,7 @@ function ProfileTab() {
             <EditField label="פרויקטים שבוצעו" value={projects} onChange={setProjects} type="number" />
           </div>
 
-          {type && (
+          {type && type !== 'lawyer' && (
             <div>
               <label className="block text-xs text-[#5a5a6e] mb-1">אזורי התמחות / סוגי פרויקטים</label>
               <div className="flex flex-wrap gap-2">
@@ -386,6 +412,11 @@ function ProfileTab() {
   const arr = (k: string): string[] => Array.isArray(d[k]) ? d[k] as string[] : []
   const regions = arr('operatingRegions')
   const extraRegions = regions.slice(1)
+  const isLawyer = data.providerType === 'lawyer'
+  const specsHe = isLawyer
+    ? arr('specializations').map(s => LAWYER_SPEC_LABELS[s] ?? s)
+    : arr('specializations')
+  const refs = Array.isArray(d.lawyerReferences) ? d.lawyerReferences as Array<{name:string;phone:string;project_name:string}> : []
   const rows: { label: string; value: string | null }[] = [
     { label: 'סוג שירות', value: data.providerType ? PROVIDER_TYPE_LABELS[data.providerType] : null },
     { label: 'שם מלא', value: data.fullName },
@@ -393,17 +424,28 @@ function ProfileTab() {
     { label: 'אימייל', value: data.email },
     { label: 'עיר פעילות ראשית', value: data.mainCity },
     ...(extraRegions.length > 0 ? [{ label: 'אזורי פעילות נוספים', value: extraRegions.join(', ') }] : []),
-    { label: 'חברה / משרד', value: str('company') },
+    ...(isLawyer && arr('neighborhoods').length > 0 ? [{ label: 'שכונות', value: arr('neighborhoods').join(', ') }] : []),
+    { label: isLawyer ? 'שם משרד' : 'חברה / משרד', value: isLawyer ? str('officeName') || str('company') : str('company') },
     { label: 'מספר רישיון', value: data.licenseNumber },
     { label: 'רשות רישוי', value: str('licenseAuthority') },
     { label: 'תוקף רישיון', value: str('licenseExpiry') },
     { label: 'שנות ניסיון', value: num('experienceYears') != null ? `${num('experienceYears')} שנים` : null },
     { label: 'פרויקטים שבוצעו', value: num('completedProjects') != null ? String(num('completedProjects')) : null },
-    { label: 'התמחויות', value: arr('specializations').length > 0 ? arr('specializations').join(', ') : null },
+    ...(isLawyer && num('inProgressProjectsCount') != null ? [{ label: 'פרויקטים בתהליך', value: String(num('inProgressProjectsCount')) }] : []),
+    { label: 'התמחויות', value: specsHe.length > 0 ? specsHe.join(', ') : null },
+    ...(isLawyer && arr('preferredProjectSizes').length > 0 ? [{ label: 'גדלי פרויקט מועדפים', value: arr('preferredProjectSizes').map(s => SIZE_LABELS[s] ?? s).join(', ') }] : []),
+    ...(isLawyer && arr('preferredComplexity').length > 0 ? [{ label: 'רמות מורכבות', value: arr('preferredComplexity').map(c => COMPLEXITY_LABELS[c] ?? c).join(', ') }] : []),
+    ...(isLawyer ? [{ label: 'מקבל כדאיות נמוכה', value: d.acceptsLowFeasibility === true ? 'כן' : 'לא' }] : []),
+    ...(isLawyer ? [{ label: 'מקבל פרויקטים קשים', value: d.acceptsDifficultProjects === true ? 'כן' : 'לא' }] : []),
+    ...(isLawyer && arr('completedProjectTypes').length > 0 ? [{ label: 'סוגי פרויקטים שבוצעו', value: arr('completedProjectTypes').join(', ') }] : []),
+    ...(isLawyer && str('feeStructure') ? [{ label: 'מבנה שכר טרחה', value: FEE_STRUCTURE_LABELS[str('feeStructure')!] ?? str('feeStructure') }] : []),
+    ...(isLawyer && num('feePercent') != null ? [{ label: 'אחוז שכר טרחה', value: `${num('feePercent')}%` }] : []),
+    ...(isLawyer && num('feeFixedAmount') != null ? [{ label: 'סכום קבוע', value: `${num('feeFixedAmount')} ₪` }] : []),
+    ...(isLawyer && str('feeSpecialTerms') ? [{ label: 'תנאים מיוחדים', value: str('feeSpecialTerms') }] : []),
     { label: 'אתר / אתר אישי', value: str('website') },
     { label: 'LinkedIn', value: str('linkedinUrl') },
     { label: 'קישור לדירוג', value: data.ratingUrl },
-    { label: 'תיאור מקצועי', value: str('bio') },
+    { label: isLawyer ? 'למה לבחור בי' : 'תיאור מקצועי', value: isLawyer ? str('whyChooseMe') || str('bio') : str('bio') },
   ]
 
   return (
@@ -434,6 +476,21 @@ function ProfileTab() {
                 <a key={i} href={url} target="_blank" rel="noopener" className="text-[12px] text-[#3b6b9c] underline">
                   {safeHost(url)}
                 </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {isLawyer && refs.length > 0 && (
+          <div className="border-b border-[#eeeeee] pb-3">
+            <p className="text-[11px] text-[#5a5a6e] mb-2">ממליצים</p>
+            <div className="space-y-2">
+              {refs.map((r, i) => (
+                <div key={i} className="bg-[#f8f9fa] rounded-xl p-2 text-[12px] text-[#212121]">
+                  <span className="font-semibold">{r.name}</span>
+                  {r.phone && <span className="text-[#5a5a6e]"> · {r.phone}</span>}
+                  {r.project_name && <span className="text-[#8e8e9e]"> · {r.project_name}</span>}
+                </div>
               ))}
             </div>
           </div>
