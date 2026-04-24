@@ -288,12 +288,44 @@ export const tendersRouter = router({
   getTenderProposals: protectedProcedure
     .input(z.object({ tenderId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      const { data } = await ctx.supabase
+      // tender_proposals.provider_id FK points to auth.users, not
+      // public.profiles. The PostgREST embedded join fails silently
+      // (PGRST200) and this endpoint used to return []. Two-step fetch.
+      interface ProposalRow {
+        id: string
+        tender_id: string
+        provider_id: string
+        price: number | null
+        timeline: string | null
+        description: string | null
+        benefits: string | null
+        experience_years: number | null
+        past_projects_count: number | null
+        warranty_details: string | null
+        documents: string[] | null
+        status: string
+        submitted_at: string
+      }
+      const { data: proposals } = await ctx.supabase
         .from('tender_proposals')
-        .select('*, provider:profiles!tender_proposals_provider_id_fkey(id,full_name,avatar_url)')
+        .select('*')
         .eq('tender_id', input.tenderId)
         .order('submitted_at', { ascending: false })
-      return data ?? []
+      const rows = (proposals ?? []) as ProposalRow[]
+      if (rows.length === 0) return []
+
+      const providerIds = Array.from(new Set(rows.map(r => r.provider_id)))
+      const { data: profs } = await ctx.supabase
+        .from('profiles').select('id, full_name, avatar_url').in('id', providerIds)
+      const profMap = new Map<string, { id: string; full_name: string | null; avatar_url: string | null }>(
+        ((profs ?? []) as Array<{ id: string; full_name: string | null; avatar_url: string | null }>).map(p => [p.id, p])
+      )
+      return rows.map((r): ProposalRow & {
+        provider: { id: string; full_name: string | null; avatar_url: string | null } | null
+      } => ({
+        ...r,
+        provider: profMap.get(r.provider_id) ?? null,
+      }))
     }),
 
   getTenderById: protectedProcedure

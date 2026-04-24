@@ -81,7 +81,7 @@ function ProposalComparison({
           </tr>
         </thead>
         <tbody>
-          {sorted.map((p: { id: string; status: string; provider_id: string; provider?: { full_name?: string }; price?: number; timeline_months?: number; experience_years?: number; past_projects_count?: number; warranty_details?: string }) => (
+          {sorted.map((p: { id: string; status: string; provider_id: string; provider?: { full_name?: string | null } | null; price?: number | null; timeline_months?: number | null; timeline?: string | null; experience_years?: number | null; past_projects_count?: number | null; warranty_details?: string | null }) => (
             <tr
               key={p.id}
               className={`border-t transition-colors ${
