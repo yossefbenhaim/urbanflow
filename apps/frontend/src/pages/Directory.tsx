@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import { trpc } from '../lib/trpc'
 import { useUser } from '../hooks/useUser'
 import PageLayout, { PageTitle } from '../components/PageLayout'
@@ -11,7 +12,8 @@ function QuoteModal({ recipientId, recipientName, onClose }: { recipientId: stri
   const [budget, setBudget] = useState('')
   const [timeline, setTimeline] = useState('')
   const sendRequest = trpc.quotes.sendRequest.useMutation({
-    onSuccess: () => { alert('הצעת המחיר נשלחה בהצלחה!'); onClose() }
+    onSuccess: () => { toast.success('הצעת המחיר נשלחה בהצלחה!'); onClose() },
+    onError: (e) => toast.error(e.message || 'שגיאה בשליחת הבקשה'),
   })
   return (
     <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" dir="rtl">

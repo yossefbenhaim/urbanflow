@@ -26,21 +26,77 @@ export const quotesRouter = router({
     }),
 
   getMyRequests: protectedProcedure.query(async ({ ctx }) => {
-    const { data } = await ctx.supabase
+    // quote_requests FKs reference auth.users, not profiles — embedded
+    // join via profiles!… would fail PGRST200. Two-step fetch.
+    interface QuoteRequestRow {
+      id: string
+      sender_id: string
+      recipient_id: string
+      project_description: string
+      budget_range: string | null
+      timeline: string | null
+      status: string
+      created_at: string
+      updated_at: string | null
+      quote_responses: Array<{
+        id: string
+        quote_request_id: string
+        responder_id: string
+        content: string
+        price_offer: string | null
+        created_at: string
+      }>
+    }
+    type Profile = { id: string; full_name: string | null; role: string | null }
+    const { data: rows } = await ctx.supabase
       .from('quote_requests')
-      .select('*, sender:profiles!quote_requests_sender_id_fkey(id,full_name,role), quote_responses(*)')
+      .select('*, quote_responses(*)')
       .eq('recipient_id', ctx.user.id)
       .order('created_at', { ascending: false })
-    return data ?? []
+    const list = (rows ?? []) as QuoteRequestRow[]
+    if (list.length === 0) return [] as Array<QuoteRequestRow & { sender: Profile | null }>
+    const senderIds = Array.from(new Set(list.map(r => r.sender_id)))
+    const { data: profs } = await ctx.supabase.from('profiles').select('id, full_name, role').in('id', senderIds)
+    const profMap = new Map<string, Profile>(((profs ?? []) as Profile[]).map(p => [p.id, p]))
+    return list.map((r): QuoteRequestRow & { sender: Profile | null } => ({
+      ...r, sender: profMap.get(r.sender_id) ?? null,
+    }))
   }),
 
   getSentRequests: protectedProcedure.query(async ({ ctx }) => {
-    const { data } = await ctx.supabase
+    interface QuoteRequestRow {
+      id: string
+      sender_id: string
+      recipient_id: string
+      project_description: string
+      budget_range: string | null
+      timeline: string | null
+      status: string
+      created_at: string
+      updated_at: string | null
+      quote_responses: Array<{
+        id: string
+        quote_request_id: string
+        responder_id: string
+        content: string
+        price_offer: string | null
+        created_at: string
+      }>
+    }
+    type Profile = { id: string; full_name: string | null; role: string | null }
+    const { data: rows } = await ctx.supabase
       .from('quote_requests')
-      .select('*, recipient:profiles!quote_requests_recipient_id_fkey(id,full_name,role), quote_responses(*)')
+      .select('*, quote_responses(*)')
       .eq('sender_id', ctx.user.id)
       .order('created_at', { ascending: false })
-    return data ?? []
+    const list = (rows ?? []) as QuoteRequestRow[]
+    if (list.length === 0) return [] as Array<QuoteRequestRow & { recipient: Profile | null }>
+    const recipientIds = Array.from(new Set(list.map(r => r.recipient_id)))
+    const { data: profs } = await ctx.supabase.from('profiles').select('id, full_name, role').in('id', recipientIds)
+    const profMap = new Map<string, Profile>(((profs ?? []) as Profile[]).map(p => [p.id, p]))
+    return list.map((r): QuoteRequestRow & { recipient: Profile | null } => ({
+      ...r, recipient: profMap.get(r.recipient_id) ?? null,
+    }))
   }),
 
   respond: protectedProcedure
