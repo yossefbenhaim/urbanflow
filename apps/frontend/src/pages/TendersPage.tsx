@@ -339,8 +339,13 @@ export default function TendersPage() {
   const [matchTarget, setMatchTarget] = useState<{ id: string; name: string; tenderId: string } | null>(null)
   const [meetingTarget, setMeetingTarget] = useState<{ tenderId: string; counterpartId: string; counterpartName: string } | null>(null)
 
-  // Get user's project
-  const projectId = profile?.project_id
+  // Resolve user's project via proper backend endpoint. profile.project_id
+  // from the auth store is never populated — relying on it shows an
+  // incorrect "יש להצטרף לפרויקט" state for every tenant including ועד.
+  const { data: myProject } = trpc.tenant.getMyProjectId.useQuery(undefined, {
+    enabled: !!profile,
+  })
+  const projectId = myProject?.projectId ?? profile?.project_id ?? null
 
   const { data: tenders, refetch } = trpc.tenders.getProjectTenders.useQuery(
     { projectId: projectId! },

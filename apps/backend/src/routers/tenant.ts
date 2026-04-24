@@ -346,6 +346,41 @@ export const tenantRouter = router({
     }
   }),
 
+  /** Resolves the user's project via all known paths:
+   *   1. project_tenants.tenant_id → project_id (direct membership)
+   *   2. profiles.representative_building_id → buildings.project_id (ועד rep)
+   *   3. tenant_profiles → units → buildings → project_id (fallback chain)
+   * Used by any page that needs "which project am I in" without guessing. */
+  getMyProjectId: protectedProcedure.query(async ({ ctx }) => {
+    // 1. Direct project_tenants row
+    const { data: pt } = await ctx.supabase
+      .from('project_tenants').select('project_id').eq('tenant_id', ctx.user.id).maybeSingle()
+    if (pt && (pt as { project_id?: string }).project_id) {
+      return { projectId: (pt as { project_id: string }).project_id, source: 'project_tenants' as const }
+    }
+
+    // 2. Rep flag → building → project
+    const { data: pr } = await ctx.supabase
+      .from('profiles').select('representative_building_id').eq('id', ctx.user.id).maybeSingle()
+    const repBid = (pr as { representative_building_id?: string | null } | null)?.representative_building_id
+    if (repBid) {
+      const { data: bld } = await ctx.supabase
+        .from('buildings').select('project_id').eq('id', repBid).maybeSingle()
+      const projectId = (bld as { project_id?: string } | null)?.project_id
+      if (projectId) return { projectId, source: 'representative_building' as const }
+    }
+
+    // 3. Unit → building → project
+    const { data: tp } = await ctx.supabase
+      .from('tenant_profiles').select('unit:units(building:buildings(project_id))').eq('user_id', ctx.user.id).maybeSingle()
+    const unit = (tp as { unit?: { building?: { project_id?: string } } | Array<{ building?: { project_id?: string } }> } | null)?.unit
+    const unitObj = Array.isArray(unit) ? unit[0] : unit
+    const projectId = unitObj?.building?.project_id
+    if (projectId) return { projectId, source: 'unit_chain' as const }
+
+    return { projectId: null, source: null }
+  }),
+
   getMyBuildingGroup: protectedProcedure.query(async ({ ctx }) => {
     const { data: tp } = await ctx.supabase.from('tenant_profiles').select('building_id').eq('user_id', ctx.user.id).single()
     if (!(tp as TenantProfileRow | null)?.building_id) return null
