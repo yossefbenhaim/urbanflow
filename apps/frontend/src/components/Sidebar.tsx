@@ -81,7 +81,7 @@ function NotificationBell() {
 // ── Sidebar Items by Role ─────────────────────────────────────────────────────
 type NavItem = { to: string; icon: string; label: string }
 
-function getSidebarItems(role: string, isRepresentative: boolean): NavItem[] {
+function getSidebarItems(role: string, isRepresentative: boolean, providerType?: string | null): NavItem[] {
   switch (role) {
     case 'tenant':
       return [
@@ -105,15 +105,19 @@ function getSidebarItems(role: string, isRepresentative: boolean): NavItem[] {
         { to: '/tenders', icon: '📋', label: 'מכרזים' },
         { to: '/profile', icon: '👤', label: 'פרופיל' },
       ]
-    case 'provider':
+    case 'provider': {
+      // בדיקות is the professional inspection flow — only אדריכל + שמאי
+      // submit those. Lawyers and developers don't need to see the tab.
+      const showInspections = providerType === 'architect' || providerType === 'appraiser'
       return [
         { to: '/provider', icon: '🏠', label: 'ראשי' },
-        { to: '/inspections', icon: '🔍', label: 'בדיקות' },
+        ...(showInspections ? [{ to: '/inspections', icon: '🔍', label: 'בדיקות' }] : []),
         { to: '/chat', icon: '💬', label: 'צ\'אט' },
         { to: '/quotes', icon: '💰', label: 'הצעות מחיר' },
         { to: '/provider/preferences', icon: '⚙️', label: 'העדפות' },
         { to: '/provider/profile', icon: '👤', label: 'פרופיל' },
       ]
+    }
     case 'organizer':
       return [
         { to: '/organizer', icon: '🏠', label: 'ראשי' },
@@ -167,11 +171,17 @@ export default function Sidebar({ overrideItems }: { overrideItems?: NavItem[] }
   })
   const isRepresentative = (myRole as { isRepresentative?: boolean } | undefined)?.isRepresentative || false
 
+  // Needed to decide whether to show בדיקות — only architect/appraiser.
+  const { data: onboarding } = trpc.provider.getOnboardingStatus.useQuery(undefined, {
+    enabled: !!token && profile?.role === 'provider',
+  })
+  const providerType = (onboarding as { role?: string | null } | undefined)?.role ?? null
+
   if (loading || !profile) return null
 
   const roleInfo = ROLE_LABELS[profile.role ?? ''] ?? { label: '', icon: '👤', color: '' }
 
-  const navItems = overrideItems || getSidebarItems(profile.role ?? '', isRepresentative)
+  const navItems = overrideItems || getSidebarItems(profile.role ?? '', isRepresentative, providerType)
 
   // Pick the nav item whose path is the LONGEST prefix of the current URL.
   // This prevents both /provider and /provider/preferences from highlighting

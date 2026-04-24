@@ -40,13 +40,36 @@ export default function InspectionsPage() {
   const [selectedType, setSelectedType] = useState<InspectionType | null>(null)
   const [activeTab, setActiveTab] = useState<'projects' | 'my-inspections' | 'notifications'>('projects')
 
-  const { data: planData } = trpc.inspections.getMyPlan.useQuery()
-  const { data: projectsData, isLoading } = trpc.inspections.getOpenProjects.useQuery()
-  const { data: myInspections } = trpc.inspections.getMyInspections.useQuery()
-  const { data: notifications } = trpc.inspections.getNotifications.useQuery()
+  // Inspections are an architect/appraiser flow. Gate the page explicitly
+  // for lawyers/developers who might land here via a stale URL or bookmark.
+  const { data: onboarding, isLoading: loadingType } = trpc.provider.getOnboardingStatus.useQuery()
+  const providerType = (onboarding as { role?: string | null } | undefined)?.role ?? null
+  const allowed = providerType === 'architect' || providerType === 'appraiser'
+
+  const { data: planData } = trpc.inspections.getMyPlan.useQuery(undefined, { enabled: allowed })
+  const { data: projectsData, isLoading } = trpc.inspections.getOpenProjects.useQuery(undefined, { enabled: allowed })
+  const { data: myInspections } = trpc.inspections.getMyInspections.useQuery(undefined, { enabled: allowed })
+  const { data: notifications } = trpc.inspections.getNotifications.useQuery(undefined, { enabled: allowed })
   const unreadCount = notifications?.filter(n => !n.is_read).length ?? 0
 
   const markRead = trpc.inspections.markNotificationRead.useMutation()
+
+  if (!loadingType && !allowed) {
+    return (
+      <PageLayout>
+        <div className="max-w-lg mx-auto p-8 text-center">
+          <div className="text-5xl mb-4">🔒</div>
+          <h2 className="text-xl font-bold text-[#212121] mb-2">בדיקות מקצועיות</h2>
+          <p className="text-[#5a5a6e] text-sm mb-6">
+            אזור זה זמין לאדריכלים ושמאים בלבד. אם אתה נותן שירות מסוג אחר
+            (עו״ד / יזם), לוח הבקרה שלך ב״ראשי״ מציג את המכרזים והפרויקטים
+            הרלוונטיים עבורך.
+          </p>
+          <button onClick={() => navigate('/provider')} className="sc-btn-primary">חזרה לראשי</button>
+        </div>
+      </PageLayout>
+    )
+  }
 
   return (
     <PageLayout>
