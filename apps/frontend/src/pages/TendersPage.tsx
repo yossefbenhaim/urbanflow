@@ -367,8 +367,8 @@ export default function TendersPage() {
   const isProvider = profile?.role === 'provider'
 
   const displayTenders = isProvider
-    ? (tenders ?? []).filter((t: { status?: string }) => t.status === 'open')
-    : tenders ?? []
+    ? (tenders ?? []).filter(t => t.status === 'open')
+    : (tenders ?? [])
 
   return (
     <PageLayout>
@@ -418,7 +418,7 @@ export default function TendersPage() {
         )}
 
         <div className="space-y-4">
-          {displayTenders.map((tender: { id: string; title: string; tender_type: string; status: string; description?: string; created_at: string; deadline?: string; tender_proposals?: { count?: number }[]; creator?: { full_name?: string }; winner?: { id: string; full_name: string } }) => {
+          {displayTenders.map((tender: { id: string; title: string; tender_type: string; status: string; description?: string | null; created_at: string; deadline?: string | null; tender_proposals?: { count?: number }[]; creator?: { full_name?: string | null } | null; winner?: { id: string; full_name: string | null } | null }) => {
             const typeInfo = TENDER_TYPES.find(t => t.key === tender.tender_type)
             const statusInfo = STATUS_LABELS[tender.status] || STATUS_LABELS.open
 
@@ -465,11 +465,11 @@ export default function TendersPage() {
                   {isRep && tender.status === 'awarded' && tender.winner && (
                     <div className="flex gap-2">
                       <button
-                        onClick={e => { e.stopPropagation(); setMatchTarget({ id: tender.winner!.id, name: tender.winner!.full_name, tenderId: tender.id }) }}
+                        onClick={e => { e.stopPropagation(); setMatchTarget({ id: tender.winner!.id, name: tender.winner!.full_name ?? '', tenderId: tender.id }) }}
                         className="sc-btn-secondary text-sm whitespace-nowrap"
                       >🤝 שלח הצעה</button>
                       <button
-                        onClick={e => { e.stopPropagation(); setMeetingTarget({ tenderId: tender.id, counterpartId: tender.winner!.id, counterpartName: tender.winner!.full_name }) }}
+                        onClick={e => { e.stopPropagation(); setMeetingTarget({ tenderId: tender.id, counterpartId: tender.winner!.id, counterpartName: tender.winner!.full_name ?? '' }) }}
                         className="sc-btn-secondary text-sm whitespace-nowrap"
                       >📅 דווח פגישה</button>
                     </div>

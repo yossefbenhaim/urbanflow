@@ -176,19 +176,33 @@ export const tendersRouter = router({
       // PostgREST embedded join via profiles!tenders_created_by_fkey
       // silently fails (PGRST200). Fetch tenders + profiles + proposal
       // counts separately and stitch manually.
+      interface TenderRow {
+        id: string
+        project_id: string
+        created_by: string
+        title: string
+        description: string | null
+        tender_type: string
+        requirements: string | null
+        deadline: string | null
+        status: string
+        winner_id: string | null
+        created_at: string
+        closed_at: string | null
+      }
       const { data: tenders } = await ctx.supabase
         .from('tenders')
         .select('*')
         .eq('project_id', input.projectId)
         .order('created_at', { ascending: false })
-      const rows = (tenders ?? []) as Array<Record<string, unknown>>
+      const rows = (tenders ?? []) as TenderRow[]
       if (rows.length === 0) return []
 
       const userIds = Array.from(new Set(
-        rows.flatMap(t => [t.created_by as string | null, t.winner_id as string | null])
+        rows.flatMap(t => [t.created_by, t.winner_id])
             .filter((x): x is string => !!x)
       ))
-      const tenderIds = rows.map(t => t.id as string)
+      const tenderIds = rows.map(t => t.id)
 
       const [profilesRes, proposalsRes] = await Promise.all([
         userIds.length > 0
@@ -204,11 +218,15 @@ export const tendersRouter = router({
         proposalCount[p.tender_id] = (proposalCount[p.tender_id] ?? 0) + 1
       }
 
-      return rows.map(t => ({
+      return rows.map((t): TenderRow & {
+        creator: { id: string; full_name: string | null } | null
+        winner: { id: string; full_name: string | null } | null
+        tender_proposals: { count: number }[]
+      } => ({
         ...t,
-        creator: t.created_by ? profMap.get(t.created_by as string) ?? null : null,
-        winner: t.winner_id ? profMap.get(t.winner_id as string) ?? null : null,
-        tender_proposals: [{ count: proposalCount[t.id as string] ?? 0 }],
+        creator: t.created_by ? profMap.get(t.created_by) ?? null : null,
+        winner: t.winner_id ? profMap.get(t.winner_id) ?? null : null,
+        tender_proposals: [{ count: proposalCount[t.id] ?? 0 }],
       }))
     }),
 
