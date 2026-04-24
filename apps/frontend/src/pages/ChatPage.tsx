@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import { useUser } from '../hooks/useUser'
 import PageLayout from '../components/PageLayout'
@@ -9,8 +9,21 @@ export default function ChatPage() {
   const { conversationId } = useParams<{ conversationId: string }>()
   const navigate = useNavigate()
   const { profile } = useUser()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [message, setMessage] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // If the page was opened with ?template=... (e.g. ועד clicking מו״מ on
+  // a proposal), pre-fill the input once so the user can edit before send.
+  useEffect(() => {
+    const tpl = searchParams.get('template')
+    if (tpl && conversationId) {
+      setMessage(decodeURIComponent(tpl))
+      const next = new URLSearchParams(searchParams)
+      next.delete('template')
+      setSearchParams(next, { replace: true })
+    }
+  }, [conversationId, searchParams, setSearchParams])
 
   const { data: conversations = [] } = trpc.chat.getConversations.useQuery()
   const { data: buildingGroup } = trpc.tenant.getMyBuildingGroup.useQuery(undefined, {

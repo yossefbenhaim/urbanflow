@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { trpc } from '../lib/trpc'
 import PageLayout, { PageTitle } from '../components/PageLayout'
@@ -26,10 +26,12 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 // ── Proposal Comparison Table (C2) ──────────────────────
 function ProposalComparison({
   tenderId,
+  tenderTitle,
   isRep,
   onAward,
 }: {
   tenderId: string
+  tenderTitle: string
   isRep: boolean
   onAward: (winnerId: string) => void
 }) {
@@ -39,10 +41,27 @@ function ProposalComparison({
   const [sortKey, setSortKey] = useState<string>('price')
   const [sortAsc, setSortAsc] = useState(true)
   const [confirmReject, setConfirmReject] = useState<{ id: string; name: string } | null>(null)
+  const negotiatingWithRef = useRef<string>('')
 
-  const startChat = trpc.chat.startConversation.useMutation({
-    onSuccess: ({ conversationId }: { conversationId: string }) => navigate(`/chat/${conversationId}`),
+  // Starts the chat AND pre-populates the textarea with a מו״מ template.
+  // We pass the template via ?template=... since the chat conversation
+  // can already exist (startConversation is idempotent).
+  const negotiateStart = trpc.chat.startConversation.useMutation({
+    onSuccess: ({ conversationId }) => {
+      const providerName = negotiatingWithRef.current || 'שלום'
+      const template =
+        `שלום ${providerName},\n` +
+        `בנוגע להצעה שהגשת למכרז "${tenderTitle}" — ` +
+        `רציתי לפתוח איתך בשיחת משא ומתן על התנאים.\n\n` +
+        `אשמח לדון ב:\n• מחיר\n• לוחות זמנים\n• תנאי תשלום\n`
+      navigate(`/chat/${conversationId}?template=${encodeURIComponent(template)}`)
+    },
   })
+
+  const startNegotiation = (providerId: string, providerName: string) => {
+    negotiatingWithRef.current = providerName
+    negotiateStart.mutate({ recipientId: providerId })
+  }
   const reject = trpc.tenders.rejectProposal.useMutation({
     onSuccess: () => {
       utils.tenders.getTenderProposals.invalidate({ tenderId })
@@ -141,8 +160,8 @@ function ProposalComparison({
                         🏆 בחר זוכה
                       </button>
                       <button
-                        onClick={() => startChat.mutate({ recipientId: p.provider_id })}
-                        disabled={startChat.isPending}
+                        onClick={() => startNegotiation(p.provider_id, p.provider?.full_name ?? '')}
+                        disabled={negotiateStart.isPending}
                         className="text-xs py-1 px-2 rounded-lg bg-[#ebf1f7] text-[#3b6b9c] font-semibold whitespace-nowrap disabled:opacity-50"
                         title="פתח צ'אט למשא ומתן"
                       >
@@ -629,6 +648,7 @@ export default function TenderDetailPage() {
             <h3 className="text-lg font-bold text-[#212121] mb-3">📊 השוואת הצעות</h3>
             <ProposalComparison
               tenderId={tender.id}
+              tenderTitle={tender.title}
               isRep={!!isRep && tender.status === 'open'}
               onAward={winnerId => award.mutate({ tenderId: tender.id, winnerId })}
             />
