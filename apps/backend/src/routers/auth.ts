@@ -230,6 +230,60 @@ export const authRouter = router({
         refreshToken: data.session?.refresh_token ?? null, userId }
     }),
 
+  // ── Delete My Account ──────────────────────────────────────────────────────
+  // Permanently removes the current user: deletes rows from all tables that
+  // reference the user (incl. tables without ON DELETE CASCADE), then deletes
+  // the auth.users row which cascades remaining role-specific profiles.
+  // Requires the user to type their email for confirmation.
+  deleteMyAccount: protectedProcedure
+    .input(z.object({ confirmEmail: z.string().email() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user.id
+      const userEmail = ctx.user.email ?? ''
+
+      if (input.confirmEmail.trim().toLowerCase() !== userEmail.toLowerCase()) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'האימייל שהוזן לא תואם לאימייל שלך' })
+      }
+
+      const db = ctx.supabase
+
+      // Nullify nullable refs first (keep row, just disassociate)
+      await db.from('contract_approvals').update({ approved_by: null }).eq('approved_by', userId)
+      await db.from('developer_project_proposals').update({ reviewer_id: null }).eq('reviewer_id', userId)
+      await db.from('provider_ratings').update({ submitted_by: null }).eq('submitted_by', userId)
+      await db.from('provider_insights_uploads').update({ admin_reviewer_id: null }).eq('admin_reviewer_id', userId)
+      await db.from('tenders').update({ winner_id: null }).eq('winner_id', userId)
+
+      // Delete rows in tables without ON DELETE CASCADE (NOT NULL refs)
+      await db.from('negotiation_rounds').delete().eq('created_by', userId)
+      await db.from('tender_proposals').delete().eq('provider_id', userId)
+      await db.from('tenders').delete().eq('created_by', userId)
+      await db.from('match_proposals').delete().or(`sender_id.eq.${userId},target_id.eq.${userId}`)
+      await db.from('tender_meetings').delete().or(`reporter_id.eq.${userId},counterpart_id.eq.${userId}`)
+      await db.from('meeting_summaries').delete().eq('uploaded_by', userId)
+      await db.from('meeting_date_polls').delete().eq('proposer_id', userId)
+      await db.from('project_tasks').delete().eq('created_by', userId)
+      await db.from('tenant_documents').delete().eq('user_id', userId)
+      await db.from('ownership_documents').delete().eq('user_id', userId)
+      await db.from('election_forms').delete().eq('user_id', userId)
+
+      // Finally delete the auth user — cascades:
+      //   profiles → tenant/provider/manager/lawyer/architect/appraiser/developer_profiles
+      //   provider_match_preferences, provider_ratings, provider_notifications,
+      //   inspections, apartment_wishes, tenant_partners, tenant_companions,
+      //   meeting_date_votes, contract_assignments, legal_opinions,
+      //   provider_insights_uploads, developer_project_proposals, developer_bids
+      const { error } = await db.auth.admin.deleteUser(userId)
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `שגיאה במחיקת החשבון: ${error.message}`,
+        })
+      }
+
+      return { success: true }
+    }),
+
   // ── Complete OAuth Profile ─────────────────────────────────────────────────
   completeOAuthProfile: protectedProcedure
     .input(z.object({
