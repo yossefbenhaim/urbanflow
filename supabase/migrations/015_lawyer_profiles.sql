@@ -35,8 +35,8 @@ CREATE TABLE IF NOT EXISTS public.lawyer_profiles (
   in_progress_projects_count integer DEFAULT 0,
   completed_project_types text[] DEFAULT '{}'::text[],
   sample_documents_urls text[] DEFAULT '{}'::text[],
-  -- Array of {name, phone, project_name}
-  references jsonb DEFAULT '[]'::jsonb,
+  -- Array of {name, phone, project_name} — quoted: "references" is a reserved word
+  "references" jsonb DEFAULT '[]'::jsonb,
   why_choose_me text,
   -- Fee model:
   --   fee_structure: from_developer, from_tenants, mixed
