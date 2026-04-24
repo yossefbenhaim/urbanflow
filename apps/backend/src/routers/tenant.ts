@@ -346,6 +346,57 @@ export const tenantRouter = router({
     }
   }),
 
+  /** Idempotently ensures a project exists for a ועד rep's building so
+   * they can open tenders. If the building already has a project_id,
+   * returns it. Otherwise creates a minimal project (status=INITIAL,
+   * type=PINUY_BINUY default) owned by the rep, links it to the
+   * building, and returns the new id. */
+  provisionProjectForBuilding: protectedProcedure
+    .input(z.object({
+      projectType: z.enum(['PINUY_BINUY', 'TAMA_38_1', 'TAMA_38_2', 'IBUY_BINUY']).default('PINUY_BINUY'),
+      projectName: z.string().min(2).optional(),
+    }).optional())
+    .mutation(async ({ ctx, input }) => {
+      const { data: profile } = await ctx.supabase
+        .from('profiles').select('is_building_representative, representative_building_id, role').eq('id', ctx.user.id).single()
+      const pr = profile as { is_building_representative?: boolean; representative_building_id?: string | null; role?: string } | null
+      const canProvision = pr && (
+        (pr.role === 'tenant' && pr.is_building_representative === true)
+        || ['organizer', 'committee_rep', 'manager'].includes(pr.role ?? '')
+      )
+      if (!canProvision) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'רק נציג ועד, מארגן או מנהל יכולים ליצור פרויקט' })
+      }
+      if (!pr.representative_building_id) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'לא מוגדר בניין עבור המשתמש' })
+      }
+
+      const { data: building } = await ctx.supabase
+        .from('buildings').select('id, address, project_id').eq('id', pr.representative_building_id).maybeSingle()
+      const b = building as { id?: string; address?: string; project_id?: string | null } | null
+      if (!b) throw new TRPCError({ code: 'NOT_FOUND', message: 'הבניין לא נמצא' })
+      if (b.project_id) return { projectId: b.project_id, created: false }
+
+      const name = input?.projectName?.trim() || (b.address ? `פרויקט ${b.address}` : 'פרויקט חדש')
+      const { data: newProj, error: projErr } = await ctx.supabase
+        .from('projects').insert({
+          name,
+          type: input?.projectType ?? 'PINUY_BINUY',
+          status: 'INITIAL',
+          manager_id: ctx.user.id,
+          organizer_id: ctx.user.id,
+          building_ids: [b.id],
+          address: b.address ?? null,
+        }).select('id').single()
+      if (projErr || !newProj) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: `שגיאה ביצירת פרויקט: ${projErr?.message ?? 'unknown'}` })
+      }
+
+      const newId = (newProj as { id: string }).id
+      await ctx.supabase.from('buildings').update({ project_id: newId }).eq('id', b.id)
+      return { projectId: newId, created: true }
+    }),
+
   /** Resolves the user's project via all known paths:
    *   1. project_tenants.tenant_id → project_id (direct membership)
    *   2. profiles.representative_building_id → buildings.project_id (ועד rep)

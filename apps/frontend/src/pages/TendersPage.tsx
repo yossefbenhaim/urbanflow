@@ -342,10 +342,14 @@ export default function TendersPage() {
   // Resolve user's project via proper backend endpoint. profile.project_id
   // from the auth store is never populated — relying on it shows an
   // incorrect "יש להצטרף לפרויקט" state for every tenant including ועד.
-  const { data: myProject } = trpc.tenant.getMyProjectId.useQuery(undefined, {
+  const { data: myProject, refetch: refetchMyProject } = trpc.tenant.getMyProjectId.useQuery(undefined, {
     enabled: !!profile,
   })
   const projectId = myProject?.projectId ?? profile?.project_id ?? null
+
+  const provision = trpc.tenant.provisionProjectForBuilding.useMutation({
+    onSuccess: () => refetchMyProject(),
+  })
 
   const { data: tenders, refetch } = trpc.tenders.getProjectTenders.useQuery(
     { projectId: projectId! },
@@ -379,7 +383,26 @@ export default function TendersPage() {
           )}
         </div>
 
-        {!projectId && (
+        {!projectId && isRep && (
+          <div className="sc-card p-8 text-center">
+            <p className="text-3xl mb-3">🏗️</p>
+            <p className="font-bold text-[#212121] mb-1">עדיין אין פרויקט לבניין שלך</p>
+            <p className="text-[#5a5a6e] text-sm mb-4">
+              צור פרויקט חדש כדי להתחיל לנהל מכרזים ולעבוד עם נותני שירות.
+            </p>
+            <button
+              onClick={() => provision.mutate(undefined)}
+              disabled={provision.isPending}
+              className="sc-btn-primary disabled:opacity-50"
+            >
+              {provision.isPending ? 'יוצר פרויקט...' : '➕ צור פרויקט חדש לבניין שלי'}
+            </button>
+            {provision.error && (
+              <p className="text-red-500 text-sm mt-3">{provision.error.message}</p>
+            )}
+          </div>
+        )}
+        {!projectId && !isRep && (
           <div className="sc-card p-8 text-center">
             <p className="text-[#5a5a6e]">יש להצטרף לפרויקט כדי לצפות במכרזים</p>
           </div>
