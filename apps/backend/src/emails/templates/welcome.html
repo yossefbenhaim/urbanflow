@@ -31,12 +31,6 @@
       text-align: center;
     }
 
-    .email-header img {
-      width: 80px;
-      height: 80px;
-      margin-bottom: 16px;
-    }
-
     .email-header h1 {
       color: #ffffff;
       font-size: 28px;
@@ -83,25 +77,18 @@
     }
 
     .feature-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 8px 0;
-      font-size: 14px;
-      color: #5a5a6e;
+      padding: 10px 16px;
+      margin-bottom: 8px;
+      font-size: 15px;
+      color: #2b3a55;
+      background-color: #ffffff;
+      border-right: 4px solid #3b6b9c;
+      border-radius: 6px;
+      line-height: 1.5;
     }
 
-    .feature-icon {
-      width: 32px;
-      height: 32px;
-      background-color: #3b6b9c;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 16px;
-      flex-shrink: 0;
+    .feature-item:last-child {
+      margin-bottom: 0;
     }
 
     .cta-button {
@@ -161,7 +148,6 @@
     <div class="email-wrapper">
       <!-- Header -->
       <div class="email-header">
-        <img src="{{logoUrl}}" alt="Silver Castle" />
         <h1>ברוכים הבאים!</h1>
         <p>Silver Castle | טירת כסף</p>
       </div>
@@ -177,22 +163,10 @@
 
         <div class="features-list">
           <h3>מה אפשר לעשות במערכת?</h3>
-          <div class="feature-item">
-            <div class="feature-icon">&#128196;</div>
-            <span>חתימה דיגיטלית על מסמכים</span>
-          </div>
-          <div class="feature-item">
-            <div class="feature-icon">&#9989;</div>
-            <span>הצבעה בסקרים ומעקב אחר החלטות</span>
-          </div>
-          <div class="feature-item">
-            <div class="feature-icon">&#128200;</div>
-            <span>מעקב אחר התקדמות הפרויקט</span>
-          </div>
-          <div class="feature-item">
-            <div class="feature-icon">&#128172;</div>
-            <span>תקשורת ישירה עם הוועד והיזם</span>
-          </div>
+          <div class="feature-item">חתימה דיגיטלית על מסמכים</div>
+          <div class="feature-item">הצבעה בסקרים ומעקב אחר החלטות</div>
+          <div class="feature-item">מעקב אחר התקדמות הפרויקט</div>
+          <div class="feature-item">תקשורת ישירה עם הוועד והיזם</div>
         </div>
 
         <a href="{{dashboardUrl}}" class="cta-button">כניסה למערכת</a>
