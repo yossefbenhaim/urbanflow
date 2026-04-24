@@ -132,7 +132,7 @@ function CreateTenderModal({
 }
 
 // ── Submit Proposal Modal ────────────────────────────────
-function SubmitProposalModal({
+export function SubmitProposalModal({
   tenderId,
   tenderTitle,
   onClose,

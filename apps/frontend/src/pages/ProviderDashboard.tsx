@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import PageLayout, { PageTitle } from '../components/PageLayout'
 import CityAutocomplete from '../components/CityAutocomplete'
+import { SubmitProposalModal } from './TendersPage'
 import { trpc } from '../lib/trpc'
 
 const PROJECT_TYPE_HE: Record<string, string> = {
@@ -12,11 +13,18 @@ const PROJECT_TYPE_HE: Record<string, string> = {
   binui_pinui: 'בינוי פינוי',
 }
 
-const mockJobs = [
-  { id: '1', title: 'עורך דין לייצוג דיירים', project: 'פרויקט הרצל 15', type: 'עו"ד התחדשות עירונית', location: 'תל אביב', engagement: 'ליווי מלא', published: '20/02/2026' },
-  { id: '2', title: 'מפקח בנייה לפרויקט', project: 'פרויקט ביאליק 8', type: 'מפקח בנייה', location: 'רמת גן', engagement: 'שלב ביצוע', published: '22/02/2026' },
-  { id: '3', title: 'שמאי מקרקעין', project: 'פרויקט הרצל 15', type: 'שמאי', location: 'תל אביב', engagement: 'חד-פעמי', published: '23/02/2026' },
-]
+const PROVIDER_TYPE_HE: Record<string, string> = {
+  lawyer: 'עו״ד דיירים',
+  architect: 'אדריכל',
+  appraiser: 'שמאי',
+  developer: 'יזם',
+}
+
+const PROPOSAL_STATUS_HE: Record<string, { label: string; fg: string; bg: string }> = {
+  submitted: { label: 'ממתין', fg: 'text-[#c4841d]', bg: 'bg-[#fcf4e7]' },
+  winner:    { label: 'זכית',  fg: 'text-[#4a8c5c]', bg: 'bg-[#edf5ef]' },
+  rejected:  { label: 'נדחה',  fg: 'text-red-600',   bg: 'bg-red-50' },
+}
 
 type Tab = 'matches' | 'jobs' | 'applications' | 'profile'
 
@@ -29,9 +37,7 @@ export default function ProviderDashboard() {
   useEffect(() => {
     if (location.pathname.endsWith('/profile')) setTab('profile')
   }, [location.pathname])
-  const [applying, setApplying] = useState<string | null>(null)
-  const [coverLetter, setCoverLetter] = useState('')
-  const [applied, setApplied] = useState<Set<string>>(new Set())
+  const [proposalTarget, setProposalTarget] = useState<{ id: string; title: string } | null>(null)
 
   // Redirect to onboarding if the provider hasn't chosen a type yet.
   // Always fetch fresh to avoid redirecting based on a stale cache right
@@ -51,11 +57,15 @@ export default function ProviderDashboard() {
     { enabled: tab === 'matches' && onboarding?.completed === true }
   )
 
-  const submitApp = (jobId: string) => {
-    setApplied(s => new Set([...s, jobId]))
-    setApplying(null)
-    setCoverLetter('')
-  }
+  const { data: openTenders, isLoading: loadingTenders, refetch: refetchTenders } =
+    trpc.tenders.listOpenTendersForProvider.useQuery(undefined, {
+      enabled: tab === 'jobs' && onboarding?.completed === true,
+    })
+
+  const { data: myProposals, isLoading: loadingProposals, refetch: refetchProposals } =
+    trpc.tenders.listMyProposals.useQuery(undefined, {
+      enabled: tab === 'applications' && onboarding?.completed === true,
+    })
 
   return (
     <PageLayout>
@@ -132,75 +142,130 @@ export default function ProviderDashboard() {
 
         {tab === 'jobs' && (
           <>
-            {applying && (
-              <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
-                <div className="bg-white rounded-t-[14px] w-full p-6 space-y-4 shadow-card">
-                  <h3 className="font-bold text-[#212121] text-[16px]">הגשת מועמדות</h3>
-                  <textarea value={coverLetter} onChange={e => setCoverLetter(e.target.value)}
-                    rows={6} placeholder="מכתב מקדים — תאר את הניסיון שלך..."
-                    className="sc-input resize-none" />
-                  <div className="flex gap-3">
-                    <button onClick={() => setApplying(null)} className="sc-btn-secondary flex-1">ביטול</button>
-                    <button onClick={() => submitApp(applying)} className="sc-btn-primary flex-1">שלח מועמדות</button>
-                  </div>
-                </div>
+            {loadingTenders && <p className="text-center text-[#5a5a6e] py-8">טוען מכרזים פתוחים...</p>}
+            {!loadingTenders && openTenders && openTenders.tenders.length === 0 && (
+              <div className="text-center py-16 text-[#8e8e9e]">
+                <div className="text-5xl mb-3">📭</div>
+                <p className="text-[13px]">
+                  {openTenders.providerType
+                    ? `אין כרגע מכרזים פתוחים ל${PROVIDER_TYPE_HE[openTenders.providerType] ?? openTenders.providerType}`
+                    : 'השלם אונבורדינג כדי לראות מכרזים'}
+                </p>
               </div>
             )}
-
-            {mockJobs.map(job => (
-              <div key={job.id} className="sc-card p-5">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-bold text-[#212121] text-[15px]">{job.title}</h3>
-                  <span className="text-[11px] text-[#8e8e9e]">{job.published}</span>
-                </div>
-                <p className="text-[13px] text-[#3b6b9c] mb-3">{job.project}</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {[job.type, job.location, job.engagement].map(tag => (
-                    <span key={tag} className="bg-[#ebf1f7] text-[#3b6b9c] text-[10px] rounded-full px-3 py-1 font-semibold">{tag}</span>
-                  ))}
-                </div>
-                {applied.has(job.id) ? (
-                  <div className="text-center py-2 bg-[#edf5ef] rounded-[8px] text-[13px] text-[#4a8c5c] font-semibold">✅ מועמדות הוגשה</div>
-                ) : (
-                  <button onClick={() => setApplying(job.id)}
-                    className="sc-btn-primary w-full">
-                    הגש מועמדות →
-                  </button>
-                )}
-              </div>
-            ))}
+            {!loadingTenders && openTenders && openTenders.tenders.length > 0 && (
+              <>
+                <p className="text-xs text-[#5a5a6e] text-center">
+                  {openTenders.tenders.length} מכרזים פתוחים עבורך
+                </p>
+                {openTenders.tenders.map((t: {
+                  id: string; title: string; description?: string; deadline?: string; created_at: string;
+                  project?: { id: string; name: string; address?: string; project_type?: string } | null
+                }) => (
+                  <div key={t.id} className="sc-card p-5">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-bold text-[#212121] text-[15px]">{t.title}</h3>
+                      <span className="text-[11px] text-[#8e8e9e]">
+                        {new Date(t.created_at).toLocaleDateString('he-IL')}
+                      </span>
+                    </div>
+                    {t.project && (
+                      <p className="text-[13px] text-[#3b6b9c] mb-1">{t.project.name}</p>
+                    )}
+                    {t.project?.address && (
+                      <p className="text-[11px] text-[#5a5a6e] mb-3">📍 {t.project.address}</p>
+                    )}
+                    {t.description && (
+                      <p className="text-[12px] text-[#5a5a6e] mb-3 line-clamp-2">{t.description}</p>
+                    )}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {t.project?.project_type && (
+                        <span className="bg-[#ebf1f7] text-[#3b6b9c] text-[10px] rounded-full px-3 py-1 font-semibold">
+                          {PROJECT_TYPE_HE[t.project.project_type] ?? t.project.project_type}
+                        </span>
+                      )}
+                      {t.deadline && (
+                        <span className="bg-[#fcf4e7] text-[#c4841d] text-[10px] rounded-full px-3 py-1 font-semibold">
+                          ⏰ עד {new Date(t.deadline).toLocaleDateString('he-IL')}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => navigate(`/tenders/${t.id}`)}
+                        className="sc-btn-secondary flex-1"
+                      >פרטים</button>
+                      <button
+                        onClick={() => setProposalTarget({ id: t.id, title: t.title })}
+                        className="sc-btn-primary flex-1"
+                      >הגש הצעה →</button>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
           </>
         )}
 
         {tab === 'applications' && (
           <div className="space-y-3">
-            {applied.size === 0 ? (
+            {loadingProposals && <p className="text-center text-[#5a5a6e] py-8">טוען הצעות...</p>}
+            {!loadingProposals && (myProposals ?? []).length === 0 && (
               <div className="text-center py-16 text-[#8e8e9e]">
                 <div className="text-5xl mb-3">📋</div>
-                <p className="text-[13px]">לא הגשת מועמדויות עדיין</p>
-                <button onClick={() => setTab('jobs')} className="mt-4 text-[#3b6b9c] text-[13px] font-semibold">עיין במשרות</button>
+                <p className="text-[13px]">לא הגשת הצעות עדיין</p>
+                <button onClick={() => setTab('jobs')} className="mt-4 text-[#3b6b9c] text-[13px] font-semibold">
+                  עיין במכרזים פתוחים
+                </button>
               </div>
-            ) : (
-              [...applied].map(id => {
-                const job = mockJobs.find(j => j.id === id)!
-                return (
-                  <div key={id} className="sc-card p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-semibold text-[#212121] text-[13px]">{job.title}</p>
-                        <p className="text-[11px] text-[#5a5a6e] mt-0.5">{job.project}</p>
-                      </div>
-                      <span className="bg-[#fcf4e7] text-[#c4841d] text-[10px] rounded-full px-3 py-1 font-semibold">ממתין</span>
-                    </div>
-                  </div>
-                )
-              })
             )}
+            {!loadingProposals && (myProposals ?? []).map((p: {
+              id: string; status: string; submitted_at: string; price?: number | null;
+              tender?: { id: string; title: string; status: string; project?: { id: string; name: string } | null } | null
+            }) => {
+              const st = PROPOSAL_STATUS_HE[p.status] ?? PROPOSAL_STATUS_HE.submitted
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => p.tender && navigate(`/tenders/${p.tender.id}`)}
+                  className="sc-card p-4 w-full text-right"
+                >
+                  <div className="flex justify-between items-start mb-1">
+                    <p className="font-semibold text-[#212121] text-[13px]">{p.tender?.title ?? '—'}</p>
+                    <span className={`${st.bg} ${st.fg} text-[10px] rounded-full px-3 py-1 font-semibold`}>
+                      {st.label}
+                    </span>
+                  </div>
+                  {p.tender?.project?.name && (
+                    <p className="text-[11px] text-[#3b6b9c]">{p.tender.project.name}</p>
+                  )}
+                  <div className="flex justify-between mt-2 text-[11px] text-[#8e8e9e]">
+                    <span>{new Date(p.submitted_at).toLocaleDateString('he-IL')}</span>
+                    {p.price != null && (
+                      <span>{p.price.toLocaleString('he-IL')} ₪</span>
+                    )}
+                  </div>
+                </button>
+              )
+            })}
           </div>
         )}
 
         {tab === 'profile' && <ProfileTab />}
       </div>
+
+      {proposalTarget && (
+        <SubmitProposalModal
+          tenderId={proposalTarget.id}
+          tenderTitle={proposalTarget.title}
+          onClose={() => setProposalTarget(null)}
+          onSuccess={() => {
+            toast.success('ההצעה נשלחה')
+            refetchTenders()
+            refetchProposals()
+          }}
+        />
+      )}
     </PageLayout>
   )
 }

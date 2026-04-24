@@ -173,6 +173,50 @@ export const tendersRouter = router({
       return data ?? []
     }),
 
+  // Open tenders matching the caller's provider type. Infers type from which
+  // *_profiles row the user has (same rule as provider.getOnboardingStatus).
+  // Excludes tenders the user already submitted a proposal to.
+  listOpenTendersForProvider: protectedProcedure.query(async ({ ctx }) => {
+    const [arch, apr, dev, law] = await Promise.all([
+      ctx.supabase.from('architect_profiles').select('id').eq('id', ctx.user.id).maybeSingle(),
+      ctx.supabase.from('appraiser_profiles').select('id').eq('id', ctx.user.id).maybeSingle(),
+      ctx.supabase.from('developer_profiles').select('id').eq('id', ctx.user.id).maybeSingle(),
+      ctx.supabase.from('lawyer_profiles').select('id').eq('id', ctx.user.id).maybeSingle(),
+    ])
+    const providerType = arch.data ? 'architect'
+      : apr.data ? 'appraiser'
+      : dev.data ? 'developer'
+      : law.data ? 'lawyer'
+      : null
+    if (!providerType) return { providerType: null, tenders: [] }
+
+    const { data: mine } = await ctx.supabase
+      .from('tender_proposals')
+      .select('tender_id')
+      .eq('provider_id', ctx.user.id)
+    const alreadyBid = new Set((mine ?? []).map((r: { tender_id: string }) => r.tender_id))
+
+    const { data } = await ctx.supabase
+      .from('tenders')
+      .select('*, project:projects(id,name,address,project_type), tender_proposals(count)')
+      .eq('tender_type', providerType)
+      .eq('status', 'open')
+      .order('created_at', { ascending: false })
+
+    const tenders = (data ?? []).filter((t: { id: string }) => !alreadyBid.has(t.id))
+    return { providerType, tenders }
+  }),
+
+  // All proposals the caller has submitted, newest first, with tender + project context.
+  listMyProposals: protectedProcedure.query(async ({ ctx }) => {
+    const { data } = await ctx.supabase
+      .from('tender_proposals')
+      .select('*, tender:tenders(id,title,tender_type,status,deadline,winner_id,project:projects(id,name,address))')
+      .eq('provider_id', ctx.user.id)
+      .order('submitted_at', { ascending: false })
+    return data ?? []
+  }),
+
   getTenderProposals: protectedProcedure
     .input(z.object({ tenderId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
