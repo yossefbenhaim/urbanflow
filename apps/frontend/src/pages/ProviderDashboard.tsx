@@ -541,6 +541,9 @@ function ProfileTab() {
   const [portfolioInput, setPortfolioInput] = useState('')
   const [portfolio, setPortfolio] = useState<string[]>([])
   const [ratingUrl, setRatingUrl] = useState('')
+  const [photoUrl, setPhotoUrl] = useState('')
+  const [about, setAbout] = useState('')
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
 
   const hydrate = () => {
     if (!data) return
@@ -553,6 +556,34 @@ function ProfileTab() {
     setSpecs(data.specializations ?? [])
     setPortfolio(data.portfolioUrls ?? [])
     setRatingUrl(data.ratingUrl ?? '')
+    const e = data as Record<string, unknown>
+    setPhotoUrl(typeof e.photoUrl === 'string' ? e.photoUrl : '')
+    setAbout(typeof e.about === 'string' ? e.about : '')
+  }
+
+  const handlePhotoFile = async (file: File) => {
+    if (file.size > 5 * 1024 * 1024) { toast.error('התמונה גדולה מ-5MB'); return }
+    const ext = (file.name.split('.').pop() ?? 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '')
+    const path = `avatars/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext || 'jpg'}`
+    setUploadingPhoto(true)
+    try {
+      const token = localStorage.getItem('sb-token')
+      if (!token) throw new Error('אינך מחובר')
+      const res = await fetch(`/api/upload?path=${encodeURIComponent(path)}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': file.type || 'image/jpeg' },
+        body: file,
+      })
+      if (!res.ok) {
+        const msg = await res.json().catch(() => ({ error: `שגיאה ${res.status}` }))
+        throw new Error(msg.error || `שגיאה ${res.status}`)
+      }
+      setPhotoUrl(`https://supabase.byclick.co.il/storage/v1/object/public/documents/${path}`)
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'שגיאה בהעלאה')
+    } finally {
+      setUploadingPhoto(false)
+    }
   }
 
   const save = trpc.provider.updateMyDetails.useMutation({
@@ -596,6 +627,8 @@ function ProfileTab() {
       specializations: specs,
       portfolioUrls: portfolio,
       ratingUrl: ratingUrl.trim() || undefined,
+      photoUrl: photoUrl || null,
+      about: about.trim() || null,
     })
   }
 
@@ -613,12 +646,50 @@ function ProfileTab() {
     return (
       <div className="sc-card p-6 space-y-4">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-[#1e3a5f] rounded-full flex items-center justify-center text-white text-[18px] font-bold">{initial}</div>
+          <div className="w-14 h-14 rounded-full overflow-hidden bg-[#1e3a5f] flex items-center justify-center text-white text-[18px] font-bold flex-shrink-0">
+            {photoUrl
+              ? <img src={photoUrl} alt="avatar" className="w-full h-full object-cover" />
+              : initial}
+          </div>
           <div className="min-w-0">
             <p className="font-bold text-[#212121] text-[15px] truncate">עריכת פרופיל</p>
             {data.providerType && (
               <p className="text-[13px] text-[#3b6b9c] font-semibold">{PROVIDER_TYPE_LABELS[data.providerType]}</p>
             )}
+          </div>
+        </div>
+
+        {/* Photo + About (business card) */}
+        <div className="bg-[#f8f9fa] rounded-xl p-3 space-y-3">
+          <label className="block text-xs text-[#5a5a6e] font-semibold">כרטיס ביקור</label>
+          <div className="flex items-center gap-3">
+            <label className={`inline-block px-3 py-2 rounded-xl text-sm font-semibold cursor-pointer transition-colors ${uploadingPhoto ? 'bg-[#eee] text-[#8e8e9e]' : 'bg-[#1e3a5f] text-white hover:bg-[#3b6b9c]'}`}>
+              {uploadingPhoto ? 'מעלה...' : (photoUrl ? 'החלף תמונה' : 'העלה תמונה')}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={uploadingPhoto}
+                onChange={e => e.target.files?.[0] && handlePhotoFile(e.target.files[0])}
+              />
+            </label>
+            {photoUrl && (
+              <button onClick={() => setPhotoUrl('')} className="px-3 py-2 rounded-xl text-sm text-[#5a5a6e] bg-white border border-[#eeeeee]">
+                הסר
+              </button>
+            )}
+          </div>
+          <div>
+            <label className="block text-xs text-[#5a5a6e] mb-1">ספר על עצמך</label>
+            <textarea
+              value={about}
+              onChange={e => setAbout(e.target.value)}
+              rows={3}
+              maxLength={2000}
+              placeholder="ניסיון, גישה מקצועית, מה אתה מציע לדיירים..."
+              className="sc-input resize-none"
+            />
+            <p className="text-xs text-[#8e8e9e] text-left mt-0.5">{about.length}/2000</p>
           </div>
         </div>
 
@@ -734,17 +805,31 @@ function ProfileTab() {
     { label: isLawyer ? 'למה לבחור בי' : 'תיאור מקצועי', value: isLawyer ? str('whyChooseMe') || str('bio') : str('bio') },
   ]
 
+  const viewPhoto = (d.photoUrl as string | undefined) || ''
+  const viewAbout = (d.about as string | undefined) || ''
+
   return (
     <div className="sc-card p-6 space-y-4">
       <div className="flex items-center gap-4">
-        <div className="w-14 h-14 bg-[#1e3a5f] rounded-full flex items-center justify-center text-white text-[18px] font-bold">{initial}</div>
+        <div className="w-20 h-20 rounded-full overflow-hidden bg-[#1e3a5f] flex items-center justify-center text-white text-[24px] font-bold flex-shrink-0 border-2 border-[#eeeeee]">
+          {viewPhoto
+            ? <img src={viewPhoto} alt={data.fullName ?? ''} className="w-full h-full object-cover" />
+            : initial}
+        </div>
         <div className="min-w-0">
-          <p className="font-bold text-[#212121] text-[15px] truncate">{data.fullName ?? data.email ?? ''}</p>
+          <p className="font-bold text-[#212121] text-[16px] truncate">{data.fullName ?? data.email ?? ''}</p>
           {data.providerType && (
             <p className="text-[13px] text-[#3b6b9c] font-semibold">{PROVIDER_TYPE_LABELS[data.providerType]}</p>
           )}
         </div>
       </div>
+
+      {viewAbout && (
+        <div className="bg-[#f8f9fa] rounded-xl p-4 border border-[#eeeeee]">
+          <p className="text-xs text-[#5a5a6e] mb-1 font-semibold">על המקצוע</p>
+          <p className="text-sm text-[#212121] leading-relaxed whitespace-pre-wrap">{viewAbout}</p>
+        </div>
+      )}
 
       <div className="space-y-3 pt-2">
         {rows.map(f => (
