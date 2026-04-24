@@ -318,6 +318,16 @@ export const authRouter = router({
       const userId = ctx.user.id
       const email = ctx.user.email!
 
+      // Detect first-time OAuth completion: no profiles row yet means
+      // this is a brand-new user who just picked their role, so we send
+      // the welcome email. Returning users re-completing a profile skip it.
+      const { data: existingProfile } = await ctx.supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .maybeSingle()
+      const isFirstCompletion = !existingProfile
+
       const { error } = await ctx.supabase.from('profiles').upsert({
         id: userId,
         full_name: input.fullName,
@@ -353,6 +363,13 @@ export const authRouter = router({
             id: userId, bio: '', service_types: [], operating_regions: [],
           })
         }
+      }
+
+      if (isFirstCompletion) {
+        void sendEmail('welcome', email, {
+          userName: input.fullName || email,
+          userEmail: email,
+        })
       }
 
       return { success: true, role: input.role }
