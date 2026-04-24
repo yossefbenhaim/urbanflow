@@ -26,7 +26,16 @@ const PROPOSAL_STATUS_HE: Record<string, { label: string; fg: string; bg: string
   rejected:  { label: 'נדחה',  fg: 'text-red-600',   bg: 'bg-red-50' },
 }
 
-type Tab = 'matches' | 'jobs' | 'applications' | 'profile'
+type Tab = 'matches' | 'jobs' | 'applications' | 'assignments' | 'profile'
+
+const ASSIGNMENT_STATUS_HE: Record<string, { label: string; fg: string; bg: string; emoji: string }> = {
+  pending_meeting:     { label: 'ממתין לפגישה',    fg: 'text-[#c4841d]', bg: 'bg-[#fcf4e7]', emoji: '📅' },
+  meeting_done:        { label: 'פגישה בוצעה',     fg: 'text-[#3b6b9c]', bg: 'bg-[#ebf1f7]', emoji: '✔️' },
+  contract_uploaded:   { label: 'חוזה הועלה',      fg: 'text-[#3b6b9c]', bg: 'bg-[#ebf1f7]', emoji: '📄' },
+  pending_approval:    { label: 'ממתין לאישור דיירים', fg: 'text-[#c4841d]', bg: 'bg-[#fcf4e7]', emoji: '🗳️' },
+  approved:            { label: 'פעיל בפרויקט',    fg: 'text-[#4a8c5c]', bg: 'bg-[#edf5ef]', emoji: '✅' },
+  rejected:            { label: 'נדחה',            fg: 'text-red-600',   bg: 'bg-red-50',    emoji: '❌' },
+}
 
 export default function ProviderDashboard() {
   const navigate = useNavigate()
@@ -38,6 +47,7 @@ export default function ProviderDashboard() {
     if (location.pathname.endsWith('/profile')) setTab('profile')
   }, [location.pathname])
   const [proposalTarget, setProposalTarget] = useState<{ id: string; title: string } | null>(null)
+  const [uploadTarget, setUploadTarget] = useState<{ id: string; projectName: string } | null>(null)
 
   // Redirect to onboarding if the provider hasn't chosen a type yet.
   // Always fetch fresh to avoid redirecting based on a stale cache right
@@ -67,13 +77,18 @@ export default function ProviderDashboard() {
       enabled: tab === 'applications' && onboarding?.completed === true,
     })
 
+  const { data: myAssignments, isLoading: loadingAssignments, refetch: refetchAssignments } =
+    trpc.tenders.listMyAssignments.useQuery(undefined, {
+      enabled: tab === 'assignments' && onboarding?.completed === true,
+    })
+
   return (
     <PageLayout>
       <PageTitle>לוח הבקרה — נותן שירות</PageTitle>
 
       {/* Tabs */}
       <div className="flex gap-2 mb-5 overflow-x-auto">
-        {([['matches','המלצות'],['jobs','משרות פתוחות'],['applications','המועמדויות שלי'],['profile','הפרופיל שלי']] as [Tab,string][]).map(([v,l]) => (
+        {([['matches','המלצות'],['jobs','משרות פתוחות'],['applications','המועמדויות שלי'],['assignments','הפרויקטים שלי'],['profile','הפרופיל שלי']] as [Tab,string][]).map(([v,l]) => (
           <button key={v} onClick={() => setTab(v)}
             className={`px-4 py-2 rounded-[8px] text-[13px] font-semibold transition-colors whitespace-nowrap ${
               tab === v ? 'bg-[#3b6b9c] text-white' : 'bg-[#f8f9fa] text-[#8e8e9e]'
@@ -251,6 +266,78 @@ export default function ProviderDashboard() {
           </div>
         )}
 
+        {tab === 'assignments' && (
+          <div className="space-y-3">
+            {loadingAssignments && <p className="text-center text-[#5a5a6e] py-8">טוען...</p>}
+            {!loadingAssignments && (myAssignments ?? []).length === 0 && (
+              <div className="text-center py-16 text-[#8e8e9e]">
+                <div className="text-5xl mb-3">🏗️</div>
+                <p className="text-[13px]">עדיין לא שויכת לפרויקט</p>
+                <p className="text-[11px] mt-2">זכייה במכרז תיצור שיוך אוטומטי</p>
+              </div>
+            )}
+            {!loadingAssignments && (myAssignments ?? []).map((a: {
+              id: string; status: string; contract_file_url?: string | null;
+              approval_required_count?: number | null; approvals_received?: number | null;
+              meeting_scheduled_at?: string | null; meeting_completed?: boolean | null;
+              created_at: string;
+              project?: { id: string; name: string; address?: string; project_type?: string } | null;
+              tender?: { id: string; title: string; tender_type: string } | null;
+            }) => {
+              const st = ASSIGNMENT_STATUS_HE[a.status] ?? ASSIGNMENT_STATUS_HE.pending_meeting
+              const pct = (a.approval_required_count && a.approvals_received != null)
+                ? Math.min(100, Math.round(((a.approvals_received ?? 0) / a.approval_required_count) * 100))
+                : 0
+              const canUpload = !a.contract_file_url && a.status !== 'approved' && a.status !== 'rejected'
+              return (
+                <div key={a.id} className="sc-card p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-[#212121] text-[15px] truncate">{a.project?.name ?? '—'}</h3>
+                      {a.project?.address && (
+                        <p className="text-[11px] text-[#5a5a6e] mt-0.5">📍 {a.project.address}</p>
+                      )}
+                      {a.tender?.title && (
+                        <p className="text-[12px] text-[#3b6b9c] mt-1">ממכרז: {a.tender.title}</p>
+                      )}
+                    </div>
+                    <span className={`${st.bg} ${st.fg} text-[10px] rounded-full px-3 py-1 font-semibold whitespace-nowrap`}>
+                      {st.emoji} {st.label}
+                    </span>
+                  </div>
+
+                  {a.status === 'pending_approval' && a.approval_required_count ? (
+                    <div className="mt-3">
+                      <div className="flex justify-between text-[11px] text-[#5a5a6e] mb-1">
+                        <span>אישורי דיירים</span>
+                        <span>{a.approvals_received ?? 0} / {a.approval_required_count}</span>
+                      </div>
+                      <div className="w-full bg-[#f0f0f0] rounded-full h-2">
+                        <div className="bg-[#3b6b9c] h-2 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <div className="flex gap-2 mt-3">
+                    {a.contract_file_url && (
+                      <a href={a.contract_file_url} target="_blank" rel="noopener"
+                        className="sc-btn-secondary flex-1 text-center">
+                        📄 צפייה בחוזה
+                      </a>
+                    )}
+                    {canUpload && (
+                      <button
+                        onClick={() => setUploadTarget({ id: a.id, projectName: a.project?.name ?? '' })}
+                        className="sc-btn-primary flex-1"
+                      >העלה חוזה חתום</button>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
         {tab === 'profile' && <ProfileTab />}
       </div>
 
@@ -266,7 +353,85 @@ export default function ProviderDashboard() {
           }}
         />
       )}
+
+      {uploadTarget && (
+        <UploadContractModal
+          assignmentId={uploadTarget.id}
+          projectName={uploadTarget.projectName}
+          onClose={() => setUploadTarget(null)}
+          onSuccess={() => {
+            toast.success('החוזה הועלה בהצלחה')
+            setUploadTarget(null)
+            refetchAssignments()
+          }}
+        />
+      )}
     </PageLayout>
+  )
+}
+
+function UploadContractModal({ assignmentId, projectName, onClose, onSuccess }: {
+  assignmentId: string; projectName: string; onClose: () => void; onSuccess: () => void
+}) {
+  const [file, setFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const upload = trpc.tenders.uploadContract.useMutation()
+
+  const handleUpload = async () => {
+    if (!file) { toast.error('בחר קובץ PDF'); return }
+    if (file.type !== 'application/pdf') { toast.error('יש להעלות PDF בלבד'); return }
+    setUploading(true)
+    try {
+      const token = localStorage.getItem('sb-token')
+      if (!token) throw new Error('אינך מחובר')
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/_+/g, '_')
+      const storagePath = `contracts/${Date.now()}-${safeName}`
+      const res = await fetch(`/api/upload?path=${encodeURIComponent(storagePath)}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': file.type },
+        body: file,
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || `שגיאה ${res.status}`)
+      }
+      const fileUrl = `https://supabase.byclick.co.il/storage/v1/object/public/documents/${storagePath}`
+      await upload.mutateAsync({ assignmentId, fileUrl })
+      onSuccess()
+    } catch (e) {
+      toast.error((e as Error).message || 'העלאה נכשלה')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
+        <h3 className="font-bold text-[#1e3a5f] text-[16px] mb-1">העלאת חוזה חתום</h3>
+        {projectName && <p className="text-[12px] text-[#5a5a6e] mb-4">{projectName}</p>}
+
+        <label className="block border-2 border-dashed border-[#d0d7de] rounded-xl p-6 text-center cursor-pointer hover:border-[#3b6b9c] transition-colors">
+          <input type="file" accept="application/pdf" className="hidden"
+            onChange={e => setFile(e.target.files?.[0] ?? null)} />
+          <div className="text-3xl mb-2">📄</div>
+          <p className="text-[13px] text-[#5a5a6e]">
+            {file ? file.name : 'לחץ לבחירת קובץ PDF'}
+          </p>
+        </label>
+
+        <div className="flex gap-2 mt-5">
+          <button onClick={onClose} disabled={uploading}
+            className="flex-1 py-3 rounded-xl bg-white border border-[#eeeeee] text-[#5a5a6e] font-semibold disabled:opacity-50">
+            ביטול
+          </button>
+          <button onClick={handleUpload} disabled={!file || uploading}
+            className="sc-btn-primary flex-1 disabled:opacity-60">
+            {uploading ? 'מעלה...' : 'העלה'}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 

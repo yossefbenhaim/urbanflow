@@ -217,6 +217,17 @@ export const tendersRouter = router({
     return data ?? []
   }),
 
+  // All contract assignments where the caller is the winning provider.
+  // Used by ProviderDashboard "my projects" tab.
+  listMyAssignments: protectedProcedure.query(async ({ ctx }) => {
+    const { data } = await ctx.supabase
+      .from('contract_assignments')
+      .select('*, project:projects(id,name,address,project_type), tender:tenders(id,title,tender_type)')
+      .eq('provider_id', ctx.user.id)
+      .order('created_at', { ascending: false })
+    return data ?? []
+  }),
+
   getTenderProposals: protectedProcedure
     .input(z.object({ tenderId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
