@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import PageLayout, { PageTitle } from '../components/PageLayout'
 import CityAutocomplete from '../components/CityAutocomplete'
+import DeleteAccountSection from '../components/DeleteAccountSection'
 import { SubmitProposalModal } from './TendersPage'
 import { trpc } from '../lib/trpc'
 
@@ -792,6 +793,7 @@ function ProfileTab() {
       >
         {isFetching ? 'מרענן...' : '🔄 רענן נתונים'}
       </button>
+      <DeleteAccountSection email={data.email ?? undefined} />
     </div>
   )
 }
