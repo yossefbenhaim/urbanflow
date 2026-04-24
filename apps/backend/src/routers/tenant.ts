@@ -37,6 +37,58 @@ function unwrapJoin<T>(val: T | T[] | undefined): T | undefined {
   return Array.isArray(val) ? val[0] : val
 }
 
+/**
+ * Idempotently ensures a project exists for a building. Called when a ועד
+ * is elected so the project auto-exists from Stage B onwards. If the
+ * building already has a project_id, returns it untouched. Otherwise
+ * creates a project, points the building to it, and bulk-joins all the
+ * building's tenants into project_tenants so they can see the project.
+ *
+ * Returns { projectId, created: boolean }.
+ */
+export async function autoProvisionProjectForBuilding(
+  supabase: SupabaseClient,
+  buildingId: string,
+  ownerUserId: string,
+): Promise<{ projectId: string | null; created: boolean }> {
+  const { data: building } = await supabase
+    .from('buildings').select('id, address, city, project_id').eq('id', buildingId).maybeSingle()
+  const b = building as { id?: string; address?: string; city?: string; project_id?: string | null } | null
+  if (!b?.id) return { projectId: null, created: false }
+  if (b.project_id) return { projectId: b.project_id, created: false }
+
+  const displayAddress = b.address ? b.address : (b.city ?? 'בניין')
+  const { data: newProj, error } = await supabase.from('projects').insert({
+    name: `פרויקט ${displayAddress}`,
+    type: 'PINUY_BINUY',
+    status: 'INITIAL',
+    manager_id: ownerUserId,
+    organizer_id: ownerUserId,
+    building_ids: [b.id],
+    address: b.address ?? null,
+  }).select('id').single()
+  if (error || !newProj) {
+    logger?.error?.({ err: error?.message }, 'autoProvisionProjectForBuilding insert failed')
+    return { projectId: null, created: false }
+  }
+  const projectId = (newProj as { id: string }).id
+
+  await supabase.from('buildings').update({ project_id: projectId }).eq('id', b.id)
+
+  // Bulk-join all tenants of the building (so they land in project_tenants).
+  const { data: tenants } = await supabase
+    .from('tenant_profiles').select('user_id').eq('building_id', b.id)
+  const rows = ((tenants ?? []) as Array<{ user_id?: string }>)
+    .filter((t): t is { user_id: string } => !!t.user_id)
+    .map(t => ({ project_id: projectId, tenant_id: t.user_id, status: 'active' }))
+  if (rows.length > 0) {
+    // Ignore duplicates (composite PK already enforces uniqueness)
+    await supabase.from('project_tenants').upsert(rows, { onConflict: 'project_id,tenant_id' })
+  }
+
+  return { projectId, created: true }
+}
+
 async function findOrCreateBuilding(supabase: SupabaseClient, city: string, street: string, buildingNumber: string) {
   const { data: existing } = await supabase
     .from('buildings')
@@ -119,6 +171,13 @@ async function processVote(supabase: SupabaseClient, pollId: string, buildingId:
     await supabase.from('building_representatives').update({ is_active: false }).eq('building_id', resolvedBuildingId)
     await supabase.from('building_representatives').insert({ building_id: resolvedBuildingId, user_id: resultValue, poll_id: pollId, is_active: true })
     await supabase.from('profiles').update({ is_building_representative: true, representative_building_id: resolvedBuildingId }).eq('id', resultValue)
+
+    // Auto-create the project for this building now that a rep is in place.
+    // From here on the rep has Stage B ownership until (if/when) a יזם
+    // is awarded + approved by tenant vote.
+    if (resolvedBuildingId) {
+      await autoProvisionProjectForBuilding(supabase, resolvedBuildingId, resultValue)
+    }
 
     // Notify all building members about elected representative
     const { data: repProfile } = await supabase.from('profiles').select('full_name').eq('id', resultValue).single()
@@ -371,30 +430,13 @@ export const tenantRouter = router({
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'לא מוגדר בניין עבור המשתמש' })
       }
 
-      const { data: building } = await ctx.supabase
-        .from('buildings').select('id, address, project_id').eq('id', pr.representative_building_id).maybeSingle()
-      const b = building as { id?: string; address?: string; project_id?: string | null } | null
-      if (!b) throw new TRPCError({ code: 'NOT_FOUND', message: 'הבניין לא נמצא' })
-      if (b.project_id) return { projectId: b.project_id, created: false }
-
-      const name = input?.projectName?.trim() || (b.address ? `פרויקט ${b.address}` : 'פרויקט חדש')
-      const { data: newProj, error: projErr } = await ctx.supabase
-        .from('projects').insert({
-          name,
-          type: input?.projectType ?? 'PINUY_BINUY',
-          status: 'INITIAL',
-          manager_id: ctx.user.id,
-          organizer_id: ctx.user.id,
-          building_ids: [b.id],
-          address: b.address ?? null,
-        }).select('id').single()
-      if (projErr || !newProj) {
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: `שגיאה ביצירת פרויקט: ${projErr?.message ?? 'unknown'}` })
+      // Delegate to the shared helper so manual + auto-on-election flows
+      // produce identical state (including project_tenants backfill).
+      const result = await autoProvisionProjectForBuilding(ctx.supabase, pr.representative_building_id, ctx.user.id)
+      if (!result.projectId) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'שגיאה ביצירת פרויקט' })
       }
-
-      const newId = (newProj as { id: string }).id
-      await ctx.supabase.from('buildings').update({ project_id: newId }).eq('id', b.id)
-      return { projectId: newId, created: true }
+      return result
     }),
 
   /** Resolves the user's project via all known paths:
