@@ -54,7 +54,6 @@ import TenderDetailPage from './pages/TenderDetailPage'
 import NegotiationsPage from './pages/NegotiationsPage'
 import NegotiationDetailPage from './pages/NegotiationDetailPage'
 import BuildingTasksPage from './pages/BuildingTasksPage'
-import MeetingsPage from './pages/MeetingsPage'
 
 function OAuthCallback() {
   const navigate = useNavigate()
@@ -167,7 +166,6 @@ export default function App() {
         <Route path="/negotiations" element={<NegotiationsPage />} />
         <Route path="/negotiations/:negotiationId" element={<NegotiationDetailPage />} />
         <Route path="/my-tasks" element={<BuildingTasksPage />} />
-        <Route path="/meetings" element={<MeetingsPage />} />
         <Route path="/oauth-role" element={<OAuthRoleSelect />} />
         <Route path="/directory" element={<Directory />} />
         <Route path="/chat" element={<ChatPage />} />

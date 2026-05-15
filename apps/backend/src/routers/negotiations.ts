@@ -254,21 +254,7 @@ export const negotiationsRouter = router({
     }),
 
   // List my negotiations (committee sees ones I invited; provider sees ones I was invited to).
-  // Side effect: opportunistically finalize any polls past their deadline for
-  // negotiations belonging to the caller, so we don't need a separate cron.
   listMine: protectedProcedure.query(async ({ ctx }) => {
-    // Find caller's negotiations in 'polling' state past deadline.
-    const nowIso = new Date().toISOString()
-    const { data: due } = await ctx.supabase
-      .from('provider_negotiations')
-      .select('*')
-      .or(`invited_by.eq.${ctx.user.id},provider_id.eq.${ctx.user.id}`)
-      .eq('status', 'polling')
-      .lt('poll_deadline', nowIso)
-    for (const n of (due ?? []) as NegotiationRow[]) {
-      try { await finalizePollImpl(ctx, n) } catch { /* keep listing usable on failure */ }
-    }
-
     const { data: invited } = await ctx.supabase
       .from('provider_negotiations')
       .select(`
