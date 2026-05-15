@@ -562,6 +562,17 @@ export const tenantRouter = router({
     return { success: true }
   }),
 
+  markNotificationRead: protectedProcedure
+    .input(z.object({ notificationId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('user_id', ctx.user.id)
+        .eq('id', input.notificationId)
+      return { success: true }
+    }),
+
   // ─── A1: Upload Tabu PDF ───────────────────────────────
   uploadTabu: protectedProcedure
     .input(z.object({ fileUrl: z.string().url() }))
