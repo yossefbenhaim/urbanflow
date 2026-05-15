@@ -69,22 +69,9 @@ export default function Directory() {
   const [quoteModal, setQuoteModal] = useState<{ id: string; name: string } | null>(null)
   const [convsOpen, setConvsOpen] = useState(false)
 
-  const buildingId = (myRole as { buildingId?: string | null } | undefined)?.buildingId ?? undefined
-  const { data: providers = [], refetch: refetchProviders } = trpc.directory.getProviders.useQuery(
-    {
-      ...(filter === 'all' ? {} : { role: filter === 'lawyer' ? 'provider' : filter }),
-      ...(buildingId ? { buildingId } : {}),
-    }
+  const { data: providers = [] } = trpc.directory.getProviders.useQuery(
+    filter === 'all' ? undefined : { role: filter === 'lawyer' ? 'provider' : filter }
   )
-  const [inviteModal, setInviteModal] = useState<{ id: string; name: string } | null>(null)
-  const invite = trpc.negotiations.invite.useMutation({
-    onSuccess: () => {
-      toast.success('ההזמנה נשלחה')
-      setInviteModal(null)
-      refetchProviders()
-    },
-    onError: (e) => toast.error(e.message || 'שגיאה בשליחת ההזמנה'),
-  })
   const { data: conversations = [] } = trpc.chat.getConversations.useQuery()
   const startConversation = trpc.chat.startConversation.useMutation({
     onSuccess: ({ conversationId }: { conversationId: string }) => navigate(`/chat/${conversationId}`)
@@ -106,15 +93,14 @@ export default function Directory() {
   }
 
   const meId = profile?.id
-  type ProviderRow = { id: string; role?: string; full_name?: string } & Record<string, unknown>
-  const filtered = (providers as ProviderRow[])
-    .filter(p => {
+  const filtered = providers
+    .filter((p: { role?: string }) => {
       if (filter === 'developer') return p.role === 'developer'
       if (filter === 'provider') return p.role === 'provider'
       return true
     })
-    .filter(p => !search || p.full_name?.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => (a.role === 'developer' ? -1 : b.role === 'developer' ? 1 : 0))
+    .filter((p: { full_name?: string }) => !search || p.full_name?.toLowerCase().includes(search.toLowerCase()))
+    .sort((a: { role?: string }, b: { role?: string }) => (a.role === 'developer' ? -1 : b.role === 'developer' ? 1 : 0))
 
   const filterBtns: { key: FilterType; label: string }[] = [
     { key: 'all', label: 'הכל' },
@@ -191,7 +177,7 @@ export default function Directory() {
 
         {/* ── Provider cards ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {filtered.map((p: { id: string; role?: string; full_name?: string; developer_profiles?: Record<string, unknown> | Record<string, unknown>[]; provider_profiles?: Record<string, unknown> | Record<string, unknown>[]; invitation_status?: string | null; invitation_id?: string | null }) => {
+          {filtered.map((p: { id: string; role?: string; full_name?: string; developer_profiles?: Record<string, unknown> | Record<string, unknown>[]; provider_profiles?: Record<string, unknown> | Record<string, unknown>[] }) => {
             const isDev = p.role === 'developer'
             const profile_data = isDev ? p.developer_profiles : p.provider_profiles
             const pd = Array.isArray(profile_data) ? profile_data[0] : profile_data
@@ -200,20 +186,6 @@ export default function Directory() {
             const regions = pd?.operating_regions as string[] | undefined
             const serviceTypes = pd?.service_types as string[] | undefined
             const photoUrl = pd?.photo_url as string | undefined
-            const invStatus = p.invitation_status ?? null
-            const invStatusLabel = (() => {
-              switch (invStatus) {
-                case 'invited': return '✉️ הזמנה נשלחה'
-                case 'accepted_by_provider':
-                case 'in_negotiation':
-                case 'agreed_by_provider':
-                case 'agreed_by_committee': return '💬 במשא ומתן'
-                case 'both_agreed': return '🤝 סוכם — לפני הצבעה'
-                case 'polling': return '📊 בהצבעת דיירים'
-                case 'approved': return '✅ נבחר'
-                default: return null
-              }
-            })()
 
             return (
               <div
@@ -260,27 +232,12 @@ export default function Directory() {
                   <p className="text-xs text-[#5a5a6e] mb-3">📍 {regions.slice(0, 2).join(', ')}</p>
                 )}
 
-                {invStatusLabel && (
-                  <button
-                    onClick={e => { e.stopPropagation(); if (p.invitation_id) navigate(`/negotiations/${p.invitation_id}`) }}
-                    className="w-full mb-2 sc-badge bg-[#fff4e0] text-[#8b6f47] block py-1.5 text-center hover:bg-[#ffe9c2] transition-colors">
-                    {invStatusLabel}
-                  </button>
-                )}
-
                 <div className="flex gap-2 mt-3">
                   <button
                     onClick={e => { e.stopPropagation(); startConversation.mutate({ recipientId: p.id }) }}
                     className="flex-1 flex items-center justify-center gap-1.5 bg-[#ebf1f7] text-[#3b6b9c] rounded-xl py-2.5 text-sm font-medium hover:bg-[#ebf1f7]/70 active:scale-95 transition-all">
                     💬 הודעה
                   </button>
-                  {buildingId && !invStatus && (
-                    <button
-                      onClick={e => { e.stopPropagation(); setInviteModal({ id: p.id, name: p.full_name ?? '' }) }}
-                      className="flex-1 flex items-center justify-center gap-1.5 bg-[#8b6f47]/10 text-[#8b6f47] rounded-xl py-2.5 text-sm font-medium hover:bg-[#8b6f47]/20 active:scale-95 transition-all">
-                      ✉️ הזמן
-                    </button>
-                  )}
                   <button
                     onClick={e => { e.stopPropagation(); setQuoteModal({ id: p.id, name: p.full_name ?? '' }) }}
                     className="flex-1 flex items-center justify-center gap-1.5 bg-[#4a8c5c]/10 text-[#4a8c5c] rounded-xl py-2.5 text-sm font-medium hover:bg-[#4a8c5c]/20 active:scale-95 transition-all">
@@ -305,56 +262,6 @@ export default function Directory() {
           onClose={() => setQuoteModal(null)}
         />
       )}
-
-      {inviteModal && buildingId && (
-        <InviteModal
-          recipientId={inviteModal.id}
-          recipientName={inviteModal.name}
-          buildingId={buildingId}
-          onClose={() => setInviteModal(null)}
-          onSubmit={(role) => invite.mutate({ buildingId, providerId: inviteModal.id, providerRole: role })}
-          isLoading={invite.isPending}
-        />
-      )}
     </PageLayout>
-  )
-}
-
-function InviteModal({ recipientName, onClose, onSubmit, isLoading }: {
-  recipientId: string; recipientName: string; buildingId: string;
-  onClose: () => void; isLoading: boolean;
-  onSubmit: (role: 'architect' | 'appraiser' | 'lawyer' | 'developer' | 'engineer' | 'inspector' | 'other') => void;
-}) {
-  const [role, setRole] = useState<'architect' | 'appraiser' | 'lawyer' | 'developer' | 'engineer' | 'inspector' | 'other'>('architect')
-  const roleLabels: Record<string, string> = {
-    architect: 'אדריכל', appraiser: 'שמאי', lawyer: 'עורך דין',
-    developer: 'יזם', engineer: 'מהנדס', inspector: 'מפקח', other: 'אחר',
-  }
-  return (
-    <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" dir="rtl">
-      <div className="sc-card rounded-t-3xl sm:rounded-2xl p-6 w-full sm:max-w-md shadow-2xl">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-bold text-[#212121]">✉️ הזמנה — {recipientName}</h2>
-          <button onClick={onClose} className="text-[#5a5a6e] text-xl leading-none">✕</button>
-        </div>
-        <div className="space-y-3">
-          <div>
-            <label className="text-sm font-medium text-[#212121]">תפקיד מבוקש *</label>
-            <select value={role} onChange={e => setRole(e.target.value as typeof role)} className="sc-input mt-1">
-              {Object.entries(roleLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-            </select>
-          </div>
-          <p className="text-xs text-[#5a5a6e]">לאחר אישור הצד השני יפתח משא ומתן ולאחר הסכמה דו-צדדית יוגדר סקר לכלל הדיירים (48 שעות, רוב 60%).</p>
-          <div className="flex gap-2 pt-2">
-            <button onClick={() => onSubmit(role)} disabled={isLoading}
-              className="flex-1 sc-btn-primary disabled:opacity-50">
-              {isLoading ? '...שולח' : 'שלח הזמנה'}
-            </button>
-            <button onClick={onClose} disabled={isLoading}
-              className="flex-1 sc-btn-secondary">ביטול</button>
-          </div>
-        </div>
-      </div>
-    </div>
   )
 }

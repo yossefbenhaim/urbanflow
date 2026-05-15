@@ -19,8 +19,6 @@ import { matchRouter } from './routers/match'
 import { meetingsRouter } from './routers/meetings'
 import { tasksRouter } from './routers/tasks'
 import { insightsRouter } from './routers/insights'
-import { negotiationsRouter } from './routers/negotiations'
-import { buildingTasksRouter } from './routers/buildingTasks'
 
 export const appRouter = router({
   auth: authRouter,
@@ -43,8 +41,6 @@ export const appRouter = router({
   meetings: meetingsRouter,
   tasks: tasksRouter,
   insights: insightsRouter,
-  negotiations: negotiationsRouter,
-  buildingTasks: buildingTasksRouter,
 })
 
 export type AppRouter = typeof appRouter

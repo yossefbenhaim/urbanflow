@@ -91,10 +91,8 @@ function getSidebarItems(role: string, isRepresentative: boolean, providerType?:
         { to: '/documents', icon: '📄', label: 'מסמכים' },
         { to: '/chat', icon: '💬', label: 'צ\'אט' },
         { to: '/directory', icon: '📋', label: 'ספריית מומחים' },
-        // Committee representatives (ועד) can open tenders and run negotiations.
+        // Committee representatives (ועד) can open tenders.
         ...(isRepresentative ? [{ to: '/tenders', icon: '📋', label: 'מכרזים' }] : []),
-        ...(isRepresentative ? [{ to: '/negotiations', icon: '🤝', label: 'משאים ומתנים' }] : []),
-        ...(isRepresentative ? [{ to: '/my-tasks', icon: '📝', label: 'המשימות שלי' }] : []),
         { to: '/join-project', icon: '🔗', label: 'שיוך לפרויקט' },
         { to: '/profile', icon: '👤', label: 'פרופיל' },
       ]
@@ -114,8 +112,6 @@ function getSidebarItems(role: string, isRepresentative: boolean, providerType?:
       return [
         { to: '/provider', icon: '🏠', label: 'ראשי' },
         ...(showInspections ? [{ to: '/inspections', icon: '🔍', label: 'בדיקות' }] : []),
-        { to: '/negotiations', icon: '🤝', label: 'משאים ומתנים' },
-        { to: '/my-tasks', icon: '📝', label: 'המשימות שלי' },
         { to: '/chat', icon: '💬', label: 'צ\'אט' },
         { to: '/quotes', icon: '💰', label: 'הצעות מחיר' },
         { to: '/provider/preferences', icon: '⚙️', label: 'העדפות' },

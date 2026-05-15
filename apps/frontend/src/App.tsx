@@ -51,9 +51,6 @@ import ProviderOnboarding from './pages/ProviderOnboarding'
 import ProviderPublicProfile from './pages/ProviderPublicProfile'
 import TendersPage from './pages/TendersPage'
 import TenderDetailPage from './pages/TenderDetailPage'
-import NegotiationsPage from './pages/NegotiationsPage'
-import NegotiationDetailPage from './pages/NegotiationDetailPage'
-import BuildingTasksPage from './pages/BuildingTasksPage'
 
 function OAuthCallback() {
   const navigate = useNavigate()
@@ -163,9 +160,6 @@ export default function App() {
         <Route path="/providers/:userId" element={<ProviderPublicProfile />} />
         <Route path="/tenders" element={<TendersPage />} />
         <Route path="/tenders/:tenderId" element={<TenderDetailPage />} />
-        <Route path="/negotiations" element={<NegotiationsPage />} />
-        <Route path="/negotiations/:negotiationId" element={<NegotiationDetailPage />} />
-        <Route path="/my-tasks" element={<BuildingTasksPage />} />
         <Route path="/oauth-role" element={<OAuthRoleSelect />} />
         <Route path="/directory" element={<Directory />} />
         <Route path="/chat" element={<ChatPage />} />
