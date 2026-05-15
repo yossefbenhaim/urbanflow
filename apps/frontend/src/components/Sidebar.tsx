@@ -115,6 +115,7 @@ function getSidebarItems(role: string, isRepresentative: boolean, providerType?:
         // Committee representatives (ועד) can open tenders and run negotiations.
         ...(isRepresentative ? [{ to: '/tenders', icon: '📋', label: 'מכרזים' }] : []),
         ...(isRepresentative ? [{ to: '/negotiations', icon: '🤝', label: 'משאים ומתנים' }] : []),
+        ...(isRepresentative ? [{ to: '/meetings', icon: '📅', label: 'פגישות' }] : []),
         ...(isRepresentative ? [{ to: '/my-tasks', icon: '📝', label: 'המשימות שלי' }] : []),
         { to: '/join-project', icon: '🔗', label: 'שיוך לפרויקט' },
         { to: '/profile', icon: '👤', label: 'פרופיל' },
