@@ -3,7 +3,11 @@ import { router, protectedProcedure } from '../middleware/auth'
 
 export const directoryRouter = router({
   getProviders: protectedProcedure
-    .input(z.object({ role: z.string().optional(), search: z.string().optional() }).optional())
+    .input(z.object({
+      role: z.string().optional(),
+      search: z.string().optional(),
+      buildingId: z.string().uuid().optional(),
+    }).optional())
     .query(async ({ ctx, input }) => {
       let q = ctx.supabase
         .from('profiles')
@@ -12,7 +16,34 @@ export const directoryRouter = router({
       if (input?.role) q = q.eq('role', input.role)
       if (input?.search) q = q.ilike('full_name', `%${input.search}%`)
       const { data } = await q
-      return data ?? []
+      const providers = (data ?? []) as Array<{ id: string } & Record<string, unknown>>
+
+      // If the caller's building is known, attach the current invitation
+      // status per provider so the UI can show "invitation sent" pill instead
+      // of hiding the provider. (Spec from Yossef 2026-05-15 12:16.)
+      if (input?.buildingId && providers.length > 0) {
+        const { data: negs } = await ctx.supabase
+          .from('provider_negotiations')
+          .select('provider_id, provider_role, status, id')
+          .eq('building_id', input.buildingId)
+          .in('provider_id', providers.map(p => p.id))
+        type N = { provider_id: string; provider_role: string; status: string; id: string }
+        const activeOrder = ['invited', 'accepted_by_provider', 'in_negotiation', 'agreed_by_provider', 'agreed_by_committee', 'both_agreed', 'polling', 'approved']
+        const rank = (s: string) => activeOrder.indexOf(s)
+        const byProvider = new Map<string, N>()
+        for (const n of (negs ?? []) as N[]) {
+          const existing = byProvider.get(n.provider_id)
+          if (!existing || rank(n.status) > rank(existing.status)) {
+            byProvider.set(n.provider_id, n)
+          }
+        }
+        return providers.map(p => {
+          const neg = byProvider.get(p.id)
+          return { ...p, invitation_status: neg?.status ?? null, invitation_id: neg?.id ?? null }
+        })
+      }
+
+      return providers
     }),
 
   getProfile: protectedProcedure
