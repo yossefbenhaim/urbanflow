@@ -4,12 +4,13 @@ import { useUser, ROLE_LABELS, clearTokens } from '../hooks/useUser'
 import { trpc } from '../lib/trpc'
 
 // ── Bell / Notifications ──────────────────────────────────────────────────────
-type Notification = { id: string; is_read: boolean; type?: string; title?: string; message?: string; created_at: string }
+type Notification = { id: string; is_read: boolean; type?: string; title?: string; message?: string; action_url?: string | null; created_at: string }
 
 function NotificationBell() {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const token = localStorage.getItem('sb-token')
+  const navigate = useNavigate()
 
   const { data: notifications = [], refetch } = trpc.tenant.getNotifications.useQuery(undefined, {
     enabled: !!token,
@@ -17,6 +18,7 @@ function NotificationBell() {
     staleTime: 10000,
   })
   const markRead = trpc.tenant.markNotificationsRead.useMutation({ onSuccess: () => refetch() })
+  const markOne = trpc.tenant.markNotificationRead.useMutation({ onSuccess: () => refetch() })
   const unread = (notifications as Notification[]).filter(n => !n.is_read).length
 
   useEffect(() => {
@@ -54,22 +56,41 @@ function NotificationBell() {
                 <p className="text-[13px] m-0">אין התראות חדשות</p>
               </div>
             ) : (
-              (notifications as Notification[]).map((n) => (
-                <div key={n.id} className={`px-4 py-3 border-b border-[#eeeeee]/50 transition-colors ${n.is_read ? 'bg-white' : 'bg-[#ebf1f7]'}`}>
-                  <div className="flex gap-2.5 items-start">
-                    <span className="text-lg flex-shrink-0">
-                      {n.type === 'message' ? '💬' : n.type === 'poll' ? '🗳️' : n.type === 'meeting' ? '📅' : '🔔'}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className={`m-0 text-[13px] text-[#212121] ${n.is_read ? 'font-normal' : 'font-semibold'}`}>{n.title}</p>
-                      {n.message && <p className="m-0 mt-0.5 text-[11px] text-[#5a5a6e]">{n.message}</p>}
-                      <p className="m-0 mt-1 text-[10px] text-[#8e8e9e]">
-                        {new Date(n.created_at).toLocaleString('he-IL', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
-                      </p>
+              (notifications as Notification[]).map((n) => {
+                const iconFor = (t?: string) => {
+                  if (t?.startsWith('negotiation')) return '🤝'
+                  if (t === 'message') return '💬'
+                  if (t === 'poll' || t === 'poll_reminder') return '🗳️'
+                  if (t === 'meeting') return '📅'
+                  if (t === 'quote_request' || t === 'quote_response') return '💰'
+                  return '🔔'
+                }
+                const handleClick = () => {
+                  if (!n.is_read) markOne.mutate({ notificationId: n.id })
+                  if (n.action_url) {
+                    setOpen(false)
+                    navigate(n.action_url)
+                  }
+                }
+                return (
+                  <button
+                    key={n.id}
+                    onClick={handleClick}
+                    className={`w-full text-right px-4 py-3 border-b border-[#eeeeee]/50 transition-colors ${n.is_read ? 'bg-white hover:bg-[#f8f9fa]' : 'bg-[#ebf1f7] hover:bg-[#dde9f5]'} ${n.action_url ? 'cursor-pointer' : 'cursor-default'}`}
+                  >
+                    <div className="flex gap-2.5 items-start">
+                      <span className="text-lg flex-shrink-0">{iconFor(n.type)}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className={`m-0 text-[13px] text-[#212121] ${n.is_read ? 'font-normal' : 'font-semibold'}`}>{n.title}</p>
+                        {n.message && <p className="m-0 mt-0.5 text-[11px] text-[#5a5a6e]">{n.message}</p>}
+                        <p className="m-0 mt-1 text-[10px] text-[#8e8e9e]">
+                          {new Date(n.created_at).toLocaleString('he-IL', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              ))
+                  </button>
+                )
+              })
             )}
           </div>
         </div>
@@ -94,6 +115,7 @@ function getSidebarItems(role: string, isRepresentative: boolean, providerType?:
         // Committee representatives (ועד) can open tenders and run negotiations.
         ...(isRepresentative ? [{ to: '/tenders', icon: '📋', label: 'מכרזים' }] : []),
         ...(isRepresentative ? [{ to: '/negotiations', icon: '🤝', label: 'משאים ומתנים' }] : []),
+        ...(isRepresentative ? [{ to: '/meetings', icon: '📅', label: 'פגישות' }] : []),
         ...(isRepresentative ? [{ to: '/my-tasks', icon: '📝', label: 'המשימות שלי' }] : []),
         { to: '/join-project', icon: '🔗', label: 'שיוך לפרויקט' },
         { to: '/profile', icon: '👤', label: 'פרופיל' },
